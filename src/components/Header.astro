@@ -1,0 +1,22 @@
+---
+import SearchTrigger from './SearchTrigger.astro'
+import ThemeToggle from './ThemeToggle.vue'
+---
+
+<header class="py-6">
+  <nav class="flex items-center justify-between gap-4">
+    <a
+      href="/"
+      class="text-base font-semibold tracking-tight transition-colors hover:text-primary"
+    >
+      Hubery
+    </a>
+
+    <div class="flex items-center gap-1">
+      <SearchTrigger />
+      {/* 全站唯一的 Vue 岛屿。client:load 而非 client:idle —— 主题切换是首屏可见控件,
+          延迟激活会让用户点了没反应 */}
+      <ThemeToggle client:load />
+    </div>
+  </nav>
+</header>

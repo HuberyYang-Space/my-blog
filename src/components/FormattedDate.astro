@@ -1,0 +1,17 @@
+---
+interface Props {
+  date: Date
+  class?: string
+}
+
+const { date, class: className } = Astro.props
+
+const formatted = date.toLocaleDateString('zh-CN', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+})
+---
+
+{/* datetime 属性给机器读(SEO / 阅读器),可见文本给人读 */}
+<time datetime={date.toISOString()} class={className}>{formatted}</time>

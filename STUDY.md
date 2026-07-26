@@ -4,13 +4,54 @@
 
 ## 知识点
 
-按技术点分类记录,例如:
+### 草稿过滤为什么能"一处生效、三处兑现"
 
-- Astro(静态输出、Content Collections、`render()` API)
+草稿的排除只在 `src/utils/posts.ts` 写了一次:
+
+```ts
+const posts = await getCollection('blog', ({ data }) => {
+  return import.meta.env.PROD ? data.draft !== true : true
+})
+```
+
+但它同时兑现了三件事,靠的是**静态构建的因果链**:
+
+1. 首页列表调用它 → 草稿不出现在列表中;
+2. `getStaticPaths` 也调用它 → 草稿不在路径列表里 → **不生成 html** → 直接访问 404;
+3. Pagefind 只扫描构建产物 `dist/` → 页面都不存在 → **自然不会被索引**。
+
+第 3 点尤其值得注意:**不需要给 Pagefind 任何额外配置**。很多静态站点的搜索会漏掉草稿过滤,根源在于搜索索引是独立于路由单独生成的;而 Pagefind 挂在 `astro:build:done`、以产物为唯一输入,天然继承了路由层的过滤结果。
+
+推论:**让下游以上游的产物为唯一输入,过滤就不必重复实现**。反之,如果搜索索引是从源文件另行生成的,就必然要再写一遍 draft 判断,也就必然会有忘记同步的一天。
+
+### `data-pagefind-body` 决定索引粒度
+
+只在 `PostLayout.astro` 的 `<article>` 上标了 `data-pagefind-body`。这个属性的语义是全局性的:
+
+> 一旦站点上**任何**页面带了该属性,Pagefind 就只把带此属性的页面纳入结果集。
+
+因此它一次性解决了两个问题:
+
+- 页眉页脚的文字不会污染每条结果的摘要;
+- 首页等列表页不会被索引成一条结果(否则搜任何词都会命中首页)。
+
+验证时注意区分两个数字:构建日志说 `Pagefind indexed 3 pages` 是**扫描**了 3 个页面,而 `dist/pagefind/fragment/` 下只有 2 个文件 —— 后者才是真正可被搜到的结果数。**看 fragment 数量,别看日志数字。**
+
+### 语义化 CSS 变量 vs `dark:` 前缀
+
+主题切换有两种写法。成对写法 `text-black dark:text-white` 把配色决策散落在每个组件里;本项目改为把颜色收敛到一层语义化变量:
+
+```css
+:root { --c-text: #222226; }
+.dark { --c-text: #d4d4d8; }
+```
+
+再让 UnoCSS 的 `theme.colors` 引用它们,组件里只写 `text-text`。好处是**调色只需改一处**,且深浅两套可以各自独立调校对比度 —— 而不是简单反色(深色背景不用纯黑 `#121215`、浅色文字不用纯黑 `#222226`,是为了降低眩光和边缘锐利感)。
+
+### 其他
+
 - Vue 交互岛屿(`client:load` 等指令的选择)
-- UnoCSS(`darkMode: 'class'`、语义化 CSS 变量)
-- Pagefind 搜索(`astro:build:done` 钩子、draft 过滤机制)
-- 防闪烁双主题实现原理
+- 防闪烁双主题实现原理(详见示例文章 `fouc-free-dark-mode.md`)
 
 ### pnpm 供应链信任策略(trustPolicy)
 
@@ -71,6 +112,20 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 
 - **⚠️ `astro.config.ts` 的 `site` 当前是占位域名** `https://blog.example.com`,**部署前必须替换为实际域名**。sitemap / RSS / OG 图都靠它生成绝对 URL,漏改会导致这些链接全部指向错误域名 —— 而且构建不会报错,属于静默失败。
 
+- **`.astro` 页面里 `Astro.props` 会退化成 `unknown`**:只给 `getStaticPaths` 标注 `GetStaticPaths` 类型是不够的 —— 那不会把 `props` 的类型传导到 `Astro.props`。必须在同一文件里声明 `Props` 接口,Astro 从它推断:
+
+  ```ts
+  interface Props {
+    post: CollectionEntry<'blog'>
+  }
+  ```
+
+  症状是 `astro check` 报 `Type 'unknown' is not assignable to...`,而 `pnpm build` 却能正常通过(构建不做类型检查)。**所以 build 通过不等于类型没问题,两个命令都要跑。**
+
+- **ESLint 会把 Markdown 里的代码块当独立源文件解析**:文章里贴了一段对象字面量片段(`theme: { ... }`),ESLint 报 `Parsing error: Expression expected` 且无法自动修复。写技术文章时,`ts`/`js` 代码块要么写成语法完整的片段(包在 `export default defineConfig({...})` 里),要么换用不参与 lint 的语言标签。
+
+- **`astro check` 会报 `'z' is deprecated`**:来自 zod v4 对命名空间式 `z` 导出的软弃用,计入 hints 而非 errors,**不影响退出码**。暂不处理。
+
 - **ESLint 的 import 排序会让 `// @ts-check` 失效**:脚手架生成的 `astro.config.mjs` 顶部有 `// @ts-check`,加入 `@astrojs/vue` 的 import 后被排序规则挤到了两条 import 之间。该指令必须位于文件首行才生效,挤到中间就成了普通注释。本项目已改用 `astro/config` 的 `defineConfig()` 提供类型,直接删掉该注释。
 
 ## 方法论
@@ -80,6 +135,10 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 - **安全告警不要无脑绕过,也不要无脑相信**:遇到 `ERR_PNPM_TRUST_DOWNGRADE` 这类供应链告警,正确姿势既不是直接关策略,也不是就此卡死,而是**先取证再决策** —— 比对 integrity、核实维护者、查发布时间线,判定清楚是真风险还是机制误报,再选择最小范围的处置手段(精确豁免 > 关闭策略)。判定依据要写进配置注释,让后来者(包括未来的自己)能复核。
 
 - **"最新稳定版"不等于"该用的版本"**:全局约定是新增依赖取最新稳定版,但 `typescript@7` 这类**生态尚未跟上的大版本跃迁**是例外。判断标准不是版本号新旧,而是工具链是否真的能跑通 —— 装完立刻跑一次验证命令(此处是 `pnpm typecheck`)就能暴露问题。
+
+- **验证要打到"因果链的末端",而不是停在中间信号**。本次验证草稿过滤时,构建日志写的是 `Pagefind indexed 3 pages` —— 若就此认为"索引了 3 页 = 草稿混进去了",或反过来只看日志没细究,都会得出错误结论。真正的证据是去数 `dist/pagefind/fragment/` 下的文件、去 fetch 草稿 URL 看状态码、去搜索框里真的搜一次"草稿"。**中间信号会骗人,末端事实不会。**
+
+- **端口冲突可能伪装成应用 bug**。`pnpm preview` 起在 4321 却返回 404,排查发现是另一个项目(`about-me`)昨天遗留的 vite 进程占着该端口 —— 我们的服务根本没起来。`lsof -nP -iTCP:<port> -sTCP:LISTEN` 加上 `ps -p <pid> -o command` 能一眼看清占用者是谁。**遇到"服务起了但内容不对",先确认在跟你说话的是不是你以为的那个进程。** 另外:别顺手 kill 掉不属于本项目的进程,换个端口就好。
 
 - **排查配置问题时,不要整篇打印可能含凭据的文件**。本次排查 pnpm 供应链策略时,为确认配置来源执行了 `cat ~/.npmrc`,导致其中的 npm token 明文进入会话记录。而当时真正的需求只是"这个文件里有没有配 registry",定向手段完全够用:
 

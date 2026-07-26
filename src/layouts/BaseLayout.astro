@@ -1,0 +1,67 @@
+---
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import '../styles/global.css'
+
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+const canonical = new URL(Astro.url.pathname, Astro.site)
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    {/*
+      防闪烁:必须是 <head> 的首个子节点,且必须同步内联执行。
+      目的是在浏览器首次绘制之前就把 .dark 落到 <html> 上,
+      否则会先按浅色绘制一帧,深色用户能看到明显的白屏闪烁。
+      is:inline 让 Astro 原样输出,不做模块化搬运。
+    */}
+    <script is:inline>
+      ;(function () {
+        try {
+          const stored = localStorage.getItem('theme')
+          const isDark = stored
+            ? stored === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (isDark) {
+            document.documentElement.classList.add('dark')
+            // Pagefind 组件库以该属性作为暗色选择器
+            document.documentElement.setAttribute('data-pf-theme', 'dark')
+          }
+        }
+        catch {
+          // 隐私模式下 localStorage 不可用,回退到浅色
+        }
+      })()
+    </script>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonical} />
+
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+
+  <body>
+    <div class="mx-auto max-w-2xl min-h-screen flex flex-col px-6">
+      <Header />
+      <main class="flex-1">
+        <slot />
+      </main>
+      <Footer />
+    </div>
+  </body>
+</html>

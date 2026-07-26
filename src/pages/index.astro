@@ -1,17 +1,19 @@
 ---
+import PostCard from '../components/PostCard.astro'
+import BaseLayout from '../layouts/BaseLayout.astro'
+import { getPublishedPosts } from '../utils/posts'
 
+const posts = await getPublishedPosts()
 ---
 
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="icon" href="/favicon.ico" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Astro</title>
-  </head>
-  <body>
-    <h1>Astro</h1>
-  </body>
-</html>
+<BaseLayout title="Hubery" description="记录前端工程实践与技术思考。">
+  <section class="py-4">
+    <p class="text-text-soft">记录前端工程实践与技术思考。</p>
+  </section>
+
+  <section class="mt-8">
+    {posts.length === 0
+      ? <p class="py-8 text-text-mute">还没有文章。</p>
+      : posts.map(post => <PostCard post={post} />)}
+  </section>
+</BaseLayout>

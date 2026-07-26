@@ -1,0 +1,12 @@
+---
+import PagefindConfig from 'astro-pagefind/components/PagefindConfig.astro'
+---
+
+{/*
+  Pagefind 索引由 astro-pagefind 在 `astro:build:done` 钩子中生成,
+  因此开发模式下 dist/pagefind 不存在、搜索无结果属正常现象,
+  功能需以 `pnpm build && pnpm preview` 验证。
+*/}
+<PagefindConfig />
+<pagefind-modal-trigger></pagefind-modal-trigger>
+<pagefind-modal></pagefind-modal>

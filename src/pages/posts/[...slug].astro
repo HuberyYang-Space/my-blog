@@ -1,0 +1,33 @@
+---
+import type { GetStaticPaths } from 'astro'
+import type { CollectionEntry } from 'astro:content'
+import { render } from 'astro:content'
+import PostLayout from '../../layouts/PostLayout.astro'
+import { getPublishedPosts } from '../../utils/posts'
+
+// Astro 从本文件的 Props 接口推断 Astro.props 的类型。
+// 仅给 getStaticPaths 标注 GetStaticPaths 是不够的 —— 那不会把 props 类型传导过来,
+// Astro.props 会退化成 unknown。
+interface Props {
+  post: CollectionEntry<'blog'>
+}
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  // 与首页共用同一个取数函数,草稿过滤逻辑不重复实现。
+  // 生产构建下草稿不在此列表中 → 不生成 html → 也就不会被 Pagefind 索引。
+  const posts = await getPublishedPosts()
+
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }))
+}
+
+const { post } = Astro.props
+// Astro 5+ 的独立 render() API(旧版的 entry.render() 已废弃)
+const { Content } = await render(post)
+---
+
+<PostLayout post={post}>
+  <Content />
+</PostLayout>
