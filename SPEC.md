@@ -76,8 +76,8 @@ const blog = defineCollection({
     updatedDate: z.coerce.date().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
-    cover: image().optional(),           // 预留:封面图/OG图,用 image() 走 Astro 图片优化
-    lang: z.string().default('zh-CN'),   // 预留:i18n
+    cover: image().optional(), // 预留:封面图/OG图,用 image() 走 Astro 图片优化
+    lang: z.string().default('zh-CN'), // 预留:i18n
   }),
 })
 export const collections = { blog }
@@ -88,8 +88,8 @@ export const collections = { blog }
 ```ts
 import vue from '@astrojs/vue'
 import UnoCSS from '@unocss/astro'
-import { defineConfig } from 'astro/config'
 import pagefind from 'astro-pagefind'
+import { defineConfig } from 'astro/config'
 
 export default defineConfig({
   site: 'https://your-domain.example', // 待用户提供实际域名
