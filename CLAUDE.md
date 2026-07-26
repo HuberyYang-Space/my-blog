@@ -15,6 +15,11 @@ Markdown 驱动的静态个人博客,风格克制极简,Astro + Vue 交互岛屿
 - Content Collection schema 路径是根级 `src/content.config.ts`(不是 `src/content/config.ts`)
 - 代码规范:`@antfu/eslint-config` + `eslint-plugin-astro` + `astro-eslint-parser` + `@unocss/eslint-plugin`
 - Git 规范:`@huberyyang/todo-scripts` 的 `commitlint-init` 接入 commitlint + husky + lint-staged
+- `typescript` 固定在 **6.x** —— 7.x 的原生编译器尚未提供 `astro check` 依赖的 programmatic API,不要升级
+
+## 待办提醒
+
+- ⚠️ `astro.config.ts` 的 `site` 目前是占位域名 `https://blog.example.com`,**部署前必须替换为实际域名**。sitemap / RSS / OG 图都依赖它生成绝对 URL,漏改不会报错,属静默失败。
 
 ## 目录结构约定
 

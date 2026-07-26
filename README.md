@@ -66,6 +66,8 @@ pnpm build
 npx serve dist
 ```
 
+> ⚠️ 部署前请先将 `astro.config.ts` 中的 `site` 由占位值 `https://blog.example.com` 改为实际域名 —— sitemap、RSS 与 OG 图均依赖该值生成绝对 URL。
+
 ## 相关文档
 
 - [`SPEC.md`](./SPEC.md) —— 完整技术方案与执行步骤

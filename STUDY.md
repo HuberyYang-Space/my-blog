@@ -69,6 +69,10 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 
 - **ESLint 会连带格式化 Markdown 里的代码块**:跑 `lint:fix` 后 `SPEC.md` 中的 ts 代码块被重排(import 排序、行尾注释对齐)。属预期行为,不影响内容。
 
+- **⚠️ `astro.config.ts` 的 `site` 当前是占位域名** `https://blog.example.com`,**部署前必须替换为实际域名**。sitemap / RSS / OG 图都靠它生成绝对 URL,漏改会导致这些链接全部指向错误域名 —— 而且构建不会报错,属于静默失败。
+
+- **ESLint 的 import 排序会让 `// @ts-check` 失效**:脚手架生成的 `astro.config.mjs` 顶部有 `// @ts-check`,加入 `@astrojs/vue` 的 import 后被排序规则挤到了两条 import 之间。该指令必须位于文件首行才生效,挤到中间就成了普通注释。本项目已改用 `astro/config` 的 `defineConfig()` 提供类型,直接删掉该注释。
+
 ## 方法论
 
 调研与决策过程中总结的可复用方法。
@@ -77,9 +81,24 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 
 - **"最新稳定版"不等于"该用的版本"**:全局约定是新增依赖取最新稳定版,但 `typescript@7` 这类**生态尚未跟上的大版本跃迁**是例外。判断标准不是版本号新旧,而是工具链是否真的能跑通 —— 装完立刻跑一次验证命令(此处是 `pnpm typecheck`)就能暴露问题。
 
+- **排查配置问题时,不要整篇打印可能含凭据的文件**。本次排查 pnpm 供应链策略时,为确认配置来源执行了 `cat ~/.npmrc`,导致其中的 npm token 明文进入会话记录。而当时真正的需求只是"这个文件里有没有配 registry",定向手段完全够用:
+
+  ```bash
+  ls -la ~/.npmrc                        # 只确认存在性
+  npm config get registry                # 只取需要的那一项
+  npm config list                        # pnpm/npm 会自动把凭据显示为 (protected)
+  ```
+
+  注意 `npm config list` 的输出里 token 已被自动脱敏为 `(protected)` —— 工具本身就提供了安全的查看方式,`cat` 反而绕过了这层保护。同类高危文件:`.npmrc`、`.env`、`.aws/credentials`、`.ssh/*`、`.docker/config.json`。
+
+  **推论**:凭据一旦进入日志/会话记录就应视为已泄露,唯一可靠的补救是轮换,而非"删掉记录"。所以真正的防线在于一开始就不读它。
+
 ## 待复盘问题
 
 实施过程中遇到但未即时解决、值得深挖的问题。
 
 - `typescript` 何时能升回 7.x?需等 `@astrojs/language-server` 适配原生编译器的新 API。
-- `pnpm peers check` 报了 peer dependency 警告,尚未逐条查看是否有实际影响。
+
+### 已了结
+
+- ~~`pnpm peers check` 的 peer dependency 警告~~ —— 复查为 `No peer dependency issues found`,那是安装过程中途的瞬时状态,依赖装齐后自然消解。
