@@ -1,5 +1,7 @@
 import { glob } from 'astro/loaders'
-import { defineCollection, z } from 'astro:content'
+// z 直接从 zod 取:`astro:content` 转出的那份已标记废弃。
+import { defineCollection } from 'astro:content'
+import { z } from 'zod'
 
 const blog = defineCollection({
   // `[^_]*` 让下划线开头的文件成为草稿约定之外的另一层排除手段(如 _draft.md 不会被收录)

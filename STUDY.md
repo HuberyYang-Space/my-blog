@@ -48,6 +48,110 @@ const posts = await getCollection('blog', ({ data }) => {
 
 再让 UnoCSS 的 `theme.colors` 引用它们,组件里只写 `text-text`。好处是**调色只需改一处**,且深浅两套可以各自独立调校对比度 —— 而不是简单反色(深色背景不用纯黑 `#121215`、浅色文字不用纯黑 `#222226`,是为了降低眩光和边缘锐利感)。
 
+### Shiki 双主题:`defaultColor: false` 是关键开关
+
+代码块最初在浅色页面里是一整块深色 —— 因为没配 `markdown.shikiConfig`,Shiki 走默认单主题 `github-dark`,并把颜色写成**内联样式**:
+
+```html
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8">
+```
+
+内联样式的优先级压过任何外部 CSS,所以靠 `.dark` 选择器是救不回来的。正解是让 Shiki 别输出具体颜色:
+
+```ts
+export default defineConfig({
+  markdown: {
+    shikiConfig: {
+      themes: { light: 'github-light', dark: 'github-dark' },
+      defaultColor: false, // ← 关键
+    },
+  },
+})
+```
+
+`defaultColor: false` 之后,内联样式变成两组变量并存:
+
+```html
+<pre style="--shiki-light:#24292e;--shiki-dark:#e1e4e8;--shiki-light-bg:#fff;--shiki-dark-bg:#24292e">
+```
+
+再由 CSS 二选一即可。注意 `span` 也要选中,否则只有容器换色、token 不换:
+
+```css
+.prose pre, .prose pre span { color: var(--shiki-light); background-color: var(--shiki-light-bg); }
+.dark .prose pre, .dark .prose pre span { color: var(--shiki-dark); background-color: var(--shiki-dark-bg); }
+```
+
+**教训**:遇到"外部 CSS 改不动"的样式,先看是不是内联样式;是的话,解法在生成端而不在覆盖端。
+
+### `data-pagefind-ignore` / `data-pagefind-meta` 控制摘要质量
+
+`data-pagefind-body` 只决定**哪些页面**进结果集,不决定摘要从哪儿开始。文章 header 若被包在 body 里,摘要就会长成:
+
+> 的首屏闪烁. **2026年7月25日#CSS#前端工程**. 给站点加深色模式时…
+
+日期和标签把真正的正文挤出了摘要。两个属性各司其职:
+
+- `data-pagefind-ignore` —— 把日期/标签那一行排除出**正文索引**。注意它不影响同一子树里的 `data-pagefind-filter`,filter 的采集是独立通道;
+- `data-pagefind-meta="title"` —— 把标题登记为条目**元数据**,而非正文。
+
+改完摘要直接从正文首句开始。残留的标题片段是 Pagefind 的常规行为(h1 仍在 body 内),影响很小,没有为此再动索引结构。
+
+### 让静默失败变成构建失败
+
+`site` 填错是最典型的静默失败:构建照常成功,canonical / sitemap / RSS / OG 里的绝对 URL 却整体指向错误域名,通常等到被人分享出去才发现。
+
+原先的应对是在 `astro.config.ts` 写 `// TODO` 注释 —— 但注释不会在任何时刻拦住任何人。改为一个最小集成:
+
+```ts
+function siteUrlGuard() {
+  return {
+    name: 'site-url-guard',
+    hooks: {
+      'astro:build:start': () => {
+        if (SITE.url.includes('example.com')) {
+          throw new Error('...')
+        }
+      },
+    },
+  }
+}
+```
+
+挂 `astro:build:start` 而非模块顶层,是为了只拦生产构建、不打扰 `astro dev`。
+
+**方法论**:凡是"填错也不会报错"的配置项,都值得加一道构建期断言。注释是给人看的,断言才是给流程用的。守卫的边界也要说清楚 —— 它只能识别 `example.com` 这类占位特征,拦不住一个拼错的真实域名。
+
+### `astro:content` 的 `z` 已废弃,但 zod 版本必须与 Astro 对齐
+
+`astro check` 报了 10 条 `'z' is deprecated`,官方建议改为直接 `import { z } from 'zod'`。直接改会失败:
+
+```
+Cannot find module 'zod' imported from 'src/content.config.ts'
+```
+
+因为 zod 只是 Astro 的**传递依赖**,pnpm 的严格 node_modules 不会把它暴露给项目代码。需要显式安装 —— 但**不能随手装最新版**:若装出与 Astro 内部不同的 zod 实例,schema 对象将不是同一个类的实例,校验会以难查的方式失效。
+
+正确做法是先看 Astro 声明的 range 再对齐:
+
+```bash
+node -e "console.log(require('./node_modules/astro/package.json').dependencies.zod)"  # ^4.3.6
+pnpm add 'zod@^4.3.6'
+find node_modules/.pnpm -maxdepth 1 -name 'zod@*'   # 确认只有一份
+```
+
+最后一步的"确认只有一份"是必要的验证,不能靠假设。
+
+### 中文标签路由
+
+标签含中文(`前端工程`)时,`/tags/[tag].astro` 无需特殊处理:Astro 产物目录用原始中文字符,浏览器请求时自动 percent-encode,`@astrojs/sitemap` 输出的也是编码后的形式:
+
+```
+https://blog.hubery.dev/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B/
+```
+
+但这条**必须实测**而非推定 —— 少数静态托管对非 ASCII 路径的处理有差异,本地 `preview` 通过不等于线上通过。
+
 ### 其他
 
 - Vue 交互岛屿(`client:load` 等指令的选择)
@@ -124,7 +228,7 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 
 - **ESLint 会把 Markdown 里的代码块当独立源文件解析**:文章里贴了一段对象字面量片段(`theme: { ... }`),ESLint 报 `Parsing error: Expression expected` 且无法自动修复。写技术文章时,`ts`/`js` 代码块要么写成语法完整的片段(包在 `export default defineConfig({...})` 里),要么换用不参与 lint 的语言标签。
 
-- **`astro check` 会报 `'z' is deprecated`**:来自 zod v4 对命名空间式 `z` 导出的软弃用,计入 hints 而非 errors,**不影响退出码**。暂不处理。
+- ~~**`astro check` 会报 `'z' is deprecated`**~~:已处理 —— 改为显式安装并对齐 Astro 的 zod 版本后从 `zod` 直接导入,10 条 hints 清零。详见上文「`astro:content` 的 `z` 已废弃」。
 
 - **ESLint 的 import 排序会让 `// @ts-check` 失效**:脚手架生成的 `astro.config.mjs` 顶部有 `// @ts-check`,加入 `@astrojs/vue` 的 import 后被排序规则挤到了两条 import 之间。该指令必须位于文件首行才生效,挤到中间就成了普通注释。本项目已改用 `astro/config` 的 `defineConfig()` 提供类型,直接删掉该注释。
 
@@ -151,6 +255,19 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
   注意 `npm config list` 的输出里 token 已被自动脱敏为 `(protected)` —— 工具本身就提供了安全的查看方式,`cat` 反而绕过了这层保护。同类高危文件:`.npmrc`、`.env`、`.aws/credentials`、`.ssh/*`、`.docker/config.json`。
 
   **推论**:凭据一旦进入日志/会话记录就应视为已泄露,唯一可靠的补救是轮换,而非"删掉记录"。所以真正的防线在于一开始就不读它。
+
+- **注释拦不住人,断言才能**。`site` 占位域名原本靠一条 `// TODO` 注释提醒,但注释在构建流程里不产生任何作用。凡是"填错也不会报错"的配置项,都该配一道构建期断言,把静默失败前移成显式失败。同时要诚实标注断言的**边界** —— 本例的守卫只能识别 `example.com` 这类占位特征,拦不住一个拼错的真实域名,这一点必须写在注释和文档里,否则守卫本身会变成新的虚假安全感。
+
+- **样式"改不动"时,先分清是覆盖问题还是生成问题**。浅色模式下代码块顽固地保持深色,原因是 Shiki 把颜色写成了内联样式 —— 内联优先级压过一切外部 CSS,再怎么加选择器、加 `!important` 都是在错误的层面用力。解法在生成端(`defaultColor: false` 让它改吐变量),而非覆盖端。**遇到 CSS 覆盖失败,先看元素上有没有 `style` 属性,再决定往哪个方向使劲。**
+
+- **UI 类改动要用计算样式取证,别靠肉眼看截图**。验证代码块双主题时,深色截图上"代码块底色比页面略浅"这种差异肉眼很难判断对错。直接读计算值才是确定的证据:
+
+  ```js
+  getComputedStyle(document.querySelector('.prose pre')).backgroundColor
+  // dark → rgb(36, 41, 46)   light → rgb(255, 255, 255)
+  ```
+
+  截图用来判断"好不好看",计算样式用来判断"对不对"。两者不能互相替代。
 
 ## 待复盘问题
 

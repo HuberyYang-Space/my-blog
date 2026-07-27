@@ -1,0 +1,46 @@
+---
+import type { GetStaticPaths } from 'astro'
+import type { CollectionEntry } from 'astro:content'
+import PostCard from '../../components/PostCard.astro'
+import BaseLayout from '../../layouts/BaseLayout.astro'
+import { getAllTags, getPostsByTag } from '../../utils/posts'
+
+export const getStaticPaths: GetStaticPaths = async () => {
+  const tags = await getAllTags()
+
+  // 文章在 getStaticPaths 里一并取好:页面渲染阶段不必再过一次全集合。
+  return Promise.all(
+    tags.map(async ({ tag }) => ({
+      params: { tag },
+      props: { tag, posts: await getPostsByTag(tag) },
+    })),
+  )
+}
+
+interface Props {
+  tag: string
+  posts: CollectionEntry<'blog'>[]
+}
+
+const { tag, posts } = Astro.props
+---
+
+<BaseLayout
+  title={`标签:${tag}`}
+  description={`标记为 ${tag} 的全部文章,共 ${posts.length} 篇。`}
+>
+  <section class="py-4">
+    <h1 class="text-xl font-semibold tracking-tight">#{tag}</h1>
+    <p class="mt-2 text-sm text-text-mute">共 {posts.length} 篇</p>
+  </section>
+
+  <section class="mt-6">
+    {posts.map(post => <PostCard post={post} />)}
+  </section>
+
+  <nav class="mt-12">
+    <a href="/" class="text-sm text-text-mute transition-colors hover:text-primary">
+      ← 返回首页
+    </a>
+  </nav>
+</BaseLayout>

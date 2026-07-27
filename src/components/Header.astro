@@ -1,16 +1,25 @@
 ---
+import { SITE } from '../config'
 import SearchTrigger from './SearchTrigger.astro'
 import ThemeToggle from './ThemeToggle.vue'
 ---
 
 <header class="py-6">
   <nav class="flex items-center justify-between gap-4">
-    <a
-      href="/"
-      class="text-base font-semibold tracking-tight transition-colors hover:text-primary"
-    >
-      Hubery
-    </a>
+    <div class="flex items-baseline gap-5">
+      <a
+        href="/"
+        class="text-base font-semibold tracking-tight transition-colors hover:text-primary"
+      >
+        {SITE.title}
+      </a>
+      <a
+        href="/about/"
+        class="text-sm text-text-soft transition-colors hover:text-primary"
+      >
+        关于
+      </a>
+    </div>
 
     <div class="flex items-center gap-1">
       <SearchTrigger />

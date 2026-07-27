@@ -1,14 +1,15 @@
 ---
 import PostCard from '../components/PostCard.astro'
+import { SITE } from '../config'
 import BaseLayout from '../layouts/BaseLayout.astro'
 import { getPublishedPosts } from '../utils/posts'
 
 const posts = await getPublishedPosts()
 ---
 
-<BaseLayout title="Hubery" description="记录前端工程实践与技术思考。">
+<BaseLayout title={SITE.title} description={SITE.description}>
   <section class="py-4">
-    <p class="text-text-soft">记录前端工程实践与技术思考。</p>
+    <p class="text-text-soft">{SITE.description}</p>
   </section>
 
   <section class="mt-8">

@@ -8,28 +8,65 @@ interface Props {
 }
 
 const { post } = Astro.props
-const { title, description, date, updatedDate, tags } = post.data
+const { title, description, date, updatedDate, tags } = post.data;
 ---
 
-<BaseLayout title={title} description={description}>
-  {/*
+<BaseLayout
+  title={title}
+  description={description}
+  ogType="article"
+  publishedDate={date}
+>
+  {
+    /*
     data-pagefind-body 让 Pagefind 只索引文章正文所在的这棵子树。
     没有该属性时 Pagefind 会索引整页,页眉页脚的文字会污染每一条搜索结果的摘要。
     同时:只有文章页带此标记,意味着首页等列表页不会被索引成一条结果。
-  */}
+  */
+  }
   <article data-pagefind-body>
     <header class="mb-8 border-b border-border pb-6">
-      <h1 class="text-2xl font-semibold tracking-tight">{title}</h1>
-      <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-mute">
+      {/* data-pagefind-meta 把标题登记为条目元数据,而非正文的一部分 */}
+      <h1
+        class="text-2xl font-semibold tracking-tight"
+        data-pagefind-meta="title"
+      >
+        {title}
+      </h1>
+      {
+        /*
+        data-pagefind-ignore 把日期/标签排除出正文索引。
+        否则搜索结果摘要会以"2026年7月25日#CSS#前端工程"开头,把真正的正文挤掉。
+        标签的 data-pagefind-filter 不受影响 —— filter 的采集独立于正文索引。
+      */
+      }
+      <div
+        class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-mute"
+        data-pagefind-ignore
+      >
         <FormattedDate date={date} />
-        {updatedDate && (
-          <span>更新于 <FormattedDate date={updatedDate} /></span>
-        )}
-        {tags.length > 0 && (
-          <span class="flex flex-wrap gap-2">
-            {tags.map(tag => <span data-pagefind-filter="tag">#{tag}</span>)}
-          </span>
-        )}
+        {
+          updatedDate && (
+            <span>
+              更新于 <FormattedDate date={updatedDate} />
+            </span>
+          )
+        }
+        {
+          tags.length > 0 && (
+            <span class="flex flex-wrap gap-2">
+              {tags.map(tag => (
+                <a
+                  href={`/tags/${tag}/`}
+                  class="transition-colors hover:text-primary"
+                  data-pagefind-filter="tag"
+                >
+                  #{tag}
+                </a>
+              ))}
+            </span>
+          )
+        }
       </div>
     </header>
 
@@ -39,7 +76,10 @@ const { title, description, date, updatedDate, tags } = post.data
   </article>
 
   <nav class="mt-12">
-    <a href="/" class="text-sm text-text-mute transition-colors hover:text-primary">
+    <a
+      href="/"
+      class="text-sm text-text-mute transition-colors hover:text-primary"
+    >
       ← 返回首页
     </a>
   </nav>

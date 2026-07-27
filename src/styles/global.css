@@ -205,7 +205,7 @@ pre {
   border-radius: 4px;
 }
 
-/* 代码块 —— 背景色交给 Shiki 主题,这里只管容器 */
+/* 代码块 —— 容器样式 */
 .prose pre {
   padding: 1em 1.15em;
   overflow-x: auto;
@@ -213,6 +213,22 @@ pre {
   line-height: 1.6;
   border: 1px solid var(--c-border);
   border-radius: 6px;
+}
+
+/* 代码块配色跟随站点主题。
+   astro.config.ts 配了 shikiConfig.defaultColor: false,Shiki 因此在 <pre> 与每个
+   高亮 token 上同时输出 --shiki-light / --shiki-dark 两组变量,由这里二选一取用。
+   若不这么做,Shiki 会把单一主题的颜色写成内联样式,浅色页面里会嵌一整块深色代码。 */
+.prose pre,
+.prose pre span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+.dark .prose pre,
+.dark .prose pre span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
 }
 
 .prose hr {

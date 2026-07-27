@@ -2,7 +2,8 @@
 
 一个 Markdown 驱动的静态个人博客,风格克制极简。基于 Astro 构建,以 Vue 交互岛屿实现主题切换,内置全文搜索。
 
-> 🚧 开发中。当前进度:内容层、文章页、双主题与搜索均已跑通;视觉风格待细化,RSS / 评论 / 阅读时长 / i18n 尚未实现。
+> 🚧 开发中。当前进度:内容层、文章页、双主题、搜索、标签页、RSS、sitemap 与社交分享元信息均已跑通;
+> 视觉风格待细化,评论 / 阅读时长 / i18n 尚未实现。
 
 ## 技术栈
 
@@ -68,13 +69,14 @@ draft: false # 可选,默认 false
 /
 ├── public/                    # 静态资源,原样拷贝至产物根目录
 ├── src/
+│   ├── config.ts              # 站点配置(站名/描述/域名/OG 图)的唯一真源
 │   ├── content.config.ts      # Content Collection schema(根级,非 content/config.ts)
 │   ├── content/blog/*.md      # 文章正文
-│   ├── layouts/               # BaseLayout(含防闪烁脚本)/ PostLayout
+│   ├── layouts/               # BaseLayout(含防闪烁脚本 + OG 元信息)/ PostLayout
 │   ├── components/            # ThemeToggle.vue 是全站唯一的 Vue 岛屿
-│   ├── pages/                 # 文件路由
+│   ├── pages/                 # 文件路由(含 tags/[tag]、about、404、rss.xml)
 │   ├── styles/global.css      # 双主题变量 + reset + .prose
-│   └── utils/posts.ts         # 文章查询(草稿过滤的唯一真源)
+│   └── utils/posts.ts         # 文章与标签查询(草稿过滤的唯一真源)
 ├── astro.config.ts            # Astro 配置与集成
 ├── uno.config.ts              # UnoCSS 配置
 ├── eslint.config.js           # ESLint 配置
@@ -90,7 +92,14 @@ pnpm build
 npx serve dist
 ```
 
-> ⚠️ 部署前请先将 `astro.config.ts` 中的 `site` 由占位值 `https://blog.example.com` 改为实际域名 —— sitemap、RSS 与 OG 图均依赖该值生成绝对 URL。
+> ⚠️ 部署前请核对 `src/config.ts` 中的 `SITE.url` 是否为实际域名 —— canonical、sitemap、RSS 与 OG 图均依赖该值生成绝对 URL。
+> `astro.config.ts` 里的构建守卫会拦下 `example.com` 这类占位值,但拦不住写错的真实域名。
+
+站点同时输出:
+
+- `/sitemap-index.xml` —— 由 `@astrojs/sitemap` 生成
+- `/rss.xml` —— 订阅源,与站点共用同一套草稿过滤逻辑
+- `/404.html` —— 静态托管平台按约定用作兜底页
 
 ## 相关文档
 

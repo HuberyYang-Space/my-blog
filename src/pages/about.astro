@@ -1,0 +1,29 @@
+---
+import { SITE } from '../config'
+import BaseLayout from '../layouts/BaseLayout.astro'
+---
+
+<BaseLayout title="关于" description={`关于 ${SITE.title} 与这个站点。`}>
+  <section class="py-4">
+    <h1 class="text-xl font-semibold tracking-tight">关于</h1>
+  </section>
+
+  {/* TODO: 占位文案,替换为真实自我介绍 */}
+  <section class="prose mt-6">
+    <p>你好,我是 {SITE.author},一名前端工程师。</p>
+    <p>
+      这个站点用来记录工程实践中的思考与踩坑 —— 那些当时想明白了、
+      过段时间又会忘掉的东西,写下来比留在脑子里可靠。
+    </p>
+    <p>
+      站点本身用 Astro 构建,内容是纯 Markdown,交互只保留了主题切换和搜索两处,
+      源码在 <a href="https://github.com/">GitHub</a>。
+    </p>
+  </section>
+
+  <nav class="mt-12">
+    <a href="/" class="text-sm text-text-mute transition-colors hover:text-primary">
+      ← 返回首页
+    </a>
+  </nav>
+</BaseLayout>
