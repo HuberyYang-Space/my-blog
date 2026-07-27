@@ -37,6 +37,14 @@
   color-scheme: dark;
 }
 
+/* pagefind-modal-trigger 在客户端 JS 定义自定义元素前是空标签(0 尺寸),
+   JS 加载完成插入按钮内容后才撑开到实际宽度 —— 预留尺寸避免整页跳转时头部跳动。
+   138×36 是 .pf-trigger-btn 的实测尺寸。 */
+pagefind-modal-trigger {
+  min-width: 138px;
+  min-height: 36px;
+}
+
 /* ==========================================================================
    Reset
    手写而非依赖 UnoCSS 的 injectReset(该选项需额外依赖)

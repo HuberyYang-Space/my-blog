@@ -2,6 +2,22 @@
 import { SITE } from '../config'
 import SearchTrigger from './SearchTrigger.astro'
 import ThemeToggle from './ThemeToggle.vue'
+
+const { pathname } = Astro.url
+const isHome = pathname === '/'
+const isAbout = pathname.startsWith('/about')
+
+// 激活态用 text-text(取消弱化)+ 底部下划线;非激活态下划线设为透明而非移除,
+// 避免切换激活态时链接的盒模型高度发生变化。
+function navLinkClass(active: boolean) {
+  // border-0 先把四边宽度清零,border-solid 补上 style(项目手写 reset 没有像
+  // Tailwind preflight 那样预置 border-style: solid,不补的话 style 停在初始值
+  // none,宽度会被折算成 0),最后 border-b-2 单独把底边宽度改回来 ——
+  // 三者都不能省,否则要么四边都不显示,要么变成四边都有框。
+  return `border-0 border-b-2 border-solid pb-0.5 transition-colors hover:text-primary ${
+    active ? 'border-primary text-text' : 'border-transparent text-text-soft'
+  }`
+}
 ---
 
 <header class="py-6">
@@ -9,13 +25,15 @@ import ThemeToggle from './ThemeToggle.vue'
     <div class="flex items-baseline gap-5">
       <a
         href="/"
-        class="text-base font-semibold tracking-tight transition-colors hover:text-primary"
+        aria-current={isHome ? 'page' : undefined}
+        class={`text-base font-semibold tracking-tight ${navLinkClass(isHome)}`}
       >
         {SITE.title}
       </a>
       <a
         href="/about/"
-        class="text-sm text-text-soft transition-colors hover:text-primary"
+        aria-current={isAbout ? 'page' : undefined}
+        class={`text-sm ${navLinkClass(isAbout)}`}
       >
         关于
       </a>
