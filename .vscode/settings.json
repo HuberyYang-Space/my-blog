@@ -1,0 +1,37 @@
+{
+  // 格式化统一交给 ESLint(@antfu/eslint-config),不使用 Prettier。
+  // 注意:Astro 官方扩展通过 @astrojs/language-server 内置了 volar-service-prettier,
+  // 若不显式关闭,保存 .astro 时会被 Prettier 格式化成双引号+分号风格,与 ESLint 规则互相打架。
+  "prettier.enable": false,
+  "editor.formatOnSave": false,
+  "astro.format.enable": false,
+
+  // 保存时由 ESLint 做修复式格式化
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  // 让 ESLint 接管这些语言(@antfu/eslint-config 覆盖的范围)
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "astro",
+    "html",
+    "markdown",
+    "json",
+    "jsonc",
+    "yaml"
+  ],
+
+  // 关掉各语言的内置格式化器,避免与 ESLint 抢
+  "[astro]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+  "[vue]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+  "[typescript]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+  "[javascript]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+  "[json]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+  "[jsonc]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+  "[markdown]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" }
+}
