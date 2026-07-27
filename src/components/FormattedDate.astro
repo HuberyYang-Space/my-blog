@@ -6,10 +6,13 @@ interface Props {
 
 const { date, class: className } = Astro.props
 
+// frontmatter 的纯日期字符串经 z.coerce.date() 会解析成 UTC 零点,
+// 这里必须显式指定 timeZone: 'UTC',否则构建机本地时区会让日期整体偏移一天。
 const formatted = date.toLocaleDateString('zh-CN', {
   year: 'numeric',
   month: 'long',
   day: 'numeric',
+  timeZone: 'UTC',
 })
 ---
 

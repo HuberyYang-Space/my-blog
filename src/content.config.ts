@@ -11,7 +11,8 @@ const blog = defineCollection({
     description: z.string(),
     date: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    tags: z.array(z.string()).default([]),
+    // trim 避免空白导致的重复标签,regex 避免 '/' 破坏 /tags/[tag]/ 路由
+    tags: z.array(z.string().trim().min(1).regex(/^[^/]+$/, '标签不能包含 /')).default([]),
     draft: z.boolean().default(false),
     // 预留:封面图 / OG 图,用 image() 走 Astro 的图片优化
     cover: image().optional(),

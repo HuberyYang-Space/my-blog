@@ -19,28 +19,26 @@ export async function getPublishedPosts(): Promise<CollectionEntry<'blog'>[]> {
 }
 
 /**
- * 取全部标签及其文章数,按文章数倒序、同数按标签名排序。
+ * 按标签分组文章,按文章数倒序、同数按标签名排序;组内顺序沿用日期倒序。
  *
- * 走 getPublishedPosts() 而非直接 getCollection —— 草稿里的标签不该出现在标签页,
- * 也不该凭空生成一个 /tags/xxx 路由。
+ * 只调用一次 getPublishedPosts() 并在内存里分组 —— 避免每个标签各自重新
+ * getCollection + 排序一遍(标签数越多,重复扫描的浪费越大)。
  */
-export async function getAllTags(): Promise<{ tag: string, count: number }[]> {
+export async function getPostsGroupedByTag(): Promise<{ tag: string, posts: CollectionEntry<'blog'>[] }[]> {
   const posts = await getPublishedPosts()
-  const counts = new Map<string, number>()
+  const groups = new Map<string, CollectionEntry<'blog'>[]>()
 
   for (const post of posts) {
     for (const tag of post.data.tags) {
-      counts.set(tag, (counts.get(tag) ?? 0) + 1)
+      const group = groups.get(tag)
+      if (group)
+        group.push(post)
+      else
+        groups.set(tag, [post])
     }
   }
 
-  return [...counts.entries()]
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'zh-CN'))
-}
-
-/** 取某个标签下的全部文章,顺序沿用 getPublishedPosts 的日期倒序。 */
-export async function getPostsByTag(tag: string): Promise<CollectionEntry<'blog'>[]> {
-  const posts = await getPublishedPosts()
-  return posts.filter(post => post.data.tags.includes(tag))
+  return [...groups.entries()]
+    .map(([tag, tagPosts]) => ({ tag, posts: tagPosts }))
+    .sort((a, b) => b.posts.length - a.posts.length || a.tag.localeCompare(b.tag, 'zh-CN'))
 }

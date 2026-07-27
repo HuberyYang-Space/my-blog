@@ -3,18 +3,16 @@ import type { GetStaticPaths } from 'astro'
 import type { CollectionEntry } from 'astro:content'
 import PostCard from '../../components/PostCard.astro'
 import BaseLayout from '../../layouts/BaseLayout.astro'
-import { getAllTags, getPostsByTag } from '../../utils/posts'
+import { getPostsGroupedByTag } from '../../utils/posts'
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const tags = await getAllTags()
+  // 一次分组拿到全部标签及各自的文章列表,不再逐标签重复扫描全集合。
+  const groups = await getPostsGroupedByTag()
 
-  // 文章在 getStaticPaths 里一并取好:页面渲染阶段不必再过一次全集合。
-  return Promise.all(
-    tags.map(async ({ tag }) => ({
-      params: { tag },
-      props: { tag, posts: await getPostsByTag(tag) },
-    })),
-  )
+  return groups.map(({ tag, posts }) => ({
+    params: { tag },
+    props: { tag, posts },
+  }))
 }
 
 interface Props {

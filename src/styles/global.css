@@ -18,6 +18,11 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
   color-scheme: light;
+
+  /* Pagefind 弹层的配色跟随站点主题。
+     组件库自带 [data-pf-theme="dark"] 的整套暗色变量,这里只覆盖需要对齐的几项。 */
+  --pf-font: var(--font-sans);
+  --pf-border-radius: 6px;
 }
 
 .dark {
@@ -30,13 +35,6 @@
   --c-primary: #5eb8aa;
 
   color-scheme: dark;
-}
-
-/* Pagefind 弹层的配色跟随站点主题。
-   组件库自带 [data-pf-theme="dark"] 的整套暗色变量,这里只覆盖需要对齐的几项。 */
-:root {
-  --pf-font: var(--font-sans);
-  --pf-border-radius: 6px;
 }
 
 /* ==========================================================================
