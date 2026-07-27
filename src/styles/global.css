@@ -37,6 +37,27 @@
   color-scheme: dark;
 }
 
+/* 头部:半透明玻璃背景,随主题变量自动适配深浅色,与下方内容保持模糊分层。
+   工具类无法干净表达 color-mix(),单独具名一条规则。 */
+.site-header {
+  position: relative;
+  background-color: color-mix(in srgb, var(--c-bg) 72%, transparent);
+  /* 投影颜色从 --c-text 派生(而非写死黑色),深浅主题下都只是"轻轻托起"的程度,
+     不会在浅色主题下发灰、深色主题下又糊成一片。 */
+  box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--c-text) 30%, transparent);
+  transition: background-color 0.2s ease;
+}
+
+/* 底部分隔线做成两端渐隐、中段实色,比通栏一条硬线更精致,
+   也呼应整站克制留白的调性(不做满宽度的强边框)。 */
+.site-header::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--c-border) 20%, var(--c-border) 80%, transparent);
+}
+
 /* pagefind-modal-trigger 在客户端 JS 定义自定义元素前是空标签(0 尺寸),
    JS 加载完成插入按钮内容后才撑开到实际宽度 —— 预留尺寸避免整页跳转时头部跳动。
    138×36 是 .pf-trigger-btn 的实测尺寸。 */
