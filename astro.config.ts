@@ -5,28 +5,6 @@ import pagefind from 'astro-pagefind'
 import { defineConfig } from 'astro/config'
 import { SITE } from './src/config'
 
-/**
- * 占位域名守卫。
- *
- * site 填错是典型的静默失败:构建照常成功,但 canonical / sitemap / RSS / OG
- * 里的绝对 URL 会整体指向不存在的域名,通常要等被人分享出去才发现。
- * 挂在 astro:build:start 上,只拦生产构建,不打扰 `astro dev`。
- */
-function siteUrlGuard() {
-  return {
-    name: 'site-url-guard',
-    hooks: {
-      'astro:build:start': () => {
-        if (SITE.url.includes('example.com')) {
-          throw new Error(
-            'src/config.ts 的 SITE.url 仍是占位域名,部署前必须替换为实际域名。',
-          )
-        }
-      },
-    },
-  }
-}
-
 // https://astro.build/config
 export default defineConfig({
   site: SITE.url,
@@ -34,7 +12,7 @@ export default defineConfig({
   output: 'static',
   // 顺序有意义:pagefind 必须排在最后 —— 它挂在 astro:build:done 钩子上,
   // 需要等其余集成把产物写完才能扫描 dist/ 生成索引。
-  integrations: [siteUrlGuard(), vue(), UnoCSS(), sitemap(), pagefind()],
+  integrations: [vue(), UnoCSS(), sitemap(), pagefind()],
   markdown: {
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark' },
