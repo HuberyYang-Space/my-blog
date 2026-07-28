@@ -46,20 +46,10 @@
      header 露出的左右留白区域只有半透明色、没有模糊,和中间的 nav 区域不一致。 */
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  /* 投影颜色从 --c-text 派生(而非写死黑色),深浅主题下都只是"轻轻托起"的程度,
-     不会在浅色主题下发灰、深色主题下又糊成一片。 */
-  box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--c-text) 30%, transparent);
+  /* 底部用统一细线边框,复用全站已有的 --c-border 语义(与代码块、表格等一致),
+     比投影更克制、也更贴合现代扁平化的边框处理。 */
+  border-bottom: 1px solid var(--c-border);
   transition: background-color 0.2s ease;
-}
-
-/* 底部分隔线做成两端渐隐、中段实色,比通栏一条硬线更精致,
-   也呼应整站克制留白的调性(不做满宽度的强边框)。 */
-.site-header::after {
-  content: '';
-  position: absolute;
-  inset: auto 0 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, var(--c-border) 20%, var(--c-border) 80%, transparent);
 }
 
 /* pagefind-modal-trigger 在客户端 JS 定义自定义元素前是空标签(0 尺寸),
