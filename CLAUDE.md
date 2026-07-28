@@ -20,7 +20,7 @@ Markdown 驱动的静态个人博客,风格克制极简,Astro + Vue 交互岛屿
 ## 待办提醒
 
 - ⚠️ `src/config.ts` 的 `SITE.url` 目前是**暂定域名** `https://blog.hubery.dev`,上线前需与实际部署地址核对。canonical / sitemap / RSS / OG 图都依赖它生成绝对 URL。
-  `astro.config.ts` 的 `siteUrlGuard` 集成会在生产构建时拦下 `example.com` 这类占位值,但**拦不住写错的真实域名** —— 守卫不能替代核对。
+  构建期已不再有占位域名守卫(`astro.config.ts` 的 `siteUrlGuard` 已移除),核对完全靠人工,上线前务必手动确认。
 - `src/pages/about.astro` 的正文是占位文案,待替换为真实自我介绍。
 
 ## 目录结构约定
