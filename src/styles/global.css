@@ -13,6 +13,12 @@
   --c-border: #e4e4e7;
   --c-primary: #2b7a6f;
 
+  /* 首页全站常驻氛围光背景用,RGB 三元组(非十六进制)是为了配合 rgb(... / <alpha>)
+     语法灵活控制透明度。glow-1 复用 --c-primary 的色值,glow-2 是新增的暖色调
+     (珊瑚橙),只在氛围光背景里出现,不作为通用强调色。 */
+  --c-glow-1: 43 122 111;
+  --c-glow-2: 224 138 79;
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -33,6 +39,10 @@
   --c-text-mute: #8a8a91;
   --c-border: #2a2a30;
   --c-primary: #5eb8aa;
+
+  /* 暗色下 glow-2 比浅色更柔和(饱和度降低),避免深底衬托下过艳刺眼 */
+  --c-glow-1: 94 184 170;
+  --c-glow-2: 214 150 100;
 
   color-scheme: dark;
 }
@@ -75,6 +85,87 @@ pagefind-modal-trigger {
    跟 .site-header 的 color-mix() 一样单独具名一条规则。 */
 .post-grid {
   grid-template-columns: minmax(14rem, 1fr) minmax(0, 48rem) minmax(14rem, 1fr);
+}
+
+/* ==========================================================================
+   首页:全站常驻氛围光背景
+   position: fixed 让光斑相对视口铺满,不受 index.astro 里嵌套的 max-w-2xl 窄栏
+   宽度限制,也不需要 100vw 破框 hack——不会有滚动条宽度引发横向滚动条的风险。
+   只需祖先节点(BaseLayout/Header)都没有 transform/filter/perspective/contain,
+   fixed 定位就会一直相对浏览器视口本身,已核对过没有这类属性。
+   两个对角光斑常驻在文章列表文字背后,所以透明度比"仅首屏出现"时更低更克制。
+   ========================================================================== */
+
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero {
+  padding: 4rem 0 2.5rem;
+}
+
+.hero h1 {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin-top: 0.75rem;
+  font-size: 1.05rem;
+}
+
+.glow-a,
+.glow-b {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* 右上角,冷色调 —— 刻意避开左上角的 <h1> 标题,窄屏下内容列几乎顶到视口边缘,
+   光斑堆在标题背后会拉低文字对比度。 */
+.glow-a {
+  top: -14rem;
+  right: -10rem;
+  width: 34rem;
+  height: 34rem;
+  background: radial-gradient(circle, rgb(var(--c-glow-1) / 0.24), transparent 70%);
+  filter: blur(90px);
+  animation: ambient-drift-a 26s ease-in-out infinite alternate;
+}
+
+/* 左下角,暖色调,与 glow-a 对角分布 */
+.glow-b {
+  bottom: -16rem;
+  left: -12rem;
+  width: 32rem;
+  height: 32rem;
+  background: radial-gradient(circle, rgb(var(--c-glow-2) / 0.2), transparent 70%);
+  filter: blur(100px);
+  animation: ambient-drift-b 32s ease-in-out infinite alternate;
+}
+
+@keyframes ambient-drift-a {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+
+  to {
+    transform: translate(-2rem, 2.5rem) scale(1.08);
+  }
+}
+
+@keyframes ambient-drift-b {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+
+  to {
+    transform: translate(2rem, -2rem) scale(0.95);
+  }
 }
 
 /* ==========================================================================

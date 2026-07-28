@@ -8,7 +8,13 @@ const posts = await getPublishedPosts()
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>
-  <section class="py-4">
+  <div class="ambient-glow" aria-hidden="true">
+    <span class="glow-a"></span>
+    <span class="glow-b"></span>
+  </div>
+
+  <section class="hero">
+    <h1>{SITE.title}</h1>
     <p class="text-text-soft">{SITE.description}</p>
   </section>
 
