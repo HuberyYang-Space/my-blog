@@ -11,12 +11,19 @@ interface Props {
   ogType?: 'website' | 'article'
   /** 仅 ogType 为 'article' 时有意义,输出 article:published_time */
   publishedDate?: Date
+  /** 加宽正文容器(max-w-2xl → max-w-3xl)。目前仅文章详情页需要,给代码块/表格留呼吸空间 */
+  wide?: boolean
 }
 
-const { title, description, ogType = 'website', publishedDate } = Astro.props
+const { title, description, ogType = 'website', publishedDate, wide = false } = Astro.props
 const canonical = new URL(Astro.url.pathname, Astro.site)
 // OG 图必须是绝对 URL —— 抓取方(微信/Twitter/Slack)不在本站上下文中解析相对路径
-const ogImage = new URL(SITE.ogImage, Astro.site);
+const ogImage = new URL(SITE.ogImage, Astro.site)
+
+// aside 具名插槽承载文章大纲。只有传入内容时才腾出右侧 sticky 列,
+// 其余页面(首页/about/标签页)不受影响,不会凭空多出空白列。
+const hasAside = Astro.slots.has('aside')
+const contentWidth = wide ? 'max-w-3xl' : 'max-w-2xl'
 ---
 
 <!doctype html>
@@ -86,11 +93,24 @@ const ogImage = new URL(SITE.ogImage, Astro.site);
 
   <body>
     <Header />
-    <div class="mx-auto max-w-2xl min-h-screen flex flex-col px-6">
-      <main class="flex-1">
-        <slot />
+    <div
+      class={`mx-auto min-h-screen flex flex-col px-6 ${hasAside ? 'max-w-5xl' : contentWidth}`}
+    >
+      <main class={`flex-1 ${hasAside ? 'lg:flex lg:items-start lg:gap-10' : ''}`}>
+        <div class={`w-full ${hasAside ? contentWidth : ''}`}>
+          <slot />
+        </div>
+        {
+          hasAside && (
+            <aside class="hidden lg:sticky lg:top-20 lg:block lg:w-56 lg:shrink-0">
+              <slot name="aside" />
+            </aside>
+          )
+        }
       </main>
-      <Footer />
+      <div class={`w-full ${hasAside ? `${contentWidth} mx-auto` : ''}`}>
+        <Footer />
+      </div>
     </div>
   </body>
 </html>

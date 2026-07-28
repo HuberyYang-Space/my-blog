@@ -10,6 +10,10 @@ import { getPublishedPosts } from '../../utils/posts'
 // Astro.props 会退化成 unknown。
 interface Props {
   post: CollectionEntry<'blog'>
+  /** 较早发布的文章(按日期倒序排列,当前文章之后的一项) */
+  olderPost?: CollectionEntry<'blog'>
+  /** 较新发布的文章(按日期倒序排列,当前文章之前的一项) */
+  newerPost?: CollectionEntry<'blog'>
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
@@ -17,17 +21,22 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // 生产构建下草稿不在此列表中 → 不生成 html → 也就不会被 Pagefind 索引。
   const posts = await getPublishedPosts()
 
-  return posts.map(post => ({
+  return posts.map((post, index) => ({
     params: { slug: post.id },
-    props: { post },
+    props: {
+      post,
+      // 相邻项在此一次性算好,详情页无需再各自重新拉取/排序全量列表
+      olderPost: index < posts.length - 1 ? posts[index + 1] : undefined,
+      newerPost: index > 0 ? posts[index - 1] : undefined,
+    },
   }))
 }
 
-const { post } = Astro.props
+const { post, olderPost, newerPost } = Astro.props
 // Astro 5+ 的独立 render() API(旧版的 entry.render() 已废弃)
-const { Content } = await render(post)
+const { Content, headings } = await render(post)
 ---
 
-<PostLayout post={post}>
+<PostLayout post={post} headings={headings} olderPost={olderPost} newerPost={newerPost}>
   <Content />
 </PostLayout>
