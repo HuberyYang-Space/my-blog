@@ -94,15 +94,15 @@ const contentWidth = wide ? 'max-w-3xl' : 'max-w-2xl'
   <body>
     <Header />
     <div
-      class={`mx-auto min-h-screen flex flex-col px-6 ${hasAside ? 'max-w-5xl' : contentWidth}`}
+      class={`mx-auto min-h-screen flex flex-col px-6 ${hasAside ? 'post-shell' : contentWidth}`}
     >
-      <main class={`flex-1 ${hasAside ? 'lg:flex lg:items-start lg:gap-10' : ''}`}>
-        <div class={`w-full ${hasAside ? contentWidth : ''}`}>
+      <main class={`flex-1 ${hasAside ? 'post-grid lg:grid lg:items-start lg:gap-x-10' : ''}`}>
+        <div class={`mx-auto w-full ${hasAside ? `${contentWidth} lg:col-start-2` : contentWidth}`}>
           <slot />
         </div>
         {
           hasAside && (
-            <aside class="hidden lg:sticky lg:top-20 lg:block lg:w-56 lg:shrink-0">
+            <aside class="hidden lg:sticky lg:top-20 lg:col-start-3 lg:block lg:w-56 lg:justify-self-end lg:pt-6">
               <slot name="aside" />
             </aside>
           )
