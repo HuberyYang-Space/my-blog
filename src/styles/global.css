@@ -42,6 +42,10 @@
 .site-header {
   position: relative;
   background-color: color-mix(in srgb, var(--c-bg) 72%, transparent);
+  /* 模糊必须加在这条全宽规则上,而不是内层居中的 nav —— 否则视口宽于内容列时,
+     header 露出的左右留白区域只有半透明色、没有模糊,和中间的 nav 区域不一致。 */
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   /* 投影颜色从 --c-text 派生(而非写死黑色),深浅主题下都只是"轻轻托起"的程度,
      不会在浅色主题下发灰、深色主题下又糊成一片。 */
   box-shadow: 0 8px 24px -16px color-mix(in srgb, var(--c-text) 30%, transparent);
