@@ -1,10 +1,13 @@
 ---
 import PostCard from '../components/PostCard.astro'
+import TagLink from '../components/TagLink.astro'
 import { SITE } from '../config'
 import BaseLayout from '../layouts/BaseLayout.astro'
-import { getPublishedPosts } from '../utils/posts'
+import { getPostsGroupedByTag, getPublishedPosts } from '../utils/posts'
 
 const posts = await getPublishedPosts()
+// 复用标签归档页现成的排序规则(文章数倒序、同数按标签名排序),不新增工具函数。
+const tags = (await getPostsGroupedByTag()).map(group => group.tag)
 ---
 
 <BaseLayout title={SITE.title} description={SITE.description}>
@@ -17,6 +20,12 @@ const posts = await getPublishedPosts()
     <h1>{SITE.title}<span class="hero-cursor" aria-hidden="true">_</span></h1>
     <p class="text-text-soft">{SITE.description}</p>
   </section>
+
+  {tags.length > 0 && (
+    <nav aria-label="标签导航" class="mt-6 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-mute font-mono">
+      {tags.map(tag => <TagLink tag={tag} />)}
+    </nav>
+  )}
 
   <section class="mt-8">
     {posts.length === 0

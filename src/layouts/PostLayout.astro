@@ -4,6 +4,7 @@ import type { CollectionEntry } from 'astro:content'
 import FormattedDate from '../components/FormattedDate.astro'
 import PostNav from '../components/PostNav.astro'
 import PostOutline from '../components/PostOutline.astro'
+import TagLink from '../components/TagLink.astro'
 import BaseLayout from './BaseLayout.astro'
 
 interface Props {
@@ -73,13 +74,7 @@ const showOutline = h2Count >= 3
           tags.map(tag => (
             <span class="flex items-center gap-2">
               <span aria-hidden="true">·</span>
-              <a
-                href={`/tags/${tag}/`}
-                class="transition-colors hover:text-primary"
-                data-pagefind-filter="tag"
-              >
-                #{tag}
-              </a>
+              <TagLink tag={tag} />
             </span>
           ))
         }
