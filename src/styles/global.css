@@ -140,6 +140,31 @@ pagefind-modal-trigger {
   font-size: 1.05rem;
 }
 
+.hero-cursor {
+  display: inline-block;
+  margin-left: 0.05em;
+  font-weight: 300;
+  animation: hero-cursor-breathe 1.5s ease-in-out infinite;
+}
+
+@keyframes hero-cursor-breathe {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 .glow-a,
 .glow-b {
   position: absolute;
