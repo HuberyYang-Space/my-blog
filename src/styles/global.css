@@ -129,6 +129,19 @@ pagefind-modal-trigger {
   padding: 2rem 0;
 }
 
+.hero-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--c-border);
+}
+
 .hero h1 {
   font-size: clamp(2.25rem, 5vw, 3.5rem);
   font-weight: 700;

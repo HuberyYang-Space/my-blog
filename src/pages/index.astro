@@ -17,7 +17,18 @@ const tags = (await getPostsGroupedByTag()).map(group => group.tag)
   </div>
 
   <section class="hero">
-    <h1>{SITE.title}<span class="hero-cursor" aria-hidden="true">_</span></h1>
+    <div class="hero-heading">
+      <img
+        src="/avatar.png"
+        alt={SITE.author}
+        width="44"
+        height="44"
+        class="hero-avatar"
+        loading="eager"
+        decoding="async"
+      />
+      <h1>{SITE.title}<span class="hero-cursor" aria-hidden="true">_</span></h1>
+    </div>
     <p class="text-text-soft">{SITE.description}</p>
   </section>
 
