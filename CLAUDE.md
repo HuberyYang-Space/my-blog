@@ -40,3 +40,13 @@ Markdown 驱动的静态个人博客,风格克制极简,Astro + Vue 交互岛屿
 
 - `SPEC.md` —— 完整技术方案与执行步骤
 - `STUDY.md` —— 学习/复盘笔记
+
+## Agent skills
+
+### Issue tracker
+
+Issues 通过 GitHub Issues 管理(仓库 `Hub-yang/my-blog`),使用 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
+
+### Domain docs
+
+单上下文(single-context)布局,`CONTEXT.md` + `docs/adr/` 位于仓库根目录。详见 `docs/agents/domain.md`。

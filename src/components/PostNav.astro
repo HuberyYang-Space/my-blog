@@ -23,8 +23,8 @@ const { older, newer } = Astro.props
           class="group border border-transparent rounded-md p-3 transition-colors hover:border-border"
         >
           <span class="flex items-center gap-1.5 text-xs text-text-mute">
+            上一篇
             <span class="i-ph-arrow-left transition-transform group-hover:-translate-x-0.5" />
-            较新文章
           </span>
           <span class="mt-1 block text-sm text-text-soft transition-colors group-hover:text-primary">
             {newer.data.title}
@@ -37,7 +37,7 @@ const { older, newer } = Astro.props
           class="group border border-transparent rounded-md p-3 text-right transition-colors sm:col-start-2 hover:border-border"
         >
           <span class="flex items-center justify-end gap-1.5 text-xs text-text-mute">
-            较早文章
+            下一篇
             <span class="i-ph-arrow-right transition-transform group-hover:translate-x-0.5" />
           </span>
           <span class="mt-1 block text-sm text-text-soft transition-colors group-hover:text-primary">

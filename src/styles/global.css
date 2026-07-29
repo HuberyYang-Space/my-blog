@@ -94,6 +94,8 @@ pagefind-modal-trigger {
    只需祖先节点(BaseLayout/Header)都没有 transform/filter/perspective/contain,
    fixed 定位就会一直相对浏览器视口本身,已核对过没有这类属性。
    两个对角光斑常驻在文章列表文字背后,所以透明度比"仅首屏出现"时更低更克制。
+   两个圆各自走独立的多点闭环路径("视差漂浮"),百分比停靠点、时长、相位都
+   刻意错开,避免看起来像 from/to 两点式的直线来回("乒乓")那样机械。
    ========================================================================== */
 
 .ambient-glow {
@@ -134,7 +136,7 @@ pagefind-modal-trigger {
   height: 34rem;
   background: radial-gradient(circle, rgb(var(--c-glow-1) / 0.24), transparent 70%);
   filter: blur(90px);
-  animation: ambient-drift-a 26s ease-in-out infinite alternate;
+  animation: ambient-drift-a 56s ease-in-out infinite;
 }
 
 /* 左下角,暖色调,与 glow-a 对角分布 */
@@ -145,26 +147,45 @@ pagefind-modal-trigger {
   height: 32rem;
   background: radial-gradient(circle, rgb(var(--c-glow-2) / 0.2), transparent 70%);
   filter: blur(100px);
-  animation: ambient-drift-b 32s ease-in-out infinite alternate;
+  animation: ambient-drift-b 84s ease-in-out infinite;
+  animation-delay: -30s;
 }
 
 @keyframes ambient-drift-a {
-  from {
-    transform: translate(0, 0) scale(1);
+  0%,
+  100% {
+    transform: translate(0, 0);
   }
 
-  to {
-    transform: translate(-2rem, 2.5rem) scale(1.08);
+  22% {
+    transform: translate(-2.4rem, 1.6rem);
+  }
+
+  48% {
+    transform: translate(-3.6rem, -1.2rem);
+  }
+
+  74% {
+    transform: translate(-1rem, -3rem);
   }
 }
 
 @keyframes ambient-drift-b {
-  from {
-    transform: translate(0, 0) scale(1);
+  0%,
+  100% {
+    transform: translate(0, 0);
   }
 
-  to {
-    transform: translate(2rem, -2rem) scale(0.95);
+  28% {
+    transform: translate(2.8rem, -2rem);
+  }
+
+  56% {
+    transform: translate(1rem, 2.6rem);
+  }
+
+  82% {
+    transform: translate(-1.6rem, 1rem);
   }
 }
 
