@@ -22,12 +22,12 @@ const tags = (await getPostsGroupedByTag()).map(group => group.tag)
   </section>
 
   {tags.length > 0 && (
-    <nav aria-label="标签导航" class="mt-6 flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-mute font-mono">
+    <nav aria-label="标签导航" class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-mute font-mono">
       {tags.map(tag => <TagLink tag={tag} />)}
     </nav>
   )}
 
-  <section class="mt-8">
+  <section class="mt-2">
     {posts.length === 0
       ? <p class="py-8 text-text-mute">还没有文章。</p>
       : posts.map(post => <PostCard post={post} />)}
