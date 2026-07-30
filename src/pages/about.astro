@@ -11,15 +11,34 @@ import BaseLayout from '../layouts/BaseLayout.astro'
   {/* TODO: 占位文案,替换为真实自我介绍 */}
   <section class="prose mt-6">
     <p>你好,我是 {SITE.author},一名前端工程师。</p>
-    <p>
-      这个站点用来记录工程实践中的思考与踩坑 —— 那些当时想明白了、
-      过段时间又会忘掉的东西,写下来比留在脑子里可靠。
-    </p>
-    <p>
-      站点本身用 Astro 构建,内容是纯 Markdown,交互只保留了主题切换和搜索两处,
-      源码在 <a href="https://github.com/">GitHub</a>。
-    </p>
   </section>
+
+  <nav aria-label="作品链接" class="mt-6 flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-text-mute font-mono">
+    <a href="https://huberyyang.site/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#主页</a>
+    <a href="https://huberyyang.site:82/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#博客</a>
+    <a href="https://huberyyang.site:81/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#健身</a>
+    <a href="https://huberyyang.site:83/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#音乐</a>
+    <a href="https://huberyyang.site:84/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#前端森林</a>
+    <a href="https://huberyyang.site:88/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#相等性演示</a>
+    <a href="https://huberyyang.site:90/" target="_blank" rel="noreferrer" class="transition-colors hover:text-primary">#AI日报</a>
+  </nav>
+
+  <nav aria-label="联系方式" class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
+    {/* TODO: 占位邮箱,替换为真实地址 */}
+    <a href="mailto:your-email@example.com" class="flex items-center gap-1.5 transition-colors hover:text-primary">
+      <span class="i-ph-envelope-simple" />
+      your-email@example.com
+    </a>
+    <a href="https://github.com/Hub-yang" target="_blank" rel="noreferrer" class="flex items-center gap-1.5 transition-colors hover:text-primary">
+      <span class="i-ph-github-logo" />
+      Hub-yang
+    </a>
+    {/* TODO: 占位微信号,替换为真实微信号 */}
+    <span class="flex items-center gap-1.5">
+      <span class="i-ph-wechat-logo" />
+      your-wechat-id
+    </span>
+  </nav>
 
   <nav class="mt-12">
     <a href="/" class="text-sm text-text-mute transition-colors hover:text-primary">
