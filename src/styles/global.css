@@ -13,6 +13,11 @@
   --c-border: #e4e4e7;
   --c-primary: #2b7a6f;
 
+  /* 记号笔式 hover 填涂的块色(见下方 .link-marker)。两个主题的浓度独立调参
+     (20% / 24%),原因同 glow-alpha:亮色底接近纯白会把半透明色稀释掉,暗色底
+     接近纯黑反而衬得更亮,同一个数值在两边的观感差很多。 */
+  --c-marker: color-mix(in srgb, var(--c-primary) 20%, transparent);
+
   /* 首页全站常驻氛围光背景用,RGB 三元组(非十六进制)是为了配合 rgb(... / <alpha>)
      语法灵活控制透明度。glow-1 复用 --c-primary 的色值,glow-2 是新增的暖色调
      (珊瑚橙),只在氛围光背景里出现,不作为通用强调色。 */
@@ -46,6 +51,8 @@
   --c-text-mute: #8a8a91;
   --c-border: #2a2a30;
   --c-primary: #5eb8aa;
+
+  --c-marker: color-mix(in srgb, var(--c-primary) 24%, transparent);
 
   /* 暗色下 glow-2 比浅色更柔和(饱和度降低),避免深底衬托下过艳刺眼 */
   --c-glow-1: 94 184 170;
@@ -370,6 +377,68 @@ pre {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* ==========================================================================
+   .link-marker —— 记号笔式 hover 填涂 + 从左往右划出的下划线
+   悬停时两件事同时发生:半透明主色块从底边往上长满文字背景,一条 2px 主色
+   下划线从左往右划出。移开时各自原路返回。文字颜色全程不参与 —— 隐喻是
+   "笔涂在纸上",纸上的字不会因为被涂了就变色。
+
+   两件事靠两层背景实现,同一条 transition 驱动:background-size 是可重复列表,
+   浏览器逐层插值,两层因此天然严格同步,不需要两条规则去对齐节奏。
+
+   用 background-size 动画而不是伪元素 + scaleY/scaleX:后者在会换行的行内链接
+   上会退化成一个错位矩形,而 gradient 配 box-decoration-break: clone 每行各画
+   一份。目前只用在头部导航,但这个类要能原样推广到正文链接,所以从一开始就按
+   能换行的场景来写。代价是 gradient 动画走 paint 而非合成层,这种尺寸下无影响。
+
+   起始值必须写 0% 而不是 0:0 是长度(0px),与目标值 100% 是百分比,混合单位
+   的插值要靠 calc(),background-size 上这条在 WebKit 里不生效 —— 结果不是过渡
+   而是瞬间跳变。写成百分比↔百分比才是所有浏览器都保证能插值的形式。
+
+   两层的定位锚点刻意不同(background-origin 是逐层列表):
+   - 记号块锚 padding-box,100% 高正好填满 padding 盒,止于边框带上沿;
+   - 下划线锚 border-box,贴着底边的 2px 正好落进 border-bottom 那条带子里。
+   背景的绘制区默认就是 border-box,所以下层画得进边框带。由此:
+   - 未激活项边框是 transparent,下划线透出来,且与激活态的 border-bottom 像素级重合;
+   - 激活项边框是不透明主色,会把这一层盖住 —— 悬停激活项时下划线纹丝不动,
+     只有记号块动,正是想要的;
+   - 记号块底边与下划线顶边严丝合缝,中间不留缝。
+
+   左右各外扩 0.3em(真实笔头比字宽),用 padding 撑出块宽、等量负 margin 抵消
+   对布局的影响。副作用:激活态的 border-bottom 画在 padding 之外,下划线会跟着
+   变长 0.6em —— 这是刻意接受的,下划线与记号块因此左右等宽、上下对齐。
+
+   注意:用了这个类的元素不能再挂 UnoCSS 的 transition-* 工具类。两者都在写
+   transition 那组长属性、选择器权重又相同,只能靠打包顺序决胜负,结果是必然
+   有一个被整条改写掉(踩过:transition-colors 曾把 transition-property 抢成
+   color/background-color/... ,background-size 直接失去过渡)。
+
+   prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
+   ========================================================================== */
+
+.link-marker {
+  padding-inline: 0.3em;
+  margin-inline: -0.3em;
+  /* 第一层记号块,第二层下划线 —— 背景层的绘制顺序是先声明的在上 */
+  background-image:
+    linear-gradient(var(--c-marker), var(--c-marker)),
+    linear-gradient(var(--c-primary), var(--c-primary));
+  background-origin: padding-box, border-box;
+  background-repeat: no-repeat;
+  /* 都锚在左下角:记号块由此"从下往上长",下划线由此"从左往右划" */
+  background-position: 0 100%, 0 100%;
+  background-size: 100% 0%, 0% 2px;
+  transition: background-size 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* 键盘聚焦与鼠标悬停给同等反馈,不让键盘用户只拿到一个通用焦点环 */
+.link-marker:hover,
+.link-marker:focus-visible {
+  background-size: 100% 100%, 100% 2px;
 }
 
 /* ==========================================================================

@@ -175,6 +175,63 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 
 豁免方式是 `trustPolicyExclude`(pattern 语法为 `name@version`),**精确到单个版本**,策略对其余依赖仍然生效,优于直接关掉 `trustPolicy`。
 
+### 用多层背景做 hover 动效:三个必须踩过才知道的点
+
+头部导航的"记号笔填涂 + 下划线划出"效果(`.link-marker`)踩到三个坑,都不是看代码能看出来的。
+
+**1. `background-size` 的起始值必须写 `0%`,不能写 `0`**
+
+```css
+background-size: 100% 0;    /* ✗ 瞬间跳变,没有过渡 */
+background-size: 100% 0%;   /* ✓ */
+```
+
+`0` 是**长度**(0px),目标值 `100%` 是**百分比**。混合单位插值要靠 `calc()`,`background-size` 上这条在 WebKit 里不生效,结果不是过渡而是瞬间跳变。写成百分比↔百分比才是所有浏览器都保证能插值的形式。这个坑的隐蔽之处在于:CSS 完全合法,DevTools 里 `transition-property` 也正常显示 `background-size`,只是不动。
+
+**2. 具名类的 `transition` 简写会和 UnoCSS 的 `transition-*` 工具类互相残杀**
+
+同挂在一个元素上时,`.link-marker` 的 `transition: background-size ...` 和 `transition-colors` 都在写 `transition-property` / `-duration` / `-timing-function` 这组长属性,**选择器权重相同(都是 0,1,0)**,只能靠打包顺序决胜负 —— 必然有一个被整条改写掉。实测两边都是具名类赢:
+
+```
+dist 产物:      .transition-colors @8559   <  .link-marker @45452
+dev SSR head:   .transition-colors @1528   <  .link-marker @54900
+```
+
+意味着 `transition-colors` 一直是死的。**规则:元素上有写了 `transition` 简写的具名类,就不要再挂 UnoCSS 的 `transition-*` 工具类**,把所有要过渡的属性合并进那一条声明里。
+
+**3. `background-origin` 是逐层列表,可以让不同层锚在不同的盒子上**
+
+这是让"色块"和"下划线"精确拼接的关键。背景的**绘制区**默认是 border-box(所以画得进边框带),但**定位区**由 `background-origin` 决定,且可以逐层指定:
+
+```css
+background-origin: padding-box, border-box;
+background-position: 0 100%, 0 100%;
+background-size: 100% 0%, 0% 2px;   /* hover 时 → 100% 100%, 100% 2px */
+```
+
+- 第一层(色块)锚 padding-box,`100%` 高填满 padding 盒,**止于边框带上沿**;
+- 第二层(下划线)锚 border-box,贴底 2px **正好落进 `border-bottom` 那条带子里**。
+
+实测几何(24px 高的链接):下划线层占 `[22, 24]`,`border-bottom` 也占 `[22, 24]` —— 像素级重合,所以未激活项 hover 长出的线和激活项的常驻线在同一基线上;色块占 `[0, 22]`,底边正好接上下划线顶边,无缝也无重叠。
+
+附带好处:非激活项边框是 `transparent`,下划线层透出来;激活项边框是不透明主色,**会把下划线层盖住** —— 悬停激活项时下划线纹丝不动、只有色块动,不用写任何额外的状态规则。
+
+另外,`background-size` 是**可重复列表**,浏览器逐层插值,所以**一条 `transition: background-size` 就同时驱动了两层**,两层严格同步是结构性保证,不是靠对齐两条规则的时长凑出来的。
+
+**验证 CSS 过渡的方法:用 Web Animations API seek,不要用 `requestAnimationFrame` 采样**
+
+后台标签页里 rAF 不触发,采样脚本会直接挂死。改用 `getAnimations()` 拿到 `CSSTransition` 对象后暂停并 seek,确定性地读任意时间点的中间值:
+
+```js
+el.classList.add('hover-equivalent-class')
+const an = el.getAnimations()[0] // CSSTransition
+an.pause()
+an.currentTime = 100 // 单位 ms
+getComputedStyle(el).backgroundSize // → "100% 77.5561%, 77.5561% 2px"
+```
+
+`getAnimations().length === 1` 本身就是"两层由同一条 transition 驱动"的证据。进场 125ms 与离场 125ms 的百分比相加应为 100%,可用来确认离场是原路返回而非另起一条曲线。
+
 ## 操作指南
 
 常用命令、环境配置、踩坑记录。
@@ -231,6 +288,15 @@ pnpm 11 引入了 `trustPolicy: no-downgrade`(本机为全局配置)。判定逻
 - ~~**`astro check` 会报 `'z' is deprecated`**~~:已处理 —— 改为显式安装并对齐 Astro 的 zod 版本后从 `zod` 直接导入,10 条 hints 清零。详见上文「`astro:content` 的 `z` 已废弃」。
 
 - **ESLint 的 import 排序会让 `// @ts-check` 失效**:脚手架生成的 `astro.config.mjs` 顶部有 `// @ts-check`,加入 `@astrojs/vue` 的 import 后被排序规则挤到了两条 import 之间。该指令必须位于文件首行才生效,挤到中间就成了普通注释。本项目已改用 `astro/config` 的 `defineConfig()` 提供类型,直接删掉该注释。
+
+- **用 `git worktree` 让两个 Claude Code 实例并行开发 home/about**:一条命令同时建分支 + 独立目录,不用先 `git branch` 再 `worktree add` 两步:
+
+  ```bash
+  git worktree add -b feature/home-page ../my-blog-home main
+  git worktree add -b feature/about-page ../my-blog-about main
+  ```
+
+  `node_modules` 不跨 worktree 共享,每个目录要各自 `pnpm install`(pnpm store 是硬链接,不会真的双倍占磁盘)。验证时发现 `astro dev --port 4321` 请求的端口若已被占用(本机 4321-4323 被别的项目遗留进程占着),Astro 的 dev daemon 不会报错,而是**静默改绑到下一个空闲端口**(4324/4325),日志里的 "Dev server running at ..." 才是真实端口 —— 不能假设 `--port` 参数一定生效,起完服务要看日志确认实际端口。另外该 daemon 默认绑定 `[::1]`(IPv6 loopback),用 `curl 127.0.0.1:<port>` 探测会连接失败,要用 `curl http://[::1]:<port>` 或 `localhost`。
 
 ## 方法论
 
