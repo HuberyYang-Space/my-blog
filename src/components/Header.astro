@@ -7,22 +7,23 @@ const { pathname } = Astro.url
 const isHome = pathname === '/'
 const isAbout = pathname.startsWith('/about')
 
-// 激活态用 text-text(取消弱化)+ 底部下划线;非激活态下划线设为透明而非移除,
-// 避免切换激活态时链接的盒模型高度发生变化。
+// 激活态用 text-text(取消弱化)+ 底部下划线常驻(border-bottom,不透明主色);
+// 非激活态下划线设为透明而非移除,避免切换激活态时链接的盒模型高度发生变化。
 //
-// hover 反馈交给 .link-marker(见 global.css):记号块从下往上涂满文字背景,
-// 同时一条主色下划线从左往右划出。文字本身不参与 hover。
-// 激活项的 border-bottom 是不透明主色,会盖住 .link-marker 的下划线层 ——
-// 悬停激活项时只有记号块动,下划线保持常驻,不会重复动画。
+// hover/focus-visible 反馈交给 .underline-sweep(见 global.css):下划线从左往右
+// 划出,移开时原路缩回(右边先收,锚点固定在左边)。激活项的 border-bottom 是
+// 不透明主色,会盖住 .underline-sweep 的动画层——悬停激活项时下划线纹丝不动,
+// 不会有多余的动画。
 function navLinkClass(active: boolean) {
   // border-0 先把四边宽度清零,border-solid 补上 style(项目手写 reset 没有像
   // Tailwind preflight 那样预置 border-style: solid,不补的话 style 停在初始值
-  // none,宽度会被折算成 0),最后 border-b-2 单独把底边宽度改回来 ——
-  // 三者都不能省,否则要么四边都不显示,要么变成四边都有框。
-  // 这里刻意不加 transition-colors:它和 .link-marker 的 transition 抢同一组长
-  // 属性(权重相同,只能靠打包顺序决胜),会把 background-size 的过渡整条废掉。
-  // 而 text-*/border-color 只在整页跳转时变化,跳转后是全新渲染,本就无过渡可言。
-  return `link-marker border-0 border-b-2 border-solid pb-0.5 ${
+  // none,宽度会被折算成 0),最后 border-b 单独把底边宽度改回来(1px)。
+  // pb-px 让下划线更贴近文字基线。
+  //
+  // 这里不能再加 UnoCSS 的 transition-colors:它和 .underline-sweep 自带的
+  // transition: background-size 抢同一个 transition 简写属性(选择器权重相同,
+  // 只能靠打包顺序决胜负),会把 background-size 的过渡整条废掉。
+  return `underline-sweep border-0 border-b border-solid pb-px ${
     active ? 'border-primary text-text' : 'border-transparent text-text-soft'
   }`
 }
