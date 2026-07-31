@@ -451,9 +451,10 @@ pre {
    色块用 background-origin: padding-box,止于 padding 盒边缘、不越过
    border-bottom 所在的边框带,色块底边与下划线顶边因此天然对齐、不留缝。
 
-   左右各外扩 0.3em(真实笔头比字宽),用 padding 撑出色块宽度、等量负 margin
-   抵消对布局的影响。副作用:border-bottom 画在 padding 之外,下划线会跟着
-   变长 0.6em —— 这是刻意接受的,下划线与色块因此左右等宽、上下对齐。
+   色块与文字等宽,不做左右出血。早先按"真实笔头比字宽"的思路用
+   padding-inline: 0.3em + 等量负 margin 外扩过,但 border-bottom 画在 padding
+   之外,下划线会跟着变长 0.6em;内联进中文正文时(如关于页那句"我是 XXX")
+   色块和下划线都比字宽出一截,读起来松垮,所以取消出血、让色块严格贴合字宽。
 
    注意:用了这个类的元素不能再挂 UnoCSS 的 transition-* 工具类。两者都在写
    transition 那组长属性、选择器权重又相同,只能靠打包顺序决胜负,结果是必然
@@ -471,9 +472,6 @@ pre {
 
 .highlighter {
   color: var(--c-primary);
-  padding-inline: 0.3em;
-  padding-bottom: 1px;
-  margin-inline: -0.3em;
   border-bottom: 1px solid var(--c-primary);
   background-image: linear-gradient(var(--c-marker), var(--c-marker));
   background-origin: padding-box;
@@ -501,19 +499,24 @@ pre {
    撞过一模一样的坑)。所以这里把下划线动画直接内置进 tinter,变色和划线
    两段过渡写在同一条 transition 声明里,不依赖外部第二个 class。
 
-   静止态特意不显示下划线、颜色也是弱化色——与 .highlighter(常驻主题色 +
-   常驻下划线 + hover 色块)是有意区分的两档效果:highlighter 更醒目,用于
-   想强调的链接;tinter 更克制,平时融入正文弱化色,只在交互时才提示"这是
-   可点击文本"。
+   静止态特意不显示下划线,也不设 color —— 颜色继承使用处的上下文(返回链接
+   继承 text-mute、标签继承所在导航的弱化色、文章卡片标题继承正文色),同一个
+   类挂到深浅不同的场景里都不会和周围的文字打架,只有 hover/focus 时才统一变
+   主题色。与 .highlighter(常驻主题色 + 常驻下划线 + hover 色块)是有意区分的
+   两档效果:highlighter 更醒目,用于想强调的链接;tinter 更克制,平时融入上下
+   文,只在交互时才提示"这是可点击文本"。
 
-   不带 .highlighter 那样的左右 0.3em 出血(padding-inline/margin-inline)——
-   那是配合色块设计的,这里下划线要贴合 Header 的观感,不外扩。
+   选择器带上 .prose a:not([class]):Markdown 的 [文字](url) 语法没地方挂
+   class,正文链接靠这条选择器自动拿到 tinter 的观感,写文章不必退化成裸 HTML。
+   :not([class]) 是必需的 —— .prose a 的权重(0,1,1)高过 .highlighter(0,1,0),
+   不排除就会把关于页那种主动挂了 .highlighter 的正文链接连背景带过渡一起改写
+   掉;顺带也放过了脚注返回箭头(带 .data-footnote-backref)。
 
    prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
    ========================================================================== */
 
-.tinter {
-  color: var(--c-text-mute);
+.tinter,
+.prose a:not([class]) {
   background-image: linear-gradient(var(--c-primary), var(--c-primary));
   background-repeat: no-repeat;
   background-position: 0 100%;
@@ -526,7 +529,9 @@ pre {
 }
 
 .tinter:hover,
-.tinter:focus-visible {
+.tinter:focus-visible,
+.prose a:not([class]):hover,
+.prose a:not([class]):focus-visible {
   color: var(--c-primary);
   background-size: 100% 1px;
 }
@@ -595,12 +600,6 @@ pre {
 
 .prose strong {
   color: var(--c-text);
-}
-
-.prose a {
-  color: var(--c-primary);
-  text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .prose ul,

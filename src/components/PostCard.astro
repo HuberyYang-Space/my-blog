@@ -9,11 +9,11 @@ interface Props {
 const { post } = Astro.props
 ---
 
-<article class="group border-b border-border py-5 last:border-b-0">
+<article class="border-b border-border py-5 last:border-b-0">
   <a href={`/posts/${post.id}/`} class="block">
     <div class="flex items-baseline justify-between gap-4">
-      <h2 class="text-base font-medium transition-colors group-hover:text-primary">
-        {post.data.title}
+      <h2 class="text-base font-medium">
+        <span class="tinter">{post.data.title}</span>
         {post.data.draft && (
           <span class="ml-2 rounded bg-bg-soft px-1.5 py-0.5 align-middle text-xs text-text-mute font-normal">
             草稿
