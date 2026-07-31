@@ -7,15 +7,16 @@ import BaseLayout from '../layouts/BaseLayout.astro'
 // 增删一项只动数组,不再复制整段 markup。
 const works = [
   { href: 'https://huberyyang.site/', label: '主页' },
-  { href: 'https://huberyyang.site:82/', label: '博客' },
-  { href: 'https://huberyyang.site:81/', label: '健身' },
+  { href: 'https://huberyyang.site:81/', label: '健身管理' },
   { href: 'https://huberyyang.site:83/', label: '音乐' },
   { href: 'https://huberyyang.site:84/', label: '前端森林' },
-  { href: 'https://huberyyang.site:88/', label: '相等性演示' },
   { href: 'https://huberyyang.site:90/', label: 'AI日报' },
+  { href: 'https://huberyyang.site:88/', label: 'equals-demo' },
 ]
 
-// href 缺省表示这一项不可点击(如微信号只能复制,没有可跳转的目标)。
+// href 缺省表示这一项没有可跳转的目标(微信号只能复制),渲染成点击复制的按钮
+// 而不是 href="javascript:void(0)" 的假链接 —— 假链接会被读屏软件播报成"链接"、
+// 键盘 Tab 停上去按回车却什么都不发生,将来加 CSP 也会被 script-src 拦掉。
 const contacts = [
   { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', href: 'mailto:18830279823@163.com' },
   { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang' },
@@ -29,33 +30,39 @@ const contacts = [
   </section>
 
   <section class="prose mt-6">
-    <p>你好，我是{SITE.author}，前端工程师，开源爱好者，对 Vue / React / Nuxt / Next / AI 感兴趣，开发合作欢迎联系。</p>
+    <p>你好，我是<a class="highlighter" href="https://github.com/Hub-yang" target="_blank" rel="noreferrer">{SITE.author}</a>，前端工程师，开源爱好者，对 Vue / React / Nuxt / Next / AI 感兴趣，开发合作欢迎联系。</p>
   </section>
 
   <nav aria-label="作品链接" class="mt-6 flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-text-mute font-mono">
     {works.map(({ href, label }) => (
-      <a href={href} target="_blank" rel="noreferrer">#{label}</a>
+      <a class="highlighter" href={href} target="_blank" rel="noreferrer">#{label}</a>
     ))}
   </nav>
 
   <nav aria-label="联系方式" class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
     {contacts.map(({ icon, text, href }) => {
-      // 首字母大写的变量被 Astro 当作动态标签:有 href 渲染成 <a>,否则退化成 <span>。
-      const Tag = href ? 'a' : 'span'
       // 站外链接才需要新开标签页,mailto: 这类协议链接不需要。
       const isExternal = href?.startsWith('http')
 
-      return (
-        <Tag
-          href={href}
-          target={isExternal ? '_blank' : undefined}
-          rel={isExternal ? 'noreferrer' : undefined}
-          class="inline-flex items-center"
-        >
-          <span class={icon} />
-          {text}
-        </Tag>
-      )
+      return href
+        ? (
+            <a
+              href={href}
+              target={isExternal ? '_blank' : undefined}
+              rel={isExternal ? 'noreferrer' : undefined}
+              class="inline-flex items-center"
+            >
+              <span class={icon} />
+              {text}
+            </a>
+          )
+        : (
+            <button type="button" class="copy-contact inline-flex items-center p-0" data-copy={text}>
+              <span class={icon} />
+              {/* 复制成功后这里的文案会被临时换成"已复制",aria-live 让读屏软件也能收到反馈 */}
+              <span class="copy-contact-text" aria-live="polite">{text}</span>
+            </button>
+          )
     })}
   </nav>
 
@@ -63,3 +70,49 @@ const contacts = [
     <BackLink href="/">返回首页</BackLink>
   </nav>
 </BaseLayout>
+
+<script>
+  // navigator.clipboard 只在安全上下文(https / localhost)下存在,站点若部署在
+  // 纯 http 上会直接拿不到,所以保留 execCommand 兜底,不让复制在生产环境失灵。
+  async function copyText(text: string) {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return
+    }
+
+    const textarea = document.createElement('textarea')
+    textarea.value = text
+    textarea.setAttribute('readonly', '')
+    // 移出可视区域再选中,避免复制瞬间页面滚动或闪烁
+    textarea.style.cssText = 'position:fixed;top:-9999px;opacity:0'
+    document.body.appendChild(textarea)
+    textarea.select()
+    document.execCommand('copy')
+    textarea.remove()
+  }
+
+  document.querySelectorAll<HTMLButtonElement>('.copy-contact').forEach((button) => {
+    const label = button.querySelector<HTMLElement>('.copy-contact-text')
+    const text = button.dataset.copy
+    if (!label || !text)
+      return
+
+    let timer: number | undefined
+
+    button.addEventListener('click', async () => {
+      try {
+        await copyText(text)
+        label.textContent = '已复制'
+      }
+      catch {
+        label.textContent = '复制失败'
+      }
+
+      // 连点时重置上一次的还原计时,否则文案会被前一个 timer 提前跳回去
+      clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        label.textContent = text
+      }, 1500)
+    })
+  })
+</script>
