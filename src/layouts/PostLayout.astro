@@ -1,6 +1,7 @@
 ---
 import type { MarkdownHeading } from 'astro'
 import type { CollectionEntry } from 'astro:content'
+import BackLink from '../components/BackLink.astro'
 import FormattedDate from '../components/FormattedDate.astro'
 import PostNav from '../components/PostNav.astro'
 import PostOutline from '../components/PostOutline.astro'
@@ -64,7 +65,7 @@ const showOutline = h2Count >= 3
         <FormattedDate date={date} />
         {
           updatedDate && (
-            <span class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-2">
               <span aria-hidden="true">·</span>
               更新于 <FormattedDate date={updatedDate} />
             </span>
@@ -72,7 +73,7 @@ const showOutline = h2Count >= 3
         }
         {
           tags.map(tag => (
-            <span class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-2">
               <span aria-hidden="true">·</span>
               <TagLink tag={tag} />
             </span>
@@ -97,11 +98,6 @@ const showOutline = h2Count >= 3
   <PostNav older={olderPost} newer={newerPost} />
 
   <nav class="mt-6">
-    <a
-      href="/"
-      class="text-sm text-text-mute transition-colors hover:text-primary"
-    >
-      ← 返回文章列表
-    </a>
+    <BackLink href="/">返回文章列表</BackLink>
   </nav>
 </BaseLayout>

@@ -97,7 +97,7 @@ const contentWidth = wide ? 'max-w-3xl' : 'max-w-2xl'
       class={`mx-auto min-h-screen flex flex-col px-6 ${hasAside ? 'post-shell' : contentWidth}`}
     >
       <main class={`flex-1 ${hasAside ? 'post-grid lg:grid lg:items-start lg:gap-x-10' : ''}`}>
-        <div class={`mx-auto w-full ${hasAside ? `${contentWidth} lg:col-start-2` : contentWidth}`}>
+        <div class={`${contentWidth} mx-auto w-full ${hasAside ? 'lg:col-start-2' : ''}`}>
           <slot />
         </div>
         {

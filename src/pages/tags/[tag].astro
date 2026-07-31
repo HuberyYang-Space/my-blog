@@ -1,6 +1,7 @@
 ---
 import type { GetStaticPaths } from 'astro'
 import type { CollectionEntry } from 'astro:content'
+import BackLink from '../../components/BackLink.astro'
 import PostCard from '../../components/PostCard.astro'
 import BaseLayout from '../../layouts/BaseLayout.astro'
 import { getPostsGroupedByTag } from '../../utils/posts'
@@ -37,8 +38,6 @@ const { tag, posts } = Astro.props
   </section>
 
   <nav class="mt-12">
-    <a href="/" class="text-sm text-text-mute transition-colors hover:text-primary">
-      ← 返回首页
-    </a>
+    <BackLink href="/">返回首页</BackLink>
   </nav>
 </BaseLayout>
