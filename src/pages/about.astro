@@ -30,7 +30,11 @@ const contacts = [
   </section>
 
   <section class="prose mt-6">
-    <p>你好，我是<a class="highlighter" href="https://github.com/Hub-yang" target="_blank" rel="noreferrer">{SITE.author}</a>，前端工程师，开源爱好者，对 Vue / React / Nuxt / Next / AI 感兴趣，开发合作欢迎联系。</p>
+    {/* 框架名链接的颜色走 .highlighter 的 --tint 参数（见 global.css 的 --tint 一节），
+        每家取各自品牌色；Next.js 的标识是纯黑白，直接用 --c-text；AI 不是产品，
+        没有官网可指，保持纯文本。这里是一句行内散文而非同构列表，刻意不像下方
+        works / contacts 那样抽成数组——拆成 .map 加分隔符只会更难读。 */}
+    <p>你好，我是<a class="highlighter" href="https://github.com/Hub-yang" target="_blank" rel="noreferrer">{SITE.author}</a>，前端工程师，开源爱好者，对 <a class="highlighter [--tint:var(--c-brand-vue)]" href="https://vuejs.org/" target="_blank" rel="noreferrer">Vue</a> / <a class="highlighter [--tint:var(--c-brand-react)]" href="https://react.dev/" target="_blank" rel="noreferrer">React</a> / <a class="highlighter [--tint:var(--c-brand-nuxt)]" href="https://nuxt.com/" target="_blank" rel="noreferrer">Nuxt</a> / <a class="highlighter [--tint:var(--c-text)]" href="https://nextjs.org/" target="_blank" rel="noreferrer">Next</a> / AI 感兴趣，开发合作欢迎联系。</p>
   </section>
 
   <nav aria-label="作品链接" class="mt-6 flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-text-mute font-mono">

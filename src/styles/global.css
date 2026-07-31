@@ -13,10 +13,13 @@
   --c-border: #e4e4e7;
   --c-primary: #2b7a6f;
 
-  /* .highlighter(见下方)hover 色块的填涂色。两个主题的浓度独立调参
-     (20% / 24%),原因同 glow-alpha:亮色底接近纯白会把半透明色稀释掉,暗色底
-     接近纯黑反而衬得更亮,同一个数值在两边的观感差很多。 */
-  --c-marker: color-mix(in srgb, var(--c-primary) 20%, transparent);
+  /* .highlighter(见下方)hover 色块的填涂浓度。两个主题独立调参(20% / 24%),
+     原因同 glow-alpha:亮色底接近纯白会把半透明色稀释掉,暗色底接近纯黑反而
+     衬得更亮,同一个数值在两边的观感差很多。
+
+     这里只给"浓度"不给"算好的颜色":.highlighter 支持通过 --tint 换色后,
+     色块必须从当次生效的颜色现算,不能锁死在 --c-primary 上。 */
+  --c-marker-ratio: 20%;
 
   /* 首页全站常驻氛围光背景用,RGB 三元组(非十六进制)是为了配合 rgb(... / <alpha>)
      语法灵活控制透明度。glow-1 复用 --c-primary 的色值,glow-2 是新增的暖色调
@@ -30,6 +33,29 @@
      拉到肉眼可见的水平。 */
   --c-glow-alpha-1: 0.55;
   --c-glow-alpha-2: 0.48;
+
+  /* 品牌色(见文件末 .highlighter / .tinter 的 --tint 一节)。这些是外部品牌资产,
+     不是本站的语义化主题色,所以刻意不接进 uno.config.ts 的 theme.colors ——
+     它们没有"这是本站的强调色/弱化色"那类语义,只能按品牌逐个指名使用。
+
+     ⚠️ 亮色主题下用的不是官方原色。这几家的品牌色都是为深色背景设计的,
+     直接放到 --c-bg (#fdfdfd) 上对比度分别只有 Vue 2.45:1、React 1.60:1、
+     Nuxt 1.79:1,远低于本文件开头声明的 >= 4.5:1 标准(React/Nuxt 那两个
+     几乎等于看不见字)。因此亮色主题一律用压暗变体,暗色主题才用官方原色。
+
+     两类值的出处不同,不要一并当成官方值维护:
+     - react 亮色 #087EA4 是 react.dev 亮色主题自己在用的链接色,等于官方
+       给出的"亮底可读版";
+     - vue / nuxt 官方没有公布亮底变体,#2B825B / #008551 是保持色相与饱和度、
+       只压亮度算到刚过 4.5:1 的结果。改动时需重新核对对比度。
+
+     另:Vue 与 Nuxt 本身都是绿色,和 --c-primary 在两个主题下都会撞成一片
+     难以分辨的绿。这是已知且接受的 —— 链接文字本身就是品牌名,颜色只做氛围
+     点缀不承载信息(也正合"信息不得仅靠颜色传达")。
+     Next.js 没有彩色品牌色(标识就是纯黑/纯白),直接复用 --c-text,不单列变量。 */
+  --c-brand-vue: #2b825b;
+  --c-brand-react: #087ea4;
+  --c-brand-nuxt: #008551;
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
@@ -52,7 +78,7 @@
   --c-border: #2a2a30;
   --c-primary: #5eb8aa;
 
-  --c-marker: color-mix(in srgb, var(--c-primary) 24%, transparent);
+  --c-marker-ratio: 24%;
 
   /* 暗色下 glow-2 比浅色更柔和(饱和度降低),避免深底衬托下过艳刺眼 */
   --c-glow-1: 94 184 170;
@@ -61,6 +87,11 @@
   /* 暗色背景本身就衬得住低透明度的光斑,沿用原有数值即可 */
   --c-glow-alpha-1: 0.28;
   --c-glow-alpha-2: 0.24;
+
+  /* 暗色主题用官方原色,对比度依次 7.6:1 / 11.6:1 / 10.4:1,均达标 */
+  --c-brand-vue: #42b883;
+  --c-brand-react: #61dafb;
+  --c-brand-nuxt: #00dc82;
 
   color-scheme: dark;
 }
@@ -467,13 +498,45 @@ pre {
    underline 工具类,意外多生成一条规则)。.highlighter 刻意用不含连字符的
    单个单词,不会被拆分误解析。
 
+   换色见下方 --tint 一节。
+
    prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
+   ==========================================================================
+
+   --tint —— .highlighter / .tinter 共用的颜色参数
+
+   两个类是"同一件事的两档强度",共用一个参数名,调用处在 highlighter 和 tinter
+   之间切换时不用连带改另一半 class。不传时落到 --c-primary,与参数化之前的
+   表现完全一致;传了就整体换色(文字、下划线、hover 色块都跟着走)。
+
+   用法:走 UnoCSS 的任意属性类,不要写 inline style ——
+     <a class="highlighter [--tint:var(--c-brand-vue)]">Vue</a>
+   任意属性类由 presetWind3(内含 preset-mini 的 cssProperty 规则)编译成
+   一条 { --tint: ... },无需额外配置。不用 style="--tint: ..." 是因为将来若加
+   CSP,inline style 属性会被 style-src 拦掉,除非开 unsafe-inline;关于页把
+   假链接改成 button 时已经按同一个考量取舍过一次。
+
+   ⚠️ 两个类只能"消费"--tint,绝不能自己声明它 —— 内部一律读
+   var(--tint, var(--c-primary)) 并存进私有的 --_tint。工具类
+   .[--tint:...] 与 .highlighter 权重同为 (0,1,0),一旦两边都写 --tint 就退化成
+   靠打包顺序决胜负,即上方 transition 那个坑的同款形态;默认值语法从根上绕开
+   权重竞争,与规则先后无关。
+
+   焦点环(见 Reset 一节的 :focus-visible)刻意不参数化,始终用 --c-primary:
+   它是全站统一的可达性指示器,跟着每个链接换色会让键盘用户失去稳定的视觉锚点,
+   而且浅色品牌色的焦点环在亮色底上基本等于没有。
    ========================================================================== */
 
 .highlighter {
-  color: var(--c-primary);
-  border-bottom: 1px solid var(--c-primary);
-  background-image: linear-gradient(var(--c-marker), var(--c-marker));
+  --_tint: var(--tint, var(--c-primary));
+
+  color: var(--_tint);
+  border-bottom: 1px solid var(--_tint);
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent),
+      color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent)
+    );
   background-origin: padding-box;
   background-repeat: no-repeat;
   background-position: 0 100%;
@@ -512,12 +575,19 @@ pre {
    不排除就会把关于页那种主动挂了 .highlighter 的正文链接连背景带过渡一起改写
    掉;顺带也放过了脚注返回箭头(带 .data-footnote-backref)。
 
+   换色同样走 --tint(说明见上方 .highlighter 与 --tint 一节)。tinter 静止态本来
+   就不着色,所以 --tint 只影响 hover/focus 时的文字色与那条划出的下划线。
+   .prose a:not([class]) 这一支是 Markdown 正文链接,没地方挂 class 也就没地方
+   传参,恒定落到默认的 --c-primary。
+
    prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
    ========================================================================== */
 
 .tinter,
 .prose a:not([class]) {
-  background-image: linear-gradient(var(--c-primary), var(--c-primary));
+  --_tint: var(--tint, var(--c-primary));
+
+  background-image: linear-gradient(var(--_tint), var(--_tint));
   background-repeat: no-repeat;
   background-position: 0 100%;
   background-size: 0% 1px;
@@ -532,7 +602,7 @@ pre {
 .tinter:focus-visible,
 .prose a:not([class]):hover,
 .prose a:not([class]):focus-visible {
-  color: var(--c-primary);
+  color: var(--_tint);
   background-size: 100% 1px;
 }
 

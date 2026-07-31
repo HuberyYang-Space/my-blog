@@ -232,6 +232,54 @@ getComputedStyle(el).backgroundSize // → "100% 77.5561%, 77.5561% 2px"
 
 `getAnimations().length === 1` 本身就是"两层由同一条 transition 驱动"的证据。进场 125ms 与离场 125ms 的百分比相加应为 100%,可用来确认离场是原路返回而非另起一条曲线。
 
+### 用 CSS 变量默认值给全局样式类做"参数"
+
+`.highlighter` / `.tinter` 要支持自定义颜色(不传用主题色、传了用自定义色)时,有三条路,选型理由值得记下来。
+
+**为什么是 `var(--tint, var(--c-primary))` 而不是 modifier class**
+
+modifier class(`.tinter--vue`)每加一个颜色都要回 `global.css` 加一条规则,与"让全局类具备通用性"的初衷直接矛盾。变量默认值语法则是零新增规则、任意色值都能传。
+
+**为什么是 UnoCSS 任意属性类而不是 inline `style`**
+
+```html
+<a class="highlighter [--tint:var(--c-brand-vue)]">Vue</a>   <!-- ✓ -->
+<a class="highlighter" style="--tint: var(--c-brand-vue)">Vue</a>  <!-- ✗ -->
+```
+
+两者效果等价,但 inline `style` 属性会被 CSP 的 `style-src` 拦掉(除非开 `unsafe-inline`)。任意属性类由 presetWind3 内含的 preset-mini `cssProperty` 规则(`preset-mini/dist/rules.mjs`,匹配 `/^\[(.*)\]$/` 且属性名满足 `/^[\w-]+$/`)编译成普通 class,无需任何配置:
+
+```css
+.\[--tint\:var\(--c-brand-vue\)\]{--tint:var(--c-brand-vue)}
+```
+
+**关键约束:被参数化的类只能"消费"变量,绝不能自己声明它**
+
+```css
+.highlighter { --_tint: var(--tint, var(--c-primary)); color: var(--_tint); }  /* ✓ */
+.highlighter { --tint: var(--c-primary); color: var(--tint); }                 /* ✗ */
+```
+
+工具类 `.[--tint:...]` 与 `.highlighter` 权重同为 `(0,1,0)`,第二种写法两边都在声明 `--tint`,又退化成上一节那个"靠打包顺序决胜负"的老问题。默认值语法把"取值"和"赋值"分到两个不同的属性名上(`--_tint` 读、`--tint` 写),从根上不存在权重竞争,与规则先后无关。
+
+**派生值必须跟着参数一起动,不能锁死在原变量上**
+
+`.highlighter` 的 hover 色块原本是 `--c-marker: color-mix(in srgb, var(--c-primary) 20%, transparent)`,浓度烘焙在颜色定义里。参数化后必须把"浓度"和"颜色"拆开,让色块从**当次生效的颜色**现算:
+
+```css
+:root { --c-marker-ratio: 20%; }  /* .dark 里是 24% */
+.highlighter { background-image: linear-gradient(
+  color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent), ...); }
+```
+
+`color-mix()` 的百分比可以由 `var()` 提供 —— `var()` 在计算值阶段做文本替换,替换完才解析 `color-mix()`。但要小心:**`color-mix()` 一旦无效,整条 `linear-gradient()` 连带失效,背景直接消失且不报错**,属于静默失败,改完必须实际看一眼而不能只看构建通过。
+
+**外部品牌色不能直接用在亮色主题上**
+
+Vue `#42B883` / React `#61DAFB` / Nuxt `#00DC82` 这类品牌色都是为深色背景设计的,放到 `#fdfdfd` 上对比度只有 2.45:1 / 1.60:1 / 1.79:1,远低于正文 4.5:1 的门槛。做法是亮色主题用压暗变体、暗色主题才用官方原色。查官方文档站自己在亮色主题下用的链接色往往能直接抄到(React 的 `#087EA4` 就是 react.dev 的亮底链接色),比自己调更可信。
+
+这类问题的隐蔽性在于**只坏一半**:暗色主题完好,而日常开发多在暗色下,自测极易漏过。凡是引入固定色值的改动,都要专门切到另一个主题核对。
+
 ## 操作指南
 
 常用命令、环境配置、踩坑记录。
