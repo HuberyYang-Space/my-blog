@@ -26,8 +26,8 @@ const { older, newer } = Astro.props
             上一篇
             <span class="i-ph-arrow-left transition-transform group-hover:-translate-x-0.5" />
           </span>
-          <span class="mt-1 block text-sm text-text-soft transition-colors group-hover:text-primary">
-            {newer.data.title}
+          <span class="mt-1 block text-sm text-text-soft">
+            <span class="tinter">{newer.data.title}</span>
           </span>
         </a>
       )}
@@ -40,8 +40,8 @@ const { older, newer } = Astro.props
             下一篇
             <span class="i-ph-arrow-right transition-transform group-hover:translate-x-0.5" />
           </span>
-          <span class="mt-1 block text-sm text-text-soft transition-colors group-hover:text-primary">
-            {older.data.title}
+          <span class="mt-1 block text-sm text-text-soft">
+            <span class="tinter">{older.data.title}</span>
           </span>
         </a>
       )}
