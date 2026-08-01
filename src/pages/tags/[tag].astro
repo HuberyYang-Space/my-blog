@@ -7,7 +7,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro'
 import { getPostsGroupedByTag } from '../../utils/posts'
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // 一次分组拿到全部标签及各自的文章列表,不再逐标签重复扫描全集合。
+  // 一次分组拿到全部标签及各自的文章列表,避免逐标签重复扫描全集合。
   const groups = await getPostsGroupedByTag()
 
   return groups.map(({ tag, posts }) => ({

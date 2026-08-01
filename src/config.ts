@@ -18,7 +18,6 @@ export const SITE = {
    * ⚠️ 待确认:目前填的是暂定域名,上线前需与实际部署地址核对。
    * canonical / sitemap / RSS / OG 图全部依赖它生成绝对 URL,填错不会报错、
    * 只会让这些链接整体指向错误域名(静默失败)。
-   * `astro.config.ts` 里的构建守卫只能拦下 example.com 这类占位值,拦不住写错的真域名。
    */
   url: 'https://blog.hubery.dev',
 

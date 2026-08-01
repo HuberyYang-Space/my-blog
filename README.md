@@ -104,5 +104,4 @@ npx serve dist
 ## 相关文档
 
 - [`SPEC.md`](./SPEC.md) —— 完整技术方案与执行步骤
-- [`STUDY.md`](./STUDY.md) —— 实施过程中的知识点与踩坑记录
 - [`CLAUDE.md`](./CLAUDE.md) —— 项目级开发约定

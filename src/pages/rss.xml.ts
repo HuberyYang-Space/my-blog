@@ -15,7 +15,7 @@ export const GET: APIRoute = async (context) => {
   return rss({
     title: SITE.title,
     description: SITE.description,
-    // context.site 由 astro.config.ts 的 site 提供,已在构建守卫处校验过
+    // context.site 由 astro.config.ts 的 site 提供(取自 SITE.url)
     site: context.site!,
     items: posts.map(post => ({
       title: post.data.title,

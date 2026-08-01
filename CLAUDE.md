@@ -24,12 +24,15 @@ Markdown 驱动的静态个人博客,风格克制极简,Astro + Vue 交互岛屿
 
 ## 目录结构约定
 
-详见 `SPEC.md` 目录结构一节。核心原则:`src/content.config.ts` 放根级、`ThemeToggle.vue` 是唯一 Vue 岛屿、Pagefind 集成顺序必须排在 vue/UnoCSS 之后(依赖 `astro:build:done` 钩子注册顺序)。
+详见 `SPEC.md` 目录结构一节。核心原则:`src/content.config.ts` 放根级、`ThemeToggle.vue` 是唯一 Vue 岛屿、Pagefind 必须是 `integrations` 数组的**最后一项**(它挂在 `astro:build:done` 上,要等其余集成把产物写完才能扫描 `dist/` 建索引)。
 
 ## 文档同步规则
 
 - **README.md**:随项目推进同步更新,格式遵循社区规范(标准分节:项目简介 / 安装 / 使用 / 开发 / License 等)。首份 README.md 由 `pnpm create astro` 脚手架生成,后续按实际内容持续维护,不要让它与实现脱节。
-- **STUDY.md**:随项目推进同步更新,记录实施过程中的知识点、操作指南、踩坑记录,供项目结束后学习复盘。
+
+## 写文章约束
+
+- ESLint 会把 Markdown 里的 `ts` / `js` 代码块当**独立源文件**解析。贴不完整的语法片段(如裸的 `theme: { ... }` 对象字面量)会报 `Parsing error: Expression expected`,且无法自动修复。两种解法:把片段补成语法完整的代码(包进 `export default defineConfig({ ... })` 之类),或换用不参与 lint 的语言标签(如 ```text)。
 
 ## 视觉效果实现注意事项
 
@@ -38,7 +41,6 @@ Markdown 驱动的静态个人博客,风格克制极简,Astro + Vue 交互岛屿
 ## 参考文档
 
 - `SPEC.md` —— 完整技术方案与执行步骤
-- `STUDY.md` —— 学习/复盘笔记
 
 ## Agent skills
 
@@ -48,4 +50,4 @@ Issues 通过 GitHub Issues 管理(仓库 `Hub-yang/my-blog`),使用 `gh` CLI �
 
 ### Domain docs
 
-单上下文(single-context)布局,`CONTEXT.md` + `docs/adr/` 位于仓库根目录。详见 `docs/agents/domain.md`。
+单上下文(single-context)布局:领域文档若存在,`CONTEXT.md` 与 `docs/adr/` 位于仓库根目录。两者目前均未创建,由 `/domain-modeling` 在术语或决策真正需要沉淀时惰性生成 —— 缺失属预期,不必主动补建。详见 `docs/agents/domain.md`。

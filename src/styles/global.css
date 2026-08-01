@@ -14,8 +14,7 @@
   --c-primary: #2b7a6f;
 
   /* .highlighter(见下方)hover 色块的填涂浓度。两个主题独立调参(20% / 24%),
-     原因同 glow-alpha:亮色底接近纯白会把半透明色稀释掉,暗色底接近纯黑反而
-     衬得更亮,同一个数值在两边的观感差很多。
+     原因同下方 --c-glow-alpha。
 
      这里只给"浓度"不给"算好的颜色":.highlighter 支持通过 --tint 换色后,
      色块必须从当次生效的颜色现算,不能锁死在 --c-primary 上。 */
@@ -468,11 +467,8 @@ pre {
 
 /* ==========================================================================
    .highlighter —— 可点击文本通用样式:主题色文字 + 常驻下划线 + hover 色块
-   与 .underline-sweep 同源,都脱胎于早期的 .link-marker(记号笔填涂 + 下划线
-   划出双层动画)。Header 导航后来把动画层简化成了只在 hover 时划出的
-   .underline-sweep;这里把"色块从下往上涂满"的效果单独抽出来,给页面正文、
-   markdown 链接等更泛用的"可点击文本"场景用 —— 下划线常驻(不依赖 hover/激活
-   态),hover/focus 时只多一个色块。
+   面向页面正文、markdown 链接等泛用的"可点击文本"场景:下划线常驻(不依赖
+   hover/激活态),hover/focus 时只多一个从下往上涂满的色块。
 
    下划线直接用 border-bottom 简写一次性给全 width/style/solid/color,不需要
    像 Header 的 navLinkClass 那样先 border-0 清零再 border-solid 补 style ——
@@ -487,16 +483,9 @@ pre {
    之外,下划线会跟着变长 0.6em;内联进中文正文时(如关于页那句"我是 XXX")
    色块和下划线都比字宽出一截,读起来松垮,所以取消出血、让色块严格贴合字宽。
 
-   注意:用了这个类的元素不能再挂 UnoCSS 的 transition-* 工具类。两者都在写
-   transition 那组长属性、选择器权重又相同,只能靠打包顺序决胜负,结果是必然
-   有一个被整条改写掉(踩过:transition-colors 曾把 transition-property 抢成
-   color/background-color/... ,background-size 直接失去过渡,细节见上方
-   .underline-sweep 注释)。
-
-   命名踩过 .underline-sweep 同样的坑:UnoCSS 会把连字符类名当成自己的
-   "变体-工具类"简写语法解析(例如 .link-underline 曾被拆成 link: 变体 +
-   underline 工具类,意外多生成一条规则)。.highlighter 刻意用不含连字符的
-   单个单词,不会被拆分误解析。
+   两条约束与 .underline-sweep 完全相同,细节见上方该类注释:元素不能再挂
+   UnoCSS 的 transition-* 工具类;类名不能带连字符,否则会被当成"变体-工具类"
+   简写误解析。
 
    换色见下方 --tint 一节。
 
@@ -506,15 +495,14 @@ pre {
    --tint —— .highlighter / .tinter 共用的颜色参数
 
    两个类是"同一件事的两档强度",共用一个参数名,调用处在 highlighter 和 tinter
-   之间切换时不用连带改另一半 class。不传时落到 --c-primary,与参数化之前的
-   表现完全一致;传了就整体换色(文字、下划线、hover 色块都跟着走)。
+   之间切换时不用连带改另一半 class。不传时落到 --c-primary,传了就整体换色
+   (文字、下划线、hover 色块都跟着走)。
 
    用法:走 UnoCSS 的任意属性类,不要写 inline style ——
      <a class="highlighter [--tint:var(--c-brand-vue)]">Vue</a>
    任意属性类由 presetWind3(内含 preset-mini 的 cssProperty 规则)编译成
    一条 { --tint: ... },无需额外配置。不用 style="--tint: ..." 是因为将来若加
-   CSP,inline style 属性会被 style-src 拦掉,除非开 unsafe-inline;关于页把
-   假链接改成 button 时已经按同一个考量取舍过一次。
+   CSP,inline style 属性会被 style-src 拦掉,除非开 unsafe-inline。
 
    ⚠️ 两个类只能"消费"--tint,绝不能自己声明它 —— 内部一律读
    var(--tint, var(--c-primary)) 并存进私有的 --_tint。工具类
@@ -558,8 +546,7 @@ pre {
    .underline-sweep 视觉上一致,但不能靠同时挂 tinter + underline-sweep 两个
    class 来复用 —— 两者都要写 transition 简写(一个管 color,一个管
    background-size),同一元素上两条 transition 声明只能靠打包顺序决胜负,
-   必然有一条被整条覆盖掉(.highlighter 曾经和 UnoCSS 的 transition-colors
-   撞过一模一样的坑)。所以这里把下划线动画直接内置进 tinter,变色和划线
+   必然有一条被整条覆盖掉。所以这里把下划线动画直接内置进 tinter,变色和划线
    两段过渡写在同一条 transition 声明里,不依赖外部第二个 class。
 
    静止态特意不显示下划线,也不设 color —— 颜色继承使用处的上下文(返回链接

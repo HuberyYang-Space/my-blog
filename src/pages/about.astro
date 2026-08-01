@@ -3,8 +3,6 @@ import BackLink from '../components/BackLink.astro'
 import { SITE } from '../config'
 import BaseLayout from '../layouts/BaseLayout.astro'
 
-// 作品链接与联系方式都是"结构相同、只有数据不同"的同构列表,改为数据驱动:
-// 增删一项只动数组,不再复制整段 markup。
 const works = [
   { href: 'https://huberyyang.site/', label: '主页' },
   { href: 'https://huberyyang.site:81/', label: '健身管理' },
