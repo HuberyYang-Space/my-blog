@@ -12,9 +12,6 @@ const props = defineProps<{
 
 // 大纲只在标题足够多时才有意义 —— 少于 3 个 h2 的短文放一个几乎空的框只是噪音
 const showOutline = computed(() => props.links.filter(l => l.depth === 2).length >= 3)
-
-// 迁移前这里还有一组 data-pagefind-* 标记(限定索引范围、登记元数据、
-// 排除日期标签行),随 Pagefind 一并移除。它们不参与渲染,无视觉影响。
 </script>
 
 <template>

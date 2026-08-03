@@ -5,8 +5,7 @@ const props = defineProps<{
   links: TocLink[]
 }>()
 
-// Nuxt Content 的 toc 是嵌套结构(h3 挂在 h2 的 children 下),
-// 这里摊平成 Astro headings 那样的一维列表。
+// Nuxt Content 的 toc 是嵌套结构(h3 挂在 h2 的 children 下),这里摊平成一维列表。
 // 只收 h2/h3 —— h4 及以下在正文里已经很细,大纲再列进去只会变成一堵长墙。
 const items = computed(() => {
   const flat: { id: string, text: string, depth: number }[] = []

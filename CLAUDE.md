@@ -6,10 +6,6 @@
 
 Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,双主题切换。
 
-> 本项目最初用 Astro + Vue 岛屿搭建,2026-08-03 整体迁移到 Nuxt。迁移动机是 Astro 的开发者工具体验:
-> 无 Vue DevTools、`.astro` 的 `<script>` 与 frontmatter 作用域隔离、改动触发整页 reload、模板类型推导弱 ——
-> 四项均为架构层面无解。代码里凡是标注"迁移前 Astro ……"的注释都是在解释某处为何这样写,不要当作过时内容删掉。
-
 ## 技术栈速览
 
 - 包管理器:pnpm;语言:TypeScript(strict)
@@ -26,9 +22,8 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 
 - ⚠️ `app/config.ts` 的 `SITE.url` 目前是**暂定域名** `https://blog.hubery.dev`,上线前需与实际部署地址核对。
   canonical / sitemap / RSS / OG 图都依赖它生成绝对 URL。构建期没有占位域名守卫,核对完全靠人工,上线前务必手动确认。
-- 🔍 **搜索功能尚未实现**。迁移前用的是 `astro-pagefind`,其 `<pagefind-modal>` 是 Astro 专属 web component,
-  迁移时一并移除。重做时两条路:`@nuxt/content` 自带的 FTS5 全文搜索(与内容层同源,但会拉取 844KB 的
-  WASM SQLite + 内容 dump),或继续用 pagefind CLI 做 postbuild 并自写 Vue 弹层 UI。
+- 🔍 **搜索功能尚未实现**。两条可选路径:`@nuxt/content` 自带的 FTS5 全文搜索(与内容层同源,
+  但会拉取 844KB 的 WASM SQLite + 内容 dump),或用 pagefind CLI 做 postbuild 并自写 Vue 弹层 UI。
 
 ## 目录结构约定
 
@@ -69,9 +64,8 @@ app/
 - ESLint 会把 Markdown 里的 `ts` / `js` 代码块当**独立源文件**解析。贴不完整的语法片段(如裸的 `theme: { ... }`
   对象字面量)会报 `Parsing error: Expression expected`,且无法自动修复。两种解法:把片段补成语法完整的代码
   (包进 `export default defineConfig({ ... })` 之类),或换用不参与 lint 的语言标签(如 ```text)。
-- **中文引号要直接打 `“”`,不要指望自动转换**。迁移前 Astro 用 `@astrojs/markdown-satteri`,它的智能标点能识别
-  CJK 后的开引号;Nuxt Content 这条路只能接 `remark-smartypants`,而它会把 `到"岛屿"` 的开引号也转成收引号
-  (`到”岛屿”`),方向是错的、比不转更糟,因此本项目不启用该插件。
+- **中文引号要直接打 `“”`,不要指望自动转换**。本项目不启用 `remark-smartypants` —— 它会把 `到"标题"`
+  的开引号也转成收引号(`到”标题”`),方向是错的、比不转更糟。
 
 ## 视觉效果实现注意事项
 

@@ -8,9 +8,7 @@ const { data: tags } = await useAsyncData('home-tags', async () => {
   return (await getPostsGroupedByTag()).map(group => group.tag)
 })
 
-// 氛围光背景的鼠标视差。迁移前这段脚本因为 .astro 的 <script> 拿不到
-// frontmatter 作用域,只能靠 querySelectorAll 按 class 捞 DOM;
-// 现在直接用模板 ref 拿节点。
+// 氛围光背景的鼠标视差。
 // .glow-core 的自动漂移(外层 transform)、呼吸缩放(scale)与这里的视差
 // transform 分属不同节点/属性,互不覆盖,详见 global.css 顶部的说明。
 const coreA = ref<HTMLElement>()

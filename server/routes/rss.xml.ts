@@ -4,7 +4,7 @@ import { SITE } from '../../app/config'
 /**
  * RSS 订阅源。
  *
- * 迁移前用的是 @astrojs/rss,Nuxt 无对应官方模块,改为 Nitro 路由手写。
+ * Nuxt 无官方 RSS 模块,这里用 Nitro 路由手写。
  * 草稿过滤复用 shared/utils/posts.ts 的 isPublishedPost() —— 与站点页面同一个
  * 真源,不在这里另写一遍条件。
  */

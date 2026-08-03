@@ -27,9 +27,9 @@ export default defineNuxtConfig({
   // 路径一律用 Nuxt 原生的无尾斜杠形式(/about、/posts/<slug>),链接、canonical、
   // sitemap、RSS 四者据此对齐。
   //
-  // 曾试过统一加尾斜杠以对齐迁移前 Astro 的产出,结果是:Nuxt 会把静态页按原生形式
-  // (/about)自动加入预渲染,爬虫又从 <NuxtLink to="/about/"> 发现带斜杠的形式,
-  // 两条路由抢写同一个 about/index.html,产出末尾带残留字节的畸形 HTML。
+  // 不要改成带尾斜杠:Nuxt 会把静态页按原生形式(/about)自动加入预渲染,爬虫又从
+  // <NuxtLink to="/about/"> 发现带斜杠的形式,两条路由抢写同一个 about/index.html,
+  // 产出末尾带残留字节的畸形 HTML,且不报错。
   // 产物文件名两种写法都是 about/index.html,静态托管行为不受影响,故取原生形式。
   site: { url: SITE.url },
 
@@ -54,23 +54,20 @@ export default defineNuxtConfig({
 
   content: {
     renderer: {
-      // Nuxt Content 默认给 h2/h3/h4 套一层锚点 <a>,Astro 输出的是裸标题。
-      // 不关掉的话标题会继承 .prose a 的下划线样式,与迁移前不一致。
+      // Nuxt Content 默认给 h2/h3/h4 套一层锚点 <a>,不关掉的话标题会继承
+      // .prose a 的下划线样式。正文要的是裸标题。
       anchorLinks: false,
     },
     build: {
       markdown: {
-        // 不接 remark-smartypants:迁移前 Astro 用的是 @astrojs/markdown-satteri,
-        // 它的智能标点能正确识别 CJK 后的开引号;remark-smartypants(Nuxt Content
-        // 这条路唯一可接的实现)会把 到"岛屿" 里的开引号也转成收引号(”岛屿”),
-        // 比不转更糟。改为在 markdown 源码里直接写中文引号,渲染结果与迁移前一致。
+        // 不接 remark-smartypants:它会把 到"标题" 里的开引号也转成收引号
+        // (”标题”),方向是错的、比不转更糟。中文引号改为在 markdown 源码里直接写。
         toc: {
-          // 大纲要收 h2/h3,与原 PostOutline 的过滤条件一致
+          // 大纲要收 h2/h3,与 PostOutline 的过滤条件一致
           depth: 3,
           searchDepth: 3,
         },
         highlight: {
-          // 对应原 astro.config.ts 的 shikiConfig.themes { light, dark }。
           // Nuxt Content 用 default 作为浅色键名,于是 Shiki 输出的变量是
           // --shiki-default / --shiki-dark,global.css 按 .dark 选择器二选一取用。
           theme: {
@@ -94,7 +91,7 @@ export default defineNuxtConfig({
   hooks: {
     // nuxt generate 写出的根级 404.html 是 SPA 兜底空壳,内容要等 JS 水合才出现。
     // 这里用预渲染好的 /404/index.html(完整服务端渲染)覆盖它,让爬虫与禁用 JS
-    // 的访客也能看到 404 内容 —— 与迁移前 Astro 的产出保持一致。
+    // 的访客也能看到 404 内容。
     'nitro:build:public-assets': async (nitro) => {
       const { join } = await import('node:path')
       const { copyFile, access } = await import('node:fs/promises')

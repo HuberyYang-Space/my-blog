@@ -13,16 +13,13 @@ export const SITE = {
   title: 'Hubery',
   description: '记录前端工程实践与技术思考。',
   author: 'Hubery Yang',
-
   /**
    * 站点根 URL,末尾不带斜杠。
    *
-   * ⚠️ 待确认:目前填的是暂定域名,上线前需与实际部署地址核对。
-   * canonical / sitemap / RSS / OG 图全部依赖它生成绝对 URL,填错不会报错、
-   * 只会让这些链接整体指向错误域名(静默失败)。
+   * ⚠️ 暂定域名,上线前需与实际部署地址核对。canonical / sitemap / RSS / OG 图
+   * 均依赖它生成绝对 URL,填错不报错,只会让这些链接整体指向错误域名(静默失败)。
    */
   url: 'https://blog.hubery.dev',
-
   /** OG 分享图,相对站点根的路径,存放于 public/ */
   ogImage: '/og.png',
 } as const
