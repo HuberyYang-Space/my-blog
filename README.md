@@ -1,19 +1,19 @@
 # my-blog
 
-一个 Markdown 驱动的静态个人博客,风格克制极简。基于 Astro 构建,以 Vue 交互岛屿实现主题切换,内置全文搜索。
+一个 Markdown 驱动的静态个人博客,风格克制极简。基于 Nuxt 4 + Nuxt Content 构建,纯静态输出,支持双主题切换。
 
-> 🚧 开发中。当前进度:内容层、文章页、双主题、搜索、标签页、RSS、sitemap 与社交分享元信息均已跑通;
-> 视觉风格待细化,评论 / 阅读时长 / i18n 尚未实现。
+> 🚧 开发中。当前进度:内容层、文章页、双主题、标签页、RSS、sitemap 与社交分享元信息均已跑通;
+> 搜索、评论 / 阅读时长 / i18n 尚未实现。
 
 ## 技术栈
 
 | 领域 | 选型 |
 | :--- | :--- |
-| 框架 | [Astro](https://astro.build)(`output: 'static'`,纯静态输出) |
-| 交互 | [Vue 3](https://vuejs.org) —— 仅用于交互岛屿 |
+| 框架 | [Nuxt 4](https://nuxt.com)(`nuxt generate`,纯静态输出) |
+| 内容 | [Nuxt Content 3](https://content.nuxt.com) —— zod schema 校验的 Markdown 集合 |
 | 样式 | [UnoCSS](https://unocss.dev)(`darkMode: 'class'`) |
-| 搜索 | [Pagefind](https://pagefind.app) —— 构建期生成索引,弹层式 UI |
 | 图标 | [Iconify](https://iconify.design) / Phosphor Icons |
+| 站点地图 | [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) |
 | 规范 | ESLint([@antfu/eslint-config](https://github.com/antfu/eslint-config))+ commitlint + husky |
 
 ## 环境要求
@@ -28,14 +28,14 @@ pnpm install
 pnpm dev
 ```
 
-开发服务器启动于 http://localhost:4321。
+开发服务器启动于 http://localhost:3000。
 
-> 注意:搜索功能依赖构建期生成的索引,开发模式下不可用,需以 `pnpm build && pnpm preview` 验证。
-> 草稿(frontmatter 里 `draft: true`)在开发模式下可见,便于边写边预览,生产构建则完全排除。
+> 草稿(frontmatter 里 `draft: true`)在开发模式下可见,便于边写边预览,生产构建则完全排除
+> —— 既不会被预渲染成页面,也不会出现在 RSS 里。
 
 ## 写文章
 
-在 `src/content/blog/` 下新建 `.md` 文件,frontmatter 字段如下:
+在 `content/blog/` 下新建 `.md` 文件,frontmatter 字段如下:
 
 ```yaml
 ---
@@ -43,12 +43,16 @@ title: 文章标题 # 必填
 description: 一句话摘要 # 必填
 date: 2026-07-26 # 必填
 updatedDate: 2026-07-27 # 可选
-tags: [Astro, CSS] # 可选,默认 []
+tags: [Nuxt, CSS] # 可选,默认 []
 draft: false # 可选,默认 false
 ---
 ```
 
 文件名即 URL 路径(`hello.md` → `/posts/hello/`)。字段写错会在构建期报错,而非渲染成空白。
+下划线开头的文件(如 `_wip.md`)不会被收录。
+
+> 正文里的中文引号请直接输入 `“”`。本项目未启用 smartypants 类插件,直引号不会被自动转换
+> —— 原因见 [`CLAUDE.md`](./CLAUDE.md) 的「写文章约束」。
 
 ## 可用命令
 
@@ -56,28 +60,31 @@ draft: false # 可选,默认 false
 
 | 命令 | 说明 |
 | :--- | :--- |
-| `pnpm dev` | 启动开发服务器(`localhost:4321`) |
-| `pnpm build` | 构建生产站点至 `./dist/`,并生成 Pagefind 搜索索引 |
+| `pnpm dev` | 启动开发服务器(`localhost:3000`) |
+| `pnpm build` | 构建静态站点至 `.output/public/` |
 | `pnpm preview` | 本地预览构建产物 |
 | `pnpm lint` | 检查代码规范 |
 | `pnpm lint:fix` | 自动修复代码规范问题 |
-| `pnpm typecheck` | 类型检查(`astro check`) |
+| `pnpm typecheck` | 类型检查(`nuxt typecheck`,底层是 vue-tsc) |
 
 ## 项目结构
 
 ```text
 /
 ├── public/                    # 静态资源,原样拷贝至产物根目录
-├── src/
+├── content/blog/*.md          # 文章正文
+├── content.config.ts          # Content collection schema(根级)
+├── shared/utils/posts.ts      # app 与 server 双向自动导入 —— 草稿过滤的唯一真源
+├── server/routes/rss.xml.ts   # RSS 订阅源(Nitro 路由)
+├── app/
+│   ├── app.vue
+│   ├── error.vue              # nuxt generate 据此产出根级 404.html
 │   ├── config.ts              # 站点配置(站名/描述/域名/OG 图)的唯一真源
-│   ├── content.config.ts      # Content Collection schema(根级,非 content/config.ts)
-│   ├── content/blog/*.md      # 文章正文
-│   ├── layouts/               # BaseLayout(含防闪烁脚本 + OG 元信息)/ PostLayout
-│   ├── components/            # ThemeToggle.vue 是全站唯一的 Vue 岛屿
-│   ├── pages/                 # 文件路由(含 tags/[tag]、about、404、rss.xml)
-│   ├── styles/global.css      # 双主题变量 + reset + .prose
-│   └── utils/posts.ts         # 文章与标签查询(草稿过滤的唯一真源)
-├── astro.config.ts            # Astro 配置与集成
+│   ├── assets/css/global.css  # 双主题变量 + reset + .prose
+│   ├── components/            # 自动导入,含 BaseLayout / PostLayout / ThemeToggle
+│   ├── pages/                 # 文件路由(index、about、posts/[slug]、tags/[tag])
+│   └── utils/posts.ts         # 文章与标签查询
+├── nuxt.config.ts             # Nuxt 配置(含防闪烁内联脚本、Shiki 双主题)
 ├── uno.config.ts              # UnoCSS 配置
 ├── eslint.config.js           # ESLint 配置
 └── commitlint.config.ts       # 提交信息规范
@@ -89,19 +96,18 @@ draft: false # 可选,默认 false
 
 ```bash
 pnpm build
-npx serve dist
+npx serve .output/public
 ```
 
-> ⚠️ 部署前请核对 `src/config.ts` 中的 `SITE.url` 是否为实际域名 —— canonical、sitemap、RSS 与 OG 图均依赖该值生成绝对 URL。
-> `astro.config.ts` 里的构建守卫会拦下 `example.com` 这类占位值,但拦不住写错的真实域名。
+> ⚠️ 部署前请核对 `app/config.ts` 中的 `SITE.url` 是否为实际域名 —— canonical、sitemap、RSS 与 OG 图
+> 均依赖该值生成绝对 URL。构建期没有占位域名守卫,写错不会报错,只会让这些链接整体指向错误域名。
 
 站点同时输出:
 
-- `/sitemap-index.xml` —— 由 `@astrojs/sitemap` 生成
+- `/sitemap.xml` —— 由 `@nuxtjs/sitemap` 生成
 - `/rss.xml` —— 订阅源,与站点共用同一套草稿过滤逻辑
 - `/404.html` —— 静态托管平台按约定用作兜底页
 
 ## 相关文档
 
-- [`SPEC.md`](./SPEC.md) —— 完整技术方案与执行步骤
 - [`CLAUDE.md`](./CLAUDE.md) —— 项目级开发约定

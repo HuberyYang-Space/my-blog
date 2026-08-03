@@ -1,10 +1,10 @@
 {
   // 格式化统一交给 ESLint(@antfu/eslint-config),不使用 Prettier。
-  // 注意:Astro 官方扩展通过 @astrojs/language-server 内置了 volar-service-prettier,
-  // 若不显式关闭,保存 .astro 时会被 Prettier 格式化成双引号+分号风格,与 ESLint 规则互相打架。
+  // Volar(vue.volar)自带 formatter,不显式关闭会与 ESLint 的 fixAll 抢格式化权,
+  // 把 .vue 改成双引号+分号风格。
   "prettier.enable": false,
   "editor.formatOnSave": false,
-  "astro.format.enable": false,
+  "vue.format.enable": false,
 
   // 保存时由 ESLint 做修复式格式化
   "editor.codeActionsOnSave": {
@@ -18,7 +18,6 @@
     "typescript",
     "typescriptreact",
     "vue",
-    "astro",
     "html",
     "markdown",
     "json",
@@ -27,11 +26,13 @@
   ],
 
   // 关掉各语言的内置格式化器,避免与 ESLint 抢
-  "[astro]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
   "[vue]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
   "[typescript]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
   "[javascript]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
   "[json]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
   "[jsonc]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
-  "[markdown]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" }
+  "[markdown]": { "editor.defaultFormatter": "dbaeumer.vscode-eslint" },
+
+  // Volar 接管 .vue 的类型服务(Nuxt 的自动导入类型由 .nuxt/ 下生成的 tsconfig 提供)
+  "typescript.tsdk": "node_modules/typescript/lib"
 }

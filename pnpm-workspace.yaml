@@ -10,17 +10,18 @@ trustPolicy: no-downgrade
 # no-downgrade 策略把它误判为 "trust downgrade / possible package takeover",
 # 但已核对:lockfile integrity 与 npm registry 完全一致,维护者为官方 npm CLI 团队,
 # 且 6.3.1 本身是修复 ReDoS(CVE-2022-25883)后的版本。故仅对该条目豁免。
-# chokidar@4.0.3 是 @astrojs/check 的传递依赖。同样为误报:
-# 该版本 2024-12-18 发布至今无异常,维护者 paulmillr 为唯一且长期维护者,
-# integrity 与 registry 一致,仅因缺 provenance 附证被判定为 trust downgrade。
 # mdn-data@2.29.0 报的是 "Missing time in metadata",并非 trust downgrade:
 # pnpm 取到的精简元数据缺 time 字段,实际 registry 有时间戳(2026-07-17),
 # 由 Mozilla mdn-bot 经 GitHub Actions 发布,且是当前 latest。
 trustPolicyExclude:
   - semver@6.3.1
-  - chokidar@4.0.3
   - mdn-data@2.29.0
 
+# better-sqlite3 是 @nuxt/content v3 的存储后端(v3 把内容层从文件改为 SQL),
+# 属原生模块,安装时需跑 prebuild-install 拉预编译二进制、失败则回落 node-gyp 编译。
+# 放行理由:它是 @nuxt/content 官方文档指定的默认适配器,维护者为 WiseLibs 组织,
+# 长期活跃;构建脚本只做二进制获取/编译,不访问项目文件。
 allowBuilds:
+  better-sqlite3: true
   esbuild: true
   sharp: true

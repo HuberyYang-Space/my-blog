@@ -1,9 +1,9 @@
 {
   "recommendations": [
-    "astro-build.astro-vscode",
     "dbaeumer.vscode-eslint",
     "vue.volar",
-    "antfu.unocss"
+    "antfu.unocss",
+    "nuxt.mdc"
   ],
   // 本项目用 ESLint 做格式化,装 Prettier 扩展会与之冲突
   "unwantedRecommendations": ["esbenp.prettier-vscode"]

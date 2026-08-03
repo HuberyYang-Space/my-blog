@@ -1,0 +1,128 @@
+<script setup lang="ts">
+import { SITE } from '~/config'
+
+const works = [
+  { href: 'https://huberyyang.site/', label: '主页' },
+  { href: 'https://huberyyang.site:81/', label: '健身管理' },
+  { href: 'https://huberyyang.site:83/', label: '音乐' },
+  { href: 'https://huberyyang.site:84/', label: '前端森林' },
+  { href: 'https://huberyyang.site:90/', label: 'AI日报' },
+  { href: 'https://huberyyang.site:88/', label: 'equals-demo' },
+]
+
+// href 缺省表示这一项没有可跳转的目标(微信号只能复制),渲染成点击复制的按钮
+// 而不是 href="javascript:void(0)" 的假链接 —— 假链接会被读屏软件播报成"链接"、
+// 键盘 Tab 停上去按回车却什么都不发生,将来加 CSP 也会被 script-src 拦掉。
+const contacts: { icon: string, text: string, href?: string }[] = [
+  { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', href: 'mailto:18830279823@163.com' },
+  { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang' },
+  { icon: 'i-ph-wechat-logo', text: 'HuberyYang_' },
+]
+
+// 站外链接才需要新开标签页,mailto: 这类协议链接不需要。
+function isExternal(href?: string) {
+  return Boolean(href?.startsWith('http'))
+}
+
+// navigator.clipboard 只在安全上下文(https / localhost)下存在,站点若部署在
+// 纯 http 上会直接拿不到,所以保留 execCommand 兜底,不让复制在生产环境失灵。
+async function copyText(text: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', '')
+  // 移出可视区域再选中,避免复制瞬间页面滚动或闪烁
+  textarea.style.cssText = 'position:fixed;top:-9999px;opacity:0'
+  document.body.appendChild(textarea)
+  textarea.select()
+  document.execCommand('copy')
+  textarea.remove()
+}
+
+// 复制成功后按钮文案临时换成"已复制",aria-live 让读屏软件也能收到反馈
+const copyLabels = ref<Record<string, string>>({})
+const timers = new Map<string, number>()
+
+async function onCopy(text: string) {
+  try {
+    await copyText(text)
+    copyLabels.value[text] = '已复制'
+  }
+  catch {
+    copyLabels.value[text] = '复制失败'
+  }
+
+  // 连点时重置上一次的还原计时,否则文案会被前一个 timer 提前跳回去
+  clearTimeout(timers.get(text))
+  timers.set(text, window.setTimeout(() => {
+    delete copyLabels.value[text]
+  }, 1500))
+}
+
+onUnmounted(() => timers.forEach(id => clearTimeout(id)))
+</script>
+
+<template>
+  <BaseLayout title="关于" :description="`关于 ${SITE.title} 与这个站点。`">
+    <section class="py-4">
+      <h1 class="text-xl font-semibold tracking-tight">
+        关于
+      </h1>
+    </section>
+
+    <section class="prose mt-6">
+      <!--
+        框架名链接的颜色走 .highlighter 的 --tint 参数（见 global.css 的 --tint 一节），
+        每家取各自品牌色；Next.js 的标识是纯黑白，直接用 --c-text；AI 不是产品，
+        没有官网可指，保持纯文本。这里是一句行内散文而非同构列表，刻意不像下方
+        works / contacts 那样抽成数组——拆成 v-for 加分隔符只会更难读。
+      -->
+      <p>你好，我是<a class="highlighter" href="https://github.com/Hub-yang" target="_blank" rel="noreferrer">{{ SITE.author }}</a>，前端工程师，开源爱好者，对 <a class="highlighter [--tint:var(--c-brand-vue)]" href="https://vuejs.org/" target="_blank" rel="noreferrer">Vue</a> / <a class="highlighter [--tint:var(--c-brand-react)]" href="https://react.dev/" target="_blank" rel="noreferrer">React</a> / <a class="highlighter [--tint:var(--c-brand-nuxt)]" href="https://nuxt.com/" target="_blank" rel="noreferrer">Nuxt</a> / <a class="highlighter [--tint:var(--c-text)]" href="https://nextjs.org/" target="_blank" rel="noreferrer">Next</a> / AI 感兴趣，开发合作欢迎联系。</p>
+    </section>
+
+    <nav aria-label="作品链接" class="mt-6 flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-text-mute font-mono">
+      <a
+        v-for="{ href, label } in works"
+        :key="href"
+        class="highlighter"
+        :href="href"
+        target="_blank"
+        rel="noreferrer"
+      >#{{ label }}</a>
+    </nav>
+
+    <nav aria-label="联系方式" class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
+      <template v-for="{ icon, text, href } in contacts" :key="text">
+        <a
+          v-if="href"
+          :href="href"
+          :target="isExternal(href) ? '_blank' : undefined"
+          :rel="isExternal(href) ? 'noreferrer' : undefined"
+          class="inline-flex items-center"
+        >
+          <span :class="icon" />
+          {{ text }}
+        </a>
+        <button
+          v-else
+          type="button"
+          class="copy-contact inline-flex items-center p-0"
+          @click="onCopy(text)"
+        >
+          <span :class="icon" />
+          <span class="copy-contact-text" aria-live="polite">{{ copyLabels[text] ?? text }}</span>
+        </button>
+      </template>
+    </nav>
+
+    <nav class="mt-12">
+      <BackLink href="/">
+        返回首页
+      </BackLink>
+    </nav>
+  </BaseLayout>
+</template>

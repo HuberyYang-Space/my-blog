@@ -1,13 +1,11 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "compilerOptions": {
-    "jsx": "preserve"
-  },
-  "include": [
-    ".astro/types.d.ts",
-    "**/*"
+  "references": [
+    { "path": "./.nuxt/tsconfig.app.json" },
+    { "path": "./.nuxt/tsconfig.server.json" },
+    { "path": "./.nuxt/tsconfig.node.json" },
+    { "path": "./.nuxt/tsconfig.shared.json" }
   ],
-  "exclude": [
-    "dist"
-  ]
+  // Nuxt 在 .nuxt/ 下生成分层 tsconfig(app / server / node / shared),
+  // 根级这份只做引用聚合,不直接声明编译选项。
+  "files": []
 }

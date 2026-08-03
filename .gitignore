@@ -1,7 +1,10 @@
 # build output
-dist/
-# generated types
-.astro/
+.output/
+# nuxt generate 会建一个 dist -> .output/public 的符号链接(向后兼容),同样不入库
+dist
+# generated types / nuxt 构建缓存
+.nuxt/
+.data/
 
 # dependencies
 node_modules/
