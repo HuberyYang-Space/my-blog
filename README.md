@@ -2,8 +2,8 @@
 
 一个 Markdown 驱动的静态个人博客,风格克制极简。基于 Nuxt 4 + Nuxt Content 构建,纯静态输出,支持双主题切换。
 
-> 🚧 开发中。当前进度:内容层、文章页、双主题、标签页、RSS、sitemap、社交分享元信息,
-> 以及 MDC 组件与代码块增强均已跑通;搜索、评论 / 阅读时长 尚未实现。
+> 🚧 开发中。当前进度:内容层、文章页、双主题、标签页、RSS、sitemap、社交分享元信息、
+> 全文搜索,以及 MDC 组件与代码块增强均已跑通;评论 / 阅读时长 尚未实现。
 
 ## 技术栈
 
@@ -16,6 +16,7 @@
 | 样式 | [UnoCSS](https://unocss.dev)(`darkMode: 'class'`) |
 | 图标 | [Iconify](https://iconify.design) / Phosphor Icons |
 | 站点地图 | [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) |
+| 搜索 | 自建 —— 构建期出静态索引 + 客户端子串匹配,零运行时依赖(见下方说明) |
 | OG 分享图 | [nuxt-og-image](https://nuxtseo.com/og-image)(Browser 渲染器,构建期出图) |
 | 测试 | [Vitest](https://vitest.dev) 纯函数单测 + 自写产物断言脚本 |
 | 规范 | ESLint([@antfu/eslint-config](https://github.com/antfu/eslint-config))+ commitlint + husky |
@@ -89,6 +90,25 @@ draft: false # 可选,默认 false
 (正文栏宽 672px,按 2x 屏取 1344px 宽,格式 WebP);项目不接图片优化模块,原因见 `CLAUDE.md`。
 构建期有守卫:产物里任何 `<img src>` 指向不存在的文件都会让构建失败。
 
+## 搜索
+
+头部主题切换按钮左侧的入口,或按 <kbd>⌘K</kbd> / <kbd>Ctrl+K</kbd> 唤起。全文搜索,
+结果按文章分组、直达对应小节的锚点;<kbd>↑</kbd><kbd>↓</kbd> 选择,<kbd>↵</kbd> 打开,
+<kbd>Esc</kbd> 关闭。
+
+实现是三段式,没有引入任何搜索库或外部服务:
+
+| 环节 | 位置 | 说明 |
+| :--- | :--- | :--- |
+| 索引 | `server/routes/search-index.json.ts` | 构建期预渲染成静态 JSON(当前 18KB / gzip 6.8KB),按 h2/h3 切成小节 |
+| 匹配 | `app/utils/search.ts` | 纯函数:空格拆词取 AND,按 标题 > 标签 > 面包屑 > 正文 分档排序 |
+| 界面 | `app/components/SearchDialog.vue` | 首次打开时才拉索引,不进首屏 |
+
+**为什么不用现成的搜索库**:它们对中文清一色走分词,而分词切不准就会静默漏搜 ——
+实测 `Intl.Segmenter` 把「高亮标注」切成「高亮 / 标 / 注」,搜「标注」直接返回空数组,
+不报错也不告警。中文没有词形变化,子串匹配反而近乎完美,代价只是线性扫描 ——
+而几十篇的语料全量扫一遍是 0.004ms 量级。详见 `CLAUDE.md` 的「搜索约定」。
+
 ## 可用命令
 
 所有命令均在项目根目录执行:
@@ -123,6 +143,7 @@ draft: false # 可选,默认 false
 ├── shared/utils/posts.ts      # app 与 server 双向自动导入 —— 草稿过滤的唯一真源
 ├── server/
 │   ├── routes/rss.xml.ts      # RSS 订阅源(Nitro 路由)
+│   ├── routes/search-index.json.ts  # 搜索索引(构建期生成的静态 JSON)
 │   └── utils/xml.ts           # XML 转义(抽出来才可单测)
 ├── app/
 │   ├── app.vue
@@ -140,7 +161,7 @@ draft: false # 可选,默认 false
 │   │   ├── content/           # 覆写内置 Prose 组件(ProsePre / ProseTable / ProseImg)
 │   │   └── mdc/               # 自定义 MDC 组件(Callout / Demo / Illustration)
 │   ├── pages/                 # 文件路由(index、about、posts/[slug]、tags/[tag])
-│   └── utils/                 # posts.ts(取数层)、clipboard.ts
+│   └── utils/                 # posts.ts(取数层)、search.ts(搜索匹配)、clipboard.ts
 ├── nuxt.config.ts             # Nuxt 配置(含防闪烁内联脚本、Shiki 双主题)
 ├── uno.config.ts              # UnoCSS 配置(含跳过 SFC <style> 的自定义提取器)
 ├── eslint.config.js           # ESLint 配置

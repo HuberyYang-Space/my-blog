@@ -165,7 +165,7 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
   // ---- 3. 草稿不外泄 ----
   // 草稿过滤散落在取数、RSS、sitemap 三条路径上,漏掉任何一条都是"站点上看不到、
   // 订阅源里却推送了"。这里从产物侧一次性验完。
-  const leakSurfaces = ['rss.xml', 'sitemap.xml', 'index.html']
+  const leakSurfaces = ['rss.xml', 'sitemap.xml', 'index.html', 'search-index.json']
   for (const slug of drafts) {
     for (const surface of leakSurfaces) {
       const path = join(publicDir, surface)
@@ -223,6 +223,41 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
       fail('nav', '有多篇文章却没有任何"上一篇"链接 —— PostNav 可能没接上')
     if (!joined.includes('下一篇'))
       fail('nav', '有多篇文章却没有任何"下一篇"链接 —— PostNav 可能没接上')
+  }
+
+  // ---- 8. 搜索索引 ----
+  // 索引是 fetch 出来的,HTML 里没有任何指向它的 href —— 预渲染爬虫发现不了它,
+  // 必须靠 nuxt.config.ts 的 prerender.routes 显式列出。漏掉不会报错:dev 模式
+  // 照常能搜、构建照常成功,只有线上点开搜索才 404。
+  // (草稿是否混进索引由上面第 3 节的 leakSurfaces 一并检查。)
+  const indexPath = join(publicDir, 'search-index.json')
+  if (!await exists(indexPath)) {
+    fail('search', 'search-index.json 不存在 —— 检查 nuxt.config.ts 的 prerender.routes')
+  }
+  else {
+    const index = JSON.parse(await readFile(indexPath, 'utf8')) as {
+      id: string
+      level: number
+    }[]
+
+    if (index.length === 0) {
+      fail('search', '搜索索引是空的 —— 取数或草稿过滤可能把内容全滤掉了')
+    }
+
+    for (const entry of index) {
+      const [path, anchor] = entry.id.split('#')
+      const page = join(publicDir, path ?? '', 'index.html')
+
+      if (!await exists(page)) {
+        fail('search', `索引里的 ${entry.id} 指向不存在的页面`)
+        continue
+      }
+
+      // 锚点必须在页面上真实存在。对不上时浏览器不会报错,只是停在页面顶部 ——
+      // 搜索结果看起来"能点开",实际每一条都跳到了同一个地方。
+      if (anchor && !(await readFile(page, 'utf8')).includes(`id="${decodeURIComponent(anchor)}"`))
+        fail('search', `索引里的 ${entry.id} 在页面上找不到对应锚点`)
+    }
   }
 
   if (problems.length) {

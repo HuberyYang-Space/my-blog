@@ -44,7 +44,8 @@ function navLinkClass(active: boolean) {
         </NuxtLink>
       </div>
 
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-2">
+        <SearchTrigger />
         <ThemeToggle />
       </div>
     </nav>

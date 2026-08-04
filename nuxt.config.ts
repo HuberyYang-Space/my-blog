@@ -100,7 +100,12 @@ export default defineNuxtConfig({
       crawlLinks: true,
       // 首页/RSS 作为爬虫入口;标签页与文章页都能从首页的链接爬到。
       // /404 是给下面那个钩子备料的,见 app/pages/404.vue 的说明。
-      routes: ['/', '/rss.xml', '/404'],
+      //
+      // /search-index.json 必须显式列在这里:爬虫只从 href 属性发现链接
+      // (extractLinks 里 `if (!node.attributes?.href) return`),而这个索引是
+      // 搜索弹层用 fetch 取的,HTML 里没有任何指向它的 href。漏掉不会报错 ——
+      // dev 模式照常能搜、构建照常成功,只有线上点开搜索才 404。
+      routes: ['/', '/rss.xml', '/404', '/search-index.json'],
     },
   },
 

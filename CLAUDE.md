@@ -53,8 +53,9 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
   核对完把同文件的 `urlConfirmed` 改成 `true`。在那之前每次构建都会打印告警。
   **刻意不做成构建失败** —— 域名没核对是"还没上线",不是"构建坏了",拿它挡住日常开发得不偿失;
   而格式层面的约束(必须 https、无尾斜杠、无路径段)由 `test/config.test.ts` 硬守,那些写错是真会静默出错的。
-- 🔍 **搜索功能尚未实现**。两条可选路径:`@nuxt/content` 自带的 FTS5 全文搜索(与内容层同源,
-  但会拉取 844KB 的 WASM SQLite + 内容 dump),或用 pagefind CLI 做 postbuild 并自写 Vue 弹层 UI。
+- ⚠️ 索引里的正文**不截断**。截断能省体积,但省下来的那一截恰恰是"搜不到"的部分,
+  而且搜不到不会报错 —— 看起来只是"这站没写过这个词"。当前全站索引 18KB(gzip 6.8KB),
+  几十篇的量级下没有截断的必要。
 
 ## 目录结构约定
 
@@ -70,7 +71,7 @@ scripts/
 public/images/           # 正文插图(见「图片约定」)
 shared/utils/            # app 与 server 双向自动导入(草稿过滤真源放这里)
 server/
-├── routes/              # Nitro 路由(RSS)
+├── routes/              # Nitro 路由(RSS、搜索索引)
 └── utils/               # server 侧自动导入(escapeXml —— 抽出来才可单测)
 app/
 ├── app.vue
@@ -83,11 +84,11 @@ app/
 │   ├── reset.css        # 手写 reset
 │   ├── links.css        # 三种可点击文本样式(多组件共用)
 │   └── prose.css        # 正文排版,作用于 markdown 产出的 DOM
-├── components/          # 自动导入,含 BaseLayout / PostLayout
+├── components/          # 自动导入,含 BaseLayout / PostLayout / SearchTrigger / SearchDialog
 │   ├── content/         # 覆写内置 Prose 组件(ProsePre / ProseTable / ProseImg)
 │   └── mdc/             # 自定义 MDC 组件(Callout / Demo / Illustration)
 ├── pages/               # 文件路由
-└── utils/               # 仅 app 侧自动导入(取数层 posts.ts、clipboard.ts)
+└── utils/               # 仅 app 侧自动导入(取数层 posts.ts、搜索匹配 search.ts、clipboard.ts)
 ```
 
 - `app/mdc.config.ts` **不能放仓库根**。MDC 按 `srcDir` 扫描该文件,Nuxt 4 的 srcDir 是 `app/`;
@@ -173,6 +174,29 @@ app/
   为一点体积收益引入一个没有兜底的静默失败,不划算。
 - 产物里任何 `<img src>` 指向不存在的文件都会让构建失败,见下方「守门机制」。
 
+## 搜索约定
+
+三段式:`server/routes/search-index.json.ts` 生成索引 → `app/utils/search.ts` 纯函数匹配 →
+`SearchDialog.vue` 只负责渲染。与取数层同一套分法,理由也相同 —— 排序和边界要能单测。
+
+- **中文一律用子串匹配,不要换成"正经的搜索库"**。现成方案(SQLite FTS5、Pagefind、MiniSearch、
+  Fuse)对中文清一色走分词,而分词切不准就会**静默漏搜**:实测 `Intl.Segmenter` 把「高亮标注」
+  切成「高亮 | 标 | 注」、「代码块」切成「代码 | 块」,搜「标注」「代码块」全部返回空数组,不报错
+  也不告警。`@nuxt/content` 内置的 `useSearchCollection` 更糟 —— 它建 FTS 表时不带 tokenizer
+  (`runtime/internal/search.js`),整串中文变成一个 token,只有恰好位于标点后的词才搜得到,
+  且模块没暴露 tokenizer 配置入口,改不了。
+  中文没有词形变化,子串匹配因此近乎完美;代价只是线性扫描,而 50 篇 × 4KB 的语料全量扫一遍是
+  0.004ms 量级。`test/search.test.ts` 末尾那组「标注 / 代码块 / 块里」的回归测试就是钉这条结论的,
+  想换库时先看那几条会不会红。
+- **切段复用 `queryCollectionSearchSections`,不要自己按标题拆**。锚点推导规则得和 Nuxt Content
+  的 rehype 插件完全一致,对不上时链接会跳到页面顶部而不是小节 —— 不报错,只是跳错地方。
+  标题范围取 h2/h3,与 `PostOutline` 的过滤条件同一口径。
+- **`/search-index.json` 必须显式列进 `nitro.prerender.routes`**。索引是 `fetch` 出来的,HTML 里
+  没有任何指向它的 `href`,爬虫发现不了(同「图片约定」里 `extractLinks` 那条)。漏掉时 dev 模式
+  照常能搜、构建照常成功,只有线上点开搜索才 404。已由产物断言守住。
+- 索引是继站点页面、RSS、sitemap 之后的**第四条草稿泄露面**,过滤只认
+  `shared/utils/posts.ts` 的 `isPublishedPost()`。
+
 ## 守门机制
 
 本项目遇到的故障有同一个形状:**构建成功、页面照常渲染、只是某块东西凭空消失**
@@ -181,8 +205,8 @@ app/
 
 | 层 | 位置 | 守什么 | 怎么跑 |
 | :--- | :--- | :--- | :--- |
-| 纯函数单测 | `test/` | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式 | `pnpm test` |
-| 产物断言 | `scripts/verify-build.ts` | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线 | 构建期自动跑;`pnpm verify:build` 单独跑 |
+| 纯函数单测 | `test/` | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归) | `pnpm test` |
+| 产物断言 | `scripts/verify-build.ts` | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、搜索索引存在且每条锚点在页面上真实可达 | 构建期自动跑;`pnpm verify:build` 单独跑 |
 
 - **上线的是产物,不是测试里的那个副本** —— 凡是"没有兜底的静默失败"都归产物断言,不要试图用
   模拟环境在单测里复现。
