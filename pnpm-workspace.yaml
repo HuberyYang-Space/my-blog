@@ -4,6 +4,12 @@ minimumReleaseAgeExclude:
   - motion@12.43.0
 shellEmulator: true
 
+# pnpm 默认会在 pnpm exec/run 之前检查依赖是否与 lockfile 同步,不同步就自行跑一次 install。
+# 关掉它:依赖同步是人的职责,不该由 pre-commit 钩子代劳 —— 钩子会在 GitHub Desktop 这类
+# 无 TTY 的环境里运行,一旦那次 install 需要交互确认(例如它判定 node_modules 过期、要删掉重建),
+# 就直接失败退出,而报错指向 pnpm 内部调用栈,完全看不出跟"提交"有什么关系。
+verifyDepsBeforeRun: false
+
 trustPolicy: no-downgrade
 
 # semver@6.3.1 是 @babel/core 等包的传递依赖(babel 内部固定 ^6.0.0)。
