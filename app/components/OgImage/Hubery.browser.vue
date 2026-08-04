@@ -36,8 +36,14 @@ import { SITE } from '~/config'
   justify-content: center;
   padding-left: 120px;
   background: #fdfdfd;
-  font-family: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
-    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    'PingFang SC',
+    'Hiragino Sans GB',
+    'Microsoft YaHei',
+    sans-serif;
 }
 
 .rule {

@@ -11,7 +11,7 @@
  * 3. links  —— 三种可点击文本样式,被多个组件与 markdown 正文共用
  * 4. prose  —— 文章正文排版,作用于 markdown 产出的 DOM(不属于任何 SFC)
  */
-@import "./tokens.css";
-@import "./reset.css";
-@import "./links.css";
-@import "./prose.css";
+@import './tokens.css';
+@import './reset.css';
+@import './links.css';
+@import './prose.css';

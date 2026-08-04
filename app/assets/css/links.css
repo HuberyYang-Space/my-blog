@@ -104,11 +104,10 @@
 
   color: var(--_tint);
   border-bottom: 1px solid var(--_tint);
-  background-image:
-    linear-gradient(
-      color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent),
-      color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent)
-    );
+  background-image: linear-gradient(
+    color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent),
+    color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent)
+  );
   background-origin: padding-box;
   background-repeat: no-repeat;
   background-position: 0 100%;
