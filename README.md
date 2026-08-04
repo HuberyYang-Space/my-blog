@@ -14,6 +14,7 @@
 | 样式 | [UnoCSS](https://unocss.dev)(`darkMode: 'class'`) |
 | 图标 | [Iconify](https://iconify.design) / Phosphor Icons |
 | 站点地图 | [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) |
+| OG 分享图 | [nuxt-og-image](https://nuxtseo.com/og-image)(Browser 渲染器,构建期出图) |
 | 规范 | ESLint([@antfu/eslint-config](https://github.com/antfu/eslint-config))+ commitlint + husky |
 
 ## 环境要求
@@ -79,7 +80,8 @@ draft: false # 可选,默认 false
 ├── app/
 │   ├── app.vue
 │   ├── error.vue              # nuxt generate 据此产出根级 404.html
-│   ├── config.ts              # 站点配置(站名/描述/域名/OG 图)的唯一真源
+│   ├── config.ts              # 站点配置(站名/描述/域名)的唯一真源
+│   ├── components/OgImage/    # OG 分享图模板(Vue 组件,构建期由 Chrome 渲染)
 │   ├── assets/css/global.css  # 双主题变量 + reset + .prose
 │   ├── components/            # 自动导入,含 BaseLayout / PostLayout / ThemeToggle
 │   ├── pages/                 # 文件路由(index、about、posts/[slug]、tags/[tag])
@@ -107,6 +109,10 @@ npx serve .output/public
 - `/sitemap.xml` —— 由 `@nuxtjs/sitemap` 生成
 - `/rss.xml` —— 订阅源,与站点共用同一套草稿过滤逻辑
 - `/404.html` —— 静态托管平台按约定用作兜底页
+- `/_og/s/*.png` —— OG 分享图,构建期用 Chrome 渲染 `app/components/OgImage/` 下的模板
+
+> 构建需要本机可用的 Chrome/Chromium(CI 环境模块会自行安装)。找不到时渲染器会静默禁用,
+> 因此 `nuxt.config.ts` 里有构建期守卫:产物中若缺少 og:image 或图片文件不存在,构建直接失败。
 
 ## 相关文档
 

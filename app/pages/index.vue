@@ -2,6 +2,12 @@
 import { animate } from 'motion'
 import { SITE } from '~/config'
 
+// 全站唯一一次 defineOgImage:模块按路由生成图片,在 BaseLayout 里调用会让每条
+// 路由都产出一张字节相同的 PNG(文章越多冗余越大),而模块没有"全站单图"开关。
+// 只在根路由调用 → 只产出一个文件,且文件名不带路由段(见 SITE.ogImage 的说明)。
+// 其余页面的 og:image 由 BaseLayout 指向同一个 URL。
+defineOgImage('Hubery.browser')
+
 const { data: posts } = await useAsyncData('posts', () => getPublishedPosts())
 // 复用标签归档页现成的排序规则(文章数倒序、同数按标签名排序),不新增工具函数。
 const { data: tags } = await useAsyncData('home-tags', async () => {

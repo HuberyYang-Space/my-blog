@@ -17,7 +17,11 @@ const props = withDefaults(defineProps<{
 
 const route = useRoute()
 const canonical = computed(() => new URL(route.path, SITE.url).href)
-// OG 图必须是绝对 URL —— 抓取方(微信/Twitter/Slack)不在本站上下文中解析相对路径
+
+// OG 图必须是绝对 URL —— 抓取方(微信/Twitter/Slack)不在本站上下文中解析相对路径。
+// 图片文件由根路由的 defineOgImage 生成(见 app/pages/index.vue),这里只负责让
+// 每个页面都指向它;不在 BaseLayout 里调 defineOgImage,否则每条路由都会产出一张
+// 字节相同的冗余 PNG。
 const ogImage = new URL(SITE.ogImage, SITE.url).href
 
 useSeoMeta({

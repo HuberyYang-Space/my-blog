@@ -11,7 +11,8 @@
  */
 export const SITE = {
   title: 'Hubery',
-  description: '记录前端工程实践与技术思考。',
+  /** 首页 hero 可见文案、首页 meta description、RSS 频道描述,三处同源 */
+  description: '勤靡余劳，心有常闲。',
   author: 'Hubery Yang',
   /**
    * 站点根 URL,末尾不带斜杠。
@@ -20,6 +21,15 @@ export const SITE = {
    * 均依赖它生成绝对 URL,填错不报错,只会让这些链接整体指向错误域名(静默失败)。
    */
   url: 'https://blog.hubery.dev',
-  /** OG 分享图,相对站点根的路径,存放于 public/ */
-  ogImage: '/og.png',
+
+  /**
+   * OG 分享图路径,相对站点根。
+   *
+   * 由 nuxt-og-image 在构建期生成,文件名规则是 `c_<模板组件名>.png` ——
+   * 模板见 `app/components/OgImage/Hubery.browser.vue`,重命名模板必须同步改这里。
+   * 之所以能写死:文件名只由组件名决定,不含内容哈希;且 `nuxt.config.ts` 的构建期
+   * 守卫会核对每个页面的 og:image 是否真的存在于产物中,对不上就让构建失败,
+   * 不会静默指向一个 404。
+   */
+  ogImage: '/_og/s/c_Hubery.browser.png',
 } as const

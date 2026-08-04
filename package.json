@@ -35,6 +35,8 @@
     "eslint": "^10.8.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.2.0",
+    "nuxt-og-image": "^6.7.5",
+    "playwright-core": "^1.62.1",
     "typescript": "^6.0.3",
     "unocss": "^66.7.5",
     "vue-tsc": "^3.3.9"

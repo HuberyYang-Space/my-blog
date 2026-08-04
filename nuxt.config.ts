@@ -19,7 +19,7 @@ const themeInitScript = `(function () {
 })()`
 
 export default defineNuxtConfig({
-  modules: ['@nuxt/content', '@unocss/nuxt', '@nuxtjs/sitemap'],
+  modules: ['@nuxt/content', '@unocss/nuxt', '@nuxtjs/sitemap', 'nuxt-og-image'],
 
   // 纯静态输出:产物需可脱离 Node 运行时,由任意静态文件服务器托管。
   ssr: true,
@@ -37,6 +37,22 @@ export default defineNuxtConfig({
     // /404 是为了产出服务端渲染的 404.html 才预渲染的(见 app/pages/404.vue),
     // 它不是内容页,不能进 sitemap。
     exclude: ['/404'],
+  },
+
+  ogImage: {
+    // 渲染器不在这里配 —— 它由模板的文件名后缀决定,见
+    // app/components/OgImage/Hubery.browser.vue。`defaults` 的类型显式排除了
+    // renderer 字段,写在这里能通过构建但过不了 typecheck。
+    //
+    // 选 Chrome 而非 satori/takumi:后两者不能用系统字体,中文要另行内嵌
+    // Noto Sans SC(全字重十几 MB),而模块文档没有 CJK 章节。走浏览器则直接吃
+    // 系统 PingFang SC,且 CSS 支持完整。
+    // 已知短板"每次请求都要开浏览器"只影响运行时按需生成;本站全静态预渲染,
+    // 构建期渲染完就结束,产物里没有任何运行时开销。
+    defaults: {
+      width: 1200,
+      height: 630,
+    },
   },
 
   css: ['~/assets/css/global.css'],
@@ -108,6 +124,48 @@ export default defineNuxtConfig({
       }
 
       await copyFile(src, join(dir, '404.html'))
+
+      // ---- OG 图守卫 ----
+      // Browser 渲染器在找不到 Chrome 时会静默禁用:构建照样成功,产物里却少了
+      // 分享图,而本地预览完全看不出异常 —— 只有别人分享链接、卡片没图时才暴露,
+      // 那时往往已经部署好几天。这类没有兜底的静默失败一律转成构建失败。
+      const { readdir, readFile } = await import('node:fs/promises')
+
+      async function htmlFiles(d: string): Promise<string[]> {
+        const entries = await readdir(d, { withFileTypes: true })
+        const found = await Promise.all(entries.map(async (e) => {
+          const p = join(d, e.name)
+          if (e.isDirectory())
+            return htmlFiles(p)
+          return e.name.endsWith('.html') ? [p] : []
+        }))
+        return found.flat()
+      }
+
+      const pages = await htmlFiles(dir)
+      const missing: string[] = []
+      let checked = 0
+
+      for (const page of pages) {
+        const html = await readFile(page, 'utf8')
+        const url = html.match(/property="og:image" content="([^"]+)"/)?.[1]
+        // 200.html 是 SPA 兜底空壳,本就不带任何 SEO 标签,不参与校验
+        if (!url)
+          continue
+        checked++
+        try {
+          await access(join(dir, new URL(url).pathname))
+        }
+        catch {
+          missing.push(`${page.slice(dir.length)} → ${url}`)
+        }
+      }
+
+      if (checked === 0)
+        throw new Error('[og] 产物里没有任何 og:image —— 渲染器可能已静默禁用(检查 Chrome 是否可用)')
+
+      if (missing.length)
+        throw new Error(`[og] 以下页面的 og:image 指向不存在的文件:\n  ${missing.join('\n  ')}`)
     },
   },
 

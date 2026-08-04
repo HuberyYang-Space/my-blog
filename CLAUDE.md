@@ -13,6 +13,9 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 - 内容层:根级 `content.config.ts` 定义 collection,zod schema;markdown 放 `content/blog/`
 - 样式:`unocss` + `@unocss/nuxt`,`darkMode: 'class'`,手写 reset(不开 `injectReset`)
 - 站点地图:`@nuxtjs/sitemap`;RSS:`server/routes/rss.xml.ts` 手写 Nitro 路由(Nuxt 无官方 RSS 模块)
+- OG 分享图:`nuxt-og-image`,Browser(Chrome)渲染器,模板在 `app/components/OgImage/`。
+  选 Browser 而非 satori/takumi 是因为后两者不能用系统字体,中文需另行内嵌 Noto Sans SC,
+  且模块文档没有 CJK 章节;走 Chrome 直接吃系统 PingFang SC,CSS 支持也完整
 - 代码规范:`@antfu/eslint-config` + `@unocss/eslint-plugin`
 - Git 规范:`@huberyyang/todo-scripts` 的 `commitlint-init` 接入 commitlint + husky + lint-staged
 - `better-sqlite3` 是 `@nuxt/content` 的存储后端(v3 把内容层从文件改为 SQL),原生模块,
