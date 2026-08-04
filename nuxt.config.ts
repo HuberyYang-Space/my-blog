@@ -166,6 +166,31 @@ export default defineNuxtConfig({
 
       if (missing.length)
         throw new Error(`[og] 以下页面的 og:image 指向不存在的文件:\n  ${missing.join('\n  ')}`)
+
+      // ---- 正文图片守卫 ----
+      // 同一类静默失败:HTML 里的 <img src> 指向一个产物里不存在的文件时,构建
+      // 不会有任何反应,页面也照常渲染,只是那个位置留一个碎图 —— 而本地开发
+      // 往往因为路径能从别处解析到而看不出来。凡是站内绝对路径都在这里对账。
+      const brokenImages: string[] = []
+
+      for (const page of pages) {
+        const html = await readFile(page, 'utf8')
+        for (const match of html.matchAll(/<img[^>]+src="(\/[^"]*)"/g)) {
+          const src = match[1]
+          // 协议相对地址(//host/x.png)是外链,产物里本就没有
+          if (!src || src.startsWith('//'))
+            continue
+          try {
+            await access(join(dir, decodeURIComponent(src)))
+          }
+          catch {
+            brokenImages.push(`${page.slice(dir.length)} → ${src}`)
+          }
+        }
+      }
+
+      if (brokenImages.length)
+        throw new Error(`[img] 以下页面引用了产物中不存在的图片:\n  ${brokenImages.join('\n  ')}`)
     },
   },
 

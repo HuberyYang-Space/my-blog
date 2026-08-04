@@ -56,6 +56,21 @@
   --c-brand-react: #087ea4;
   --c-brand-nuxt: #008551;
 
+  /* 提示框的四种语气。只用于图标与标题文字(底色统一是 --c-bg-soft),
+     故按 4.5:1 的正文文字标准取色,而非大色块的 3:1。 */
+  --c-callout-note: #4a6fa5;
+  --c-callout-tip: #2b7a6f;
+  --c-callout-warning: #9a6700;
+  --c-callout-caution: #b3452c;
+
+  /* 代码块标记的底色。画在代码底下,必须足够淡才不压过 Shiki 的语法配色,
+     所以用透明度而非实色 —— 实色会因主题不同需要各配一套。 */
+  --c-code-mark: rgb(43 122 111 / 0.12);
+  --c-code-add: rgb(34 134 58 / 0.14);
+  --c-code-add-text: #22863a;
+  --c-code-remove: rgb(203 36 49 / 0.13);
+  --c-code-remove-text: #cb2431;
+
   --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
     "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
@@ -86,6 +101,19 @@
   --c-brand-vue: #42b883;
   --c-brand-react: #61dafb;
   --c-brand-nuxt: #00dc82;
+
+  /* 深底上提亮,浅色那套直接搬过来只有 3:1 出头,标题文字读着发闷 */
+  --c-callout-note: #7ba3d8;
+  --c-callout-tip: #5eb8aa;
+  --c-callout-warning: #d9a441;
+  --c-callout-caution: #e8836a;
+
+  /* 代码块标记在深色 Shiki 主题下要更亮一档才看得出,透明度也相应提高 */
+  --c-code-mark: rgb(94 184 170 / 0.16);
+  --c-code-add: rgb(63 185 80 / 0.16);
+  --c-code-add-text: #3fb950;
+  --c-code-remove: rgb(248 81 73 / 0.15);
+  --c-code-remove-text: #f85149;
 
   color-scheme: dark;
 }
@@ -670,36 +698,176 @@ pre {
   border-radius: 4px;
 }
 
-/* 代码块 —— 容器样式 */
+/* --------------------------------------------------------------------------
+   代码块 —— 结构见 app/components/content/ProsePre.vue
+   外层 .code-block 承担边框与圆角,顶部 .code-block-bar 放文件名与复制按钮,
+   <pre> 只负责代码本身。
+   -------------------------------------------------------------------------- */
+
+.code-block {
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+}
+
+.code-block-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.45em 0.6em 0.45em 1.15em;
+  font-family: var(--font-mono);
+  font-size: 0.775rem;
+  color: var(--c-text-mute);
+  background-color: var(--c-bg-soft);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.code-block-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-block-copy {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.3em;
+  color: var(--c-text-mute);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.code-block-copy:hover,
+.code-block-copy:focus-visible {
+  color: var(--c-text);
+  background-color: var(--c-bg);
+}
+
+/* 复制失败(多见于非安全上下文下 navigator.clipboard 不存在)要看得见,
+   否则用户会以为已经复制成功了 */
+.code-block-copy.is-failed {
+  color: var(--c-callout-caution);
+}
+
 .prose pre {
   padding: 1em 1.15em;
   overflow-x: auto;
   font-size: 0.875rem;
   line-height: 1.6;
-  border: 1px solid var(--c-border);
-  border-radius: 6px;
 }
 
 /* 代码块配色跟随站点主题。
    nuxt.config.ts 配了 content.build.markdown.highlight.theme = { default, dark },
    Shiki 因此在 <pre> 与每个高亮 token 上同时输出 --shiki-default / --shiki-dark
    两组变量,由这里二选一取用。
-   若不这么做,Shiki 会把单一主题的颜色写成内联样式,浅色页面里会嵌一整块深色代码。 */
-.prose pre,
-.prose pre span {
+   若不这么做,Shiki 会把单一主题的颜色写成内联样式,浅色页面里会嵌一整块深色代码。
+
+   背景色只给 <pre>,不给 token 的 <span> —— 自定义属性是继承的,给 span 也上背景
+   只是把同一个颜色重画一遍,却会盖住行高亮/diff 那层底色(它们画在 .line 上,
+   层级比 token span 更外)。 */
+.prose pre {
   color: var(--shiki-default);
   background-color: var(--shiki-default-bg);
 }
 
-.dark .prose pre,
-.dark .prose pre span {
+.prose pre span {
+  color: var(--shiki-default);
+}
+
+.dark .prose pre {
   color: var(--shiki-dark);
   background-color: var(--shiki-dark-bg);
+}
+
+.dark .prose pre span {
+  color: var(--shiki-dark);
+}
+
+/* 行必须是块级,行级底色才能铺满整宽。
+   默认的 ProsePre 自带这条内联 <style>,覆写后要在这里补回来。 */
+.prose pre code .line {
+  display: block;
+}
+
+/* --------------------------------------------------------------------------
+   代码块标记 —— 类名由 app/mdc.config.ts 注册的 Shiki transformer 生成,
+   两边必须对齐:改了转换器就要改这里。
+   -------------------------------------------------------------------------- */
+
+/* ```ts {1,3-5} 的行高亮,以及 // [!code highlight] */
+.prose pre code .line.highlighted {
+  background-color: var(--c-code-mark);
+  box-shadow: inset 2px 0 0 var(--c-primary);
+}
+
+/* // [!code ++] / [!code --] */
+.prose pre code .line.diff {
+  position: relative;
+  padding-left: 0.85em;
+  margin-left: -0.35em;
+}
+
+.prose pre code .line.diff::before {
+  position: absolute;
+  left: 0;
+  font-weight: 600;
+}
+
+.prose pre code .line.diff.add {
+  background-color: var(--c-code-add);
+}
+
+.prose pre code .line.diff.add::before {
+  content: '+';
+  color: var(--c-code-add-text);
+}
+
+.prose pre code .line.diff.remove {
+  background-color: var(--c-code-remove);
+}
+
+.prose pre code .line.diff.remove::before {
+  content: '-';
+  color: var(--c-code-remove-text);
+}
+
+/* // [!code focus] —— 未聚焦的行淡出,鼠标移入时恢复,避免读者看不到上下文 */
+.prose pre.has-focused code .line:not(.focused) {
+  opacity: 0.35;
+  filter: blur(1.2px);
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+}
+
+.prose pre.has-focused:hover code .line:not(.focused) {
+  opacity: 1;
+  filter: none;
 }
 
 .prose hr {
   border: none;
   border-top: 1px solid var(--c-border);
+}
+
+/* --------------------------------------------------------------------------
+   表格 —— 结构见 app/components/content/ProseTable.vue
+   -------------------------------------------------------------------------- */
+
+/* 列多的表在窄屏会把正文栏撑破,故限制溢出在这层内部横向滚动 */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 3px;
 }
 
 .prose table {
@@ -718,4 +886,159 @@ pre {
 .prose th {
   color: var(--c-text);
   background-color: var(--c-bg-soft);
+  /* 横向滚动时表头也要跟着走,所以不换行,由容器滚动而不是让单元格挤成两行 */
+  white-space: nowrap;
+}
+
+/* --------------------------------------------------------------------------
+   图片 —— ProseImg 渲染 <NuxtImg>,Figure 额外包 figure/figcaption
+   -------------------------------------------------------------------------- */
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+}
+
+.figure figcaption {
+  margin-top: 0.7em;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--c-text-mute);
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   提示框 —— 见 app/components/mdc/Callout.vue
+   -------------------------------------------------------------------------- */
+
+.callout {
+  padding: 0.9em 1.1em;
+  background-color: var(--c-bg-soft);
+  border-left: 3px solid var(--c-callout);
+  border-radius: 0 6px 6px 0;
+}
+
+.callout-note {
+  --c-callout: var(--c-callout-note);
+}
+
+.callout-tip {
+  --c-callout: var(--c-callout-tip);
+}
+
+.callout-warning {
+  --c-callout: var(--c-callout-warning);
+}
+
+.callout-caution {
+  --c-callout: var(--c-callout-caution);
+}
+
+.callout-head {
+  display: flex;
+  gap: 0.45em;
+  align-items: center;
+  margin-bottom: 0.5em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--c-callout);
+}
+
+.callout-icon {
+  flex-shrink: 0;
+}
+
+/* 提示框内部自成一个排版上下文 —— .prose > * + * 只管直接子元素,管不到这里面 */
+.callout-body > * + * {
+  margin-top: 0.75em;
+}
+
+.callout-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* --------------------------------------------------------------------------
+   交互 demo —— 见 app/components/mdc/Demo.vue
+   -------------------------------------------------------------------------- */
+
+.demo {
+  overflow: hidden;
+  border: 1px dashed var(--c-border);
+  border-radius: 6px;
+}
+
+.demo-title {
+  padding: 0.45em 1.1em;
+  font-family: var(--font-mono);
+  font-size: 0.775rem;
+  color: var(--c-text-mute);
+  background-color: var(--c-bg-soft);
+  border-bottom: 1px dashed var(--c-border);
+}
+
+.demo-stage {
+  padding: 1.25em 1.1em;
+}
+
+.demo button {
+  display: inline-flex;
+  gap: 0.35em;
+  align-items: center;
+  padding: 0.35em 0.7em;
+  font-size: 0.875rem;
+  color: var(--c-text-soft);
+  cursor: pointer;
+  background-color: var(--c-bg);
+  border: 1px solid var(--c-border);
+  border-radius: 4px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.demo button:hover,
+.demo button:focus-visible {
+  color: var(--c-text);
+  border-color: var(--c-primary);
+}
+
+.demo-counter {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.demo-counter-value {
+  min-width: 3ch;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--c-text);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-counter-reset {
+  margin-left: 0.5em;
+}
+
+.demo-motion {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  align-items: flex-start;
+}
+
+.demo-motion-track {
+  width: 100%;
+  /* 方块要移动 120px,轨道至少留出这段距离加方块自身宽度 */
+  min-height: 3rem;
+}
+
+.demo-motion-box {
+  width: 3rem;
+  height: 3rem;
+  background-color: var(--c-primary);
+  border-radius: 6px;
 }

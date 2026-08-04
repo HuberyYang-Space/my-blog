@@ -2,8 +2,8 @@
 
 一个 Markdown 驱动的静态个人博客,风格克制极简。基于 Nuxt 4 + Nuxt Content 构建,纯静态输出,支持双主题切换。
 
-> 🚧 开发中。当前进度:内容层、文章页、双主题、标签页、RSS、sitemap 与社交分享元信息均已跑通;
-> 搜索、评论 / 阅读时长 尚未实现。
+> 🚧 开发中。当前进度:内容层、文章页、双主题、标签页、RSS、sitemap、社交分享元信息,
+> 以及 MDC 组件与代码块增强均已跑通;搜索、评论 / 阅读时长 尚未实现。
 
 ## 技术栈
 
@@ -11,6 +11,8 @@
 | :--- | :--- |
 | 框架 | [Nuxt 4](https://nuxt.com)(`nuxt generate`,纯静态输出) |
 | 内容 | [Nuxt Content 3](https://content.nuxt.com) —— zod schema 校验的 Markdown 集合 |
+| 富文本 | [MDC](https://content.nuxt.com/docs/files/markdown) —— Markdown 里直接调用 Vue 组件 |
+| 代码高亮 | [Shiki](https://shiki.style) 双主题 + [@shikijs/transformers](https://shiki.style/packages/transformers)(diff / 聚焦标记) |
 | 样式 | [UnoCSS](https://unocss.dev)(`darkMode: 'class'`) |
 | 图标 | [Iconify](https://iconify.design) / Phosphor Icons |
 | 站点地图 | [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) |
@@ -36,7 +38,14 @@ pnpm dev
 
 ## 写文章
 
-在 `content/blog/` 下新建 `.md` 文件,frontmatter 字段如下:
+用脚手架新建,自动填好 frontmatter、日期取当天:
+
+```bash
+pnpm new "文章标题"
+pnpm new "中文标题" my-slug   # 中文标题推导不出 slug 时显式指定
+```
+
+frontmatter 字段:
 
 ```yaml
 ---
@@ -49,11 +58,35 @@ draft: false # 可选,默认 false
 ---
 ```
 
-文件名即 URL 路径(`hello.md` → `/posts/hello/`)。字段写错会在构建期报错,而非渲染成空白。
+文件名即 URL 路径(`hello.md` → `/posts/hello`)。字段写错会在构建期报错,而非渲染成空白。
 下划线开头的文件(如 `_wip.md`)不会被收录。
 
 > 正文里的中文引号请直接输入 `“”`。本项目未启用 smartypants 类插件,直引号不会被自动转换
 > —— 原因见 [`CLAUDE.md`](./CLAUDE.md) 的「写文章约束」。
+
+### 正文能力
+
+`content/blog/` 下的三篇示例文章本身就是语法参考 —— 源码即文档,看写法直接看源码。
+
+| 能力 | 写法 |
+| :--- | :--- |
+| 提示框 | `::note` / `::tip` / `::warning` / `::caution` |
+| 交互演示 | `::demo{title="…"}` 内嵌 `:demo-counter`、`:demo-motion` |
+| 带图注的插图 | `::illustration{src alt width height}` |
+| 行内挂类名 | `[文字]{.highlighter}` |
+| 代码块文件名 | ` ```ts [app/config.ts] ` |
+| 代码块行高亮 | ` ```ts {1,3-5} ` 或行尾 `// [!code highlight]` |
+| 代码块增删 | 行尾 `// [!code ++]` / `// [!code --]` |
+| 代码块聚焦 | 行尾 `// [!code focus]` |
+
+> 自定义组件放 `app/components/mdc/`,覆写内置 Prose 组件放 `app/components/content/`
+> —— 两者注册方式不同,放错会静默失效,详见 [`CLAUDE.md`](./CLAUDE.md) 的「MDC 组件约定」。
+
+### 插图
+
+放在 `public/images/`,markdown 里用 `/images/x.webp` 引用。**图片要在提交前压好、定好尺寸**
+(正文栏宽 672px,按 2x 屏取 1344px 宽,格式 WebP);项目不接图片优化模块,原因见 `CLAUDE.md`。
+构建期有守卫:产物里任何 `<img src>` 指向不存在的文件都会让构建失败。
 
 ## 可用命令
 
@@ -61,6 +94,7 @@ draft: false # 可选,默认 false
 
 | 命令 | 说明 |
 | :--- | :--- |
+| `pnpm new "标题" [slug]` | 新建文章(自动填 frontmatter,`date` 取当天,默认 `draft: true`) |
 | `pnpm dev` | 启动开发服务器(`localhost:3000`) |
 | `pnpm build` | 构建静态站点至 `.output/public/` |
 | `pnpm preview` | 本地预览构建产物 |
@@ -73,17 +107,22 @@ draft: false # 可选,默认 false
 ```text
 /
 ├── public/                    # 静态资源,原样拷贝至产物根目录
+│   └── images/                # 正文插图(提交前压好、定好尺寸)
 ├── content/blog/*.md          # 文章正文
 ├── content.config.ts          # Content collection schema(根级)
+├── scripts/new-post.ts        # pnpm new 的实现
 ├── shared/utils/posts.ts      # app 与 server 双向自动导入 —— 草稿过滤的唯一真源
 ├── server/routes/rss.xml.ts   # RSS 订阅源(Nitro 路由)
 ├── app/
 │   ├── app.vue
 │   ├── error.vue              # nuxt generate 据此产出根级 404.html
 │   ├── config.ts              # 站点配置(站名/描述/域名)的唯一真源
-│   ├── components/OgImage/    # OG 分享图模板(Vue 组件,构建期由 Chrome 渲染)
-│   ├── assets/css/global.css  # 双主题变量 + reset + .prose
+│   ├── mdc.config.ts          # Shiki transformer(必须在 app/ 下,MDC 按 srcDir 扫描)
+│   ├── assets/css/global.css  # 双主题变量 + reset + .prose + MDC 组件样式
 │   ├── components/            # 自动导入,含 BaseLayout / PostLayout / ThemeToggle
+│   │   ├── OgImage/           # OG 分享图模板(Vue 组件,构建期由 Chrome 渲染)
+│   │   ├── content/           # 覆写内置 Prose 组件(ProsePre / ProseTable / ProseImg)
+│   │   └── mdc/               # 自定义 MDC 组件(Callout / Demo / Illustration)
 │   ├── pages/                 # 文件路由(index、about、posts/[slug]、tags/[tag])
 │   └── utils/posts.ts         # 文章与标签查询
 ├── nuxt.config.ts             # Nuxt 配置(含防闪烁内联脚本、Shiki 双主题)
@@ -113,6 +152,7 @@ npx serve .output/public
 
 > 构建需要本机可用的 Chrome/Chromium(CI 环境模块会自行安装)。找不到时渲染器会静默禁用,
 > 因此 `nuxt.config.ts` 里有构建期守卫:产物中若缺少 og:image 或图片文件不存在,构建直接失败。
+> 同一个钩子里还有正文图片守卫 —— 任何 `<img src>` 指向产物中不存在的文件也会让构建失败。
 
 ## 相关文档
 
