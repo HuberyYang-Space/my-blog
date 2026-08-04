@@ -25,3 +25,24 @@ const count = ref(0)
     </button>
   </div>
 </template>
+
+<style>
+.demo-counter {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+}
+
+.demo-counter-value {
+  min-width: 3ch;
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  color: var(--c-text);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.demo-counter-reset {
+  margin-left: 0.5em;
+}
+</style>

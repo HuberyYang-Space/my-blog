@@ -9,16 +9,6 @@ import { SITE } from '../../app/config'
  * 真源,不在这里另写一遍条件。
  */
 
-/** XML 文本节点转义,避免标题/摘要里的 & < > 破坏文档结构 */
-function escapeXml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;')
-}
-
 export default defineEventHandler(async (event) => {
   const all = await queryCollection(event, 'blog').order('date', 'DESC').all()
   const posts = all.filter(isPublishedPost)
@@ -48,7 +38,7 @@ export default defineEventHandler(async (event) => {
     `<title>${escapeXml(SITE.title)}</title>`,
     `<description>${escapeXml(SITE.description)}</description>`,
     `<link>${escapeXml(SITE.url)}</link>`,
-    '<language>zh-CN</language>',
+    `<language>${SITE.locale}</language>`,
     items,
     '</channel>',
     '</rss>',

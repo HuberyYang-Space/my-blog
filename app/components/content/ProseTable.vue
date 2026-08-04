@@ -12,3 +12,16 @@
     </table>
   </div>
 </template>
+
+<style>
+/* 列多的表在窄屏会把正文栏撑破,故限制溢出在这层内部横向滚动。
+   表格本身的排版(边框、内距、表头底色)属于正文层,在 assets/css/prose.css。 */
+.table-scroll {
+  overflow-x: auto;
+}
+
+.table-scroll:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 3px;
+}
+</style>

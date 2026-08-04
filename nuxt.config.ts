@@ -59,7 +59,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
-      htmlAttrs: { lang: 'zh-CN' },
+      htmlAttrs: { lang: SITE.locale },
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
         { rel: 'alternate', type: 'application/rss+xml', title: SITE.title, href: '/rss.xml' },
@@ -125,72 +125,11 @@ export default defineNuxtConfig({
 
       await copyFile(src, join(dir, '404.html'))
 
-      // ---- OG 图守卫 ----
-      // Browser 渲染器在找不到 Chrome 时会静默禁用:构建照样成功,产物里却少了
-      // 分享图,而本地预览完全看不出异常 —— 只有别人分享链接、卡片没图时才暴露,
-      // 那时往往已经部署好几天。这类没有兜底的静默失败一律转成构建失败。
-      const { readdir, readFile } = await import('node:fs/promises')
-
-      async function htmlFiles(d: string): Promise<string[]> {
-        const entries = await readdir(d, { withFileTypes: true })
-        const found = await Promise.all(entries.map(async (e) => {
-          const p = join(d, e.name)
-          if (e.isDirectory())
-            return htmlFiles(p)
-          return e.name.endsWith('.html') ? [p] : []
-        }))
-        return found.flat()
-      }
-
-      const pages = await htmlFiles(dir)
-      const missing: string[] = []
-      let checked = 0
-
-      for (const page of pages) {
-        const html = await readFile(page, 'utf8')
-        const url = html.match(/property="og:image" content="([^"]+)"/)?.[1]
-        // 200.html 是 SPA 兜底空壳,本就不带任何 SEO 标签,不参与校验
-        if (!url)
-          continue
-        checked++
-        try {
-          await access(join(dir, new URL(url).pathname))
-        }
-        catch {
-          missing.push(`${page.slice(dir.length)} → ${url}`)
-        }
-      }
-
-      if (checked === 0)
-        throw new Error('[og] 产物里没有任何 og:image —— 渲染器可能已静默禁用(检查 Chrome 是否可用)')
-
-      if (missing.length)
-        throw new Error(`[og] 以下页面的 og:image 指向不存在的文件:\n  ${missing.join('\n  ')}`)
-
-      // ---- 正文图片守卫 ----
-      // 同一类静默失败:HTML 里的 <img src> 指向一个产物里不存在的文件时,构建
-      // 不会有任何反应,页面也照常渲染,只是那个位置留一个碎图 —— 而本地开发
-      // 往往因为路径能从别处解析到而看不出来。凡是站内绝对路径都在这里对账。
-      const brokenImages: string[] = []
-
-      for (const page of pages) {
-        const html = await readFile(page, 'utf8')
-        for (const match of html.matchAll(/<img[^>]+src="(\/[^"]*)"/g)) {
-          const src = match[1]
-          // 协议相对地址(//host/x.png)是外链,产物里本就没有
-          if (!src || src.startsWith('//'))
-            continue
-          try {
-            await access(join(dir, decodeURIComponent(src)))
-          }
-          catch {
-            brokenImages.push(`${page.slice(dir.length)} → ${src}`)
-          }
-        }
-      }
-
-      if (brokenImages.length)
-        throw new Error(`[img] 以下页面引用了产物中不存在的图片:\n  ${brokenImages.join('\n  ')}`)
+      // 产物断言 —— 校验逻辑全在 scripts/verify-build.ts,这里只负责调用。
+      // 放在外部文件而非内联进配置:那样能用 `pnpm verify:build` 单独跑,
+      // 出问题时不必每次重新构建一遍才能验证修复。
+      const { verifyBuildOutput } = await import('./scripts/verify-build')
+      await verifyBuildOutput(dir)
     },
   },
 

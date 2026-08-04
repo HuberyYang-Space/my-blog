@@ -42,3 +42,25 @@ function toggle() {
     </button>
   </div>
 </template>
+
+<style>
+.demo-motion {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  align-items: flex-start;
+}
+
+.demo-motion-track {
+  width: 100%;
+  /* 方块要移动 120px,轨道至少留出这段距离加方块自身宽度 */
+  min-height: 3rem;
+}
+
+.demo-motion-box {
+  width: 3rem;
+  height: 3rem;
+  background-color: var(--c-primary);
+  border-radius: 6px;
+}
+</style>

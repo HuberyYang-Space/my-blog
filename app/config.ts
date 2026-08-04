@@ -15,12 +15,36 @@ export const SITE = {
   description: '勤靡余劳，心有常闲。',
   author: 'Hubery Yang',
   /**
+   * 站点语言标签(BCP 47)。
+   *
+   * <html lang>、日期格式化、RSS 的 <language>、以及标签排序的 collation
+   * 四处同源。它们曾各自硬编码 'zh-CN',是同一个事实的四份副本 ——
+   * 改语言时要改四处,漏一处不报错,只会让某一处静默地按另一种语言呈现。
+   */
+  locale: 'zh-CN',
+  /**
    * 站点根 URL,末尾不带斜杠。
    *
-   * ⚠️ 暂定域名,上线前需与实际部署地址核对。canonical / sitemap / RSS / OG 图
-   * 均依赖它生成绝对 URL,填错不报错,只会让这些链接整体指向错误域名(静默失败)。
+   * canonical / sitemap / RSS / OG 图均依赖它生成绝对 URL。格式约束由
+   * `test/config.test.ts` 守住(必须 https、无尾斜杠、无路径段)——
+   * 这些写错都不会报错,只会让全站外链整体指向错误的地方。
+   *
+   * 但"格式对"不等于"域名对":是否与实际部署地址一致,机器无从判断。
+   * 见下方 urlConfirmed。
    */
   url: 'https://blog.hubery.dev',
+
+  /**
+   * 上述域名是否已与实际部署地址核对过。
+   *
+   * 仍为 false 时,每次构建都会打印告警(见 scripts/verify-build.ts)。
+   * 核对完把它改成 true —— 这一步只能由人来做,所以做成显式确认而不是
+   * 让机器去猜哪些域名"看起来像占位符"。
+   *
+   * 刻意不做成构建失败:域名没核对是"还没上线",不是"构建坏了",
+   * 拿它挡住日常开发得不偿失。
+   */
+  urlConfirmed: false,
 
   /**
    * OG 分享图路径,相对站点根。

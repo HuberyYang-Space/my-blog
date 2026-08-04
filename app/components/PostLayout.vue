@@ -65,3 +65,23 @@ const showOutline = computed(() => props.links.filter(l => l.depth === 2).length
     </nav>
   </BaseLayout>
 </template>
+
+<style>
+/* 头部信息块的一次性入场动效:只编排这一处,不做滚动触发的散点效果。
+   prefers-reduced-motion 由 assets/css/reset.css 的全局媒体查询统一降级,这里无需重复处理。 */
+@keyframes post-intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.post-intro {
+  animation: post-intro-in 0.4s ease-out;
+}
+</style>

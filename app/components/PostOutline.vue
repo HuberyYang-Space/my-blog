@@ -61,8 +61,8 @@ onMounted(() => {
   updateActive(headingEls)
 })
 
-// 客户端路由切换时组件会卸载,必须断开观察者。
-// (迁移前每次跳转都是整页加载,不存在这个问题)
+// 客户端路由切换时组件会卸载,必须断开观察者 —— 页面之间是软导航,
+// 不会有整页重载来自动回收它。
 onUnmounted(() => observer?.disconnect())
 </script>
 
@@ -71,16 +71,11 @@ onUnmounted(() => observer?.disconnect())
     <p class="mb-3 text-text-mute">
       大纲
     </p>
-    <!--
-      border-0 ... border-solid:手写 reset 没有 Tailwind preflight 那样预置的
-      border-style: solid,不补的话 style 停在初始值 none,宽度会被折算成 0
-      (与 Header.vue 的 navLinkClass 是同一个坑)。
-    -->
-    <ul class="flex flex-col list-none gap-2 border-0 border-l border-border border-solid pl-0">
+    <ul class="flex flex-col list-none gap-2 border-l border-border pl-0">
       <li v-for="item in items" :key="item.id">
         <a
           :href="`#${item.id}`"
-          class="post-outline-link block border-0 border-l-2 border-solid py-0.5 transition-colors -ml-px hover:text-text"
+          class="block border-l-2 py-0.5 transition-colors -ml-px hover:text-text"
           :class="[
             item.depth === 3 ? 'pl-6' : 'pl-3',
             activeId === item.id ? 'border-primary text-text' : 'border-transparent text-text-mute',

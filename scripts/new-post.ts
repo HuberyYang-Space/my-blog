@@ -3,6 +3,7 @@ import { access, mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { slugify } from './lib/slugify.ts'
 
 /**
  * 新建文章脚手架。
@@ -16,19 +17,6 @@ import { fileURLToPath } from 'node:url'
  */
 
 const BLOG_DIR = resolve(dirname(fileURLToPath(import.meta.url)), '../content/blog')
-
-/**
- * 由标题推导 slug。
- *
- * 只处理 ASCII —— 中文标题音译成拼音需要额外的词典依赖,而机器猜出来的
- * slug 往往还不如自己起的。故这种情况直接要求显式传入,不擅自生成。
- */
-function slugify(title: string): string {
-  return title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}
 
 /** 取本地时区的当天日期,格式 YYYY-MM-DD */
 function today(): string {

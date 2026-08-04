@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { SITE } from '~/config'
+
 const props = defineProps<{
   date: Date | string
 }>()
@@ -7,7 +9,7 @@ const props = defineProps<{
 // 这里必须显式指定 timeZone: 'UTC',否则构建机本地时区会让日期整体偏移一天。
 // Nuxt Content 经 SQLite 取回的日期是字符串,统一收敛成 Date 再格式化。
 const parsed = computed(() => new Date(props.date))
-const formatted = computed(() => parsed.value.toLocaleDateString('zh-CN', {
+const formatted = computed(() => parsed.value.toLocaleDateString(SITE.locale, {
   year: 'numeric',
   month: 'long',
   day: 'numeric',

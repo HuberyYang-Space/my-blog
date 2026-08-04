@@ -24,32 +24,13 @@ function isExternal(href?: string) {
   return Boolean(href?.startsWith('http'))
 }
 
-// navigator.clipboard 只在安全上下文(https / localhost)下存在,站点若部署在
-// 纯 http 上会直接拿不到,所以保留 execCommand 兜底,不让复制在生产环境失灵。
-async function copyText(text: string) {
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text)
-    return
-  }
-
-  const textarea = document.createElement('textarea')
-  textarea.value = text
-  textarea.setAttribute('readonly', '')
-  // 移出可视区域再选中,避免复制瞬间页面滚动或闪烁
-  textarea.style.cssText = 'position:fixed;top:-9999px;opacity:0'
-  document.body.appendChild(textarea)
-  textarea.select()
-  document.execCommand('copy')
-  textarea.remove()
-}
-
 // 复制成功后按钮文案临时换成"已复制",aria-live 让读屏软件也能收到反馈
 const copyLabels = ref<Record<string, string>>({})
 const timers = new Map<string, number>()
 
 async function onCopy(text: string) {
   try {
-    await copyText(text)
+    await copyToClipboard(text)
     copyLabels.value[text] = '已复制'
   }
   catch {
@@ -76,7 +57,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
 
     <section class="prose mt-6">
       <!--
-        框架名链接的颜色走 .highlighter 的 --tint 参数（见 global.css 的 --tint 一节），
+        框架名链接的颜色走 .highlighter 的 --tint 参数（见 assets/css/links.css 的 --tint 一节），
         每家取各自品牌色；Next.js 的标识是纯黑白，直接用 --c-text；AI 不是产品，
         没有官网可指，保持纯文本。这里是一句行内散文而非同构列表，刻意不像下方
         works / contacts 那样抽成数组——拆成 v-for 加分隔符只会更难读。
@@ -97,12 +78,16 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
 
     <nav aria-label="联系方式" class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
       <template v-for="{ icon, text, href } in contacts" :key="text">
+        <!--
+          .tinter 不可省:全局 a 规则是 color: inherit + 无下划线且没有通用 a:hover,
+          不挂样式的链接看上去就是一段普通文字,鼠标移上去也没有任何反馈。
+        -->
         <a
           v-if="href"
           :href="href"
           :target="isExternal(href) ? '_blank' : undefined"
           :rel="isExternal(href) ? 'noreferrer' : undefined"
-          class="inline-flex items-center"
+          class="tinter inline-flex items-center"
         >
           <span :class="icon" />
           {{ text }}
@@ -110,11 +95,11 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
         <button
           v-else
           type="button"
-          class="copy-contact inline-flex items-center p-0"
+          class="tinter inline-flex items-center p-0"
           @click="onCopy(text)"
         >
           <span :class="icon" />
-          <span class="copy-contact-text" aria-live="polite">{{ copyLabels[text] ?? text }}</span>
+          <span aria-live="polite">{{ copyLabels[text] ?? text }}</span>
         </button>
       </template>
     </nav>

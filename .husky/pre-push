@@ -1,0 +1,6 @@
+# 推送前的最后一道闸:类型 + 单测。
+#
+# 不放 pre-commit —— 提交比推送频繁得多,每次等几秒会让人开始想办法绕过钩子。
+# 不跑 build —— 太慢;产物断言由构建自身承担(scripts/verify-build.ts)。
+# 项目没有 CI,这就是唯一自动执行的关卡。
+pnpm typecheck && pnpm exec vitest run

@@ -17,6 +17,7 @@
 | 图标 | [Iconify](https://iconify.design) / Phosphor Icons |
 | 站点地图 | [@nuxtjs/sitemap](https://nuxtseo.com/sitemap) |
 | OG 分享图 | [nuxt-og-image](https://nuxtseo.com/og-image)(Browser 渲染器,构建期出图) |
+| 测试 | [Vitest](https://vitest.dev) 纯函数单测 + 自写产物断言脚本 |
 | 规范 | ESLint([@antfu/eslint-config](https://github.com/antfu/eslint-config))+ commitlint + husky |
 
 ## 环境要求
@@ -101,6 +102,9 @@ draft: false # 可选,默认 false
 | `pnpm lint` | 检查代码规范 |
 | `pnpm lint:fix` | 自动修复代码规范问题 |
 | `pnpm typecheck` | 类型检查(`nuxt typecheck`,底层是 vue-tsc) |
+| `pnpm test` | 跑纯函数单测(Vitest) |
+| `pnpm test:watch` | 单测 watch 模式 |
+| `pnpm verify:build` | 对 `.output/public` 单独跑一遍产物断言(构建时会自动跑) |
 
 ## 项目结构
 
@@ -110,23 +114,35 @@ draft: false # 可选,默认 false
 │   └── images/                # 正文插图(提交前压好、定好尺寸)
 ├── content/blog/*.md          # 文章正文
 ├── content.config.ts          # Content collection schema(根级)
-├── scripts/new-post.ts        # pnpm new 的实现
+├── scripts/
+│   ├── new-post.ts            # pnpm new 的实现
+│   ├── verify-build.ts        # 产物断言(构建期自动跑)
+│   └── lib/slugify.ts         # slug 推导,供脚手架与单测共用
+├── test/                      # 纯函数单测
+├── vitest.config.ts
 ├── shared/utils/posts.ts      # app 与 server 双向自动导入 —— 草稿过滤的唯一真源
-├── server/routes/rss.xml.ts   # RSS 订阅源(Nitro 路由)
+├── server/
+│   ├── routes/rss.xml.ts      # RSS 订阅源(Nitro 路由)
+│   └── utils/xml.ts           # XML 转义(抽出来才可单测)
 ├── app/
 │   ├── app.vue
 │   ├── error.vue              # nuxt generate 据此产出根级 404.html
 │   ├── config.ts              # 站点配置(站名/描述/域名)的唯一真源
 │   ├── mdc.config.ts          # Shiki transformer(必须在 app/ 下,MDC 按 srcDir 扫描)
-│   ├── assets/css/global.css  # 双主题变量 + reset + .prose + MDC 组件样式
-│   ├── components/            # 自动导入,含 BaseLayout / PostLayout / ThemeToggle
+│   ├── assets/css/            # 只放"不属于任何单个组件"的样式
+│   │   ├── global.css         # 入口,只做 @import 汇总
+│   │   ├── tokens.css         # 双主题语义变量
+│   │   ├── reset.css          # 手写 reset
+│   │   ├── links.css          # 三种可点击文本样式(多组件共用)
+│   │   └── prose.css          # 文章正文排版
+│   ├── components/            # 自动导入;组件专属样式写在各自 SFC 的 <style> 里
 │   │   ├── OgImage/           # OG 分享图模板(Vue 组件,构建期由 Chrome 渲染)
 │   │   ├── content/           # 覆写内置 Prose 组件(ProsePre / ProseTable / ProseImg)
 │   │   └── mdc/               # 自定义 MDC 组件(Callout / Demo / Illustration)
 │   ├── pages/                 # 文件路由(index、about、posts/[slug]、tags/[tag])
-│   └── utils/posts.ts         # 文章与标签查询
+│   └── utils/                 # posts.ts(取数层)、clipboard.ts
 ├── nuxt.config.ts             # Nuxt 配置(含防闪烁内联脚本、Shiki 双主题)
-├── uno.config.ts              # UnoCSS 配置
+├── uno.config.ts              # UnoCSS 配置(含跳过 SFC <style> 的自定义提取器)
 ├── eslint.config.js           # ESLint 配置
 └── commitlint.config.ts       # 提交信息规范
 ```
@@ -141,7 +157,8 @@ npx serve .output/public
 ```
 
 > ⚠️ 部署前请核对 `app/config.ts` 中的 `SITE.url` 是否为实际域名 —— canonical、sitemap、RSS 与 OG 图
-> 均依赖该值生成绝对 URL。构建期没有占位域名守卫,写错不会报错,只会让这些链接整体指向错误域名。
+> 均依赖该值生成绝对 URL。核对完把同文件的 `urlConfirmed` 改成 `true`,在那之前每次构建都会打印告警。
+> (格式层面的约束——必须 https、无尾斜杠、无路径段——由 `test/config.test.ts` 硬守。)
 
 站点同时输出:
 
@@ -150,9 +167,10 @@ npx serve .output/public
 - `/404.html` —— 静态托管平台按约定用作兜底页
 - `/_og/s/*.png` —— OG 分享图,构建期用 Chrome 渲染 `app/components/OgImage/` 下的模板
 
-> 构建需要本机可用的 Chrome/Chromium(CI 环境模块会自行安装)。找不到时渲染器会静默禁用,
-> 因此 `nuxt.config.ts` 里有构建期守卫:产物中若缺少 og:image 或图片文件不存在,构建直接失败。
-> 同一个钩子里还有正文图片守卫 —— 任何 `<img src>` 指向产物中不存在的文件也会让构建失败。
+> 构建需要本机可用的 Chrome/Chromium。找不到时渲染器会**静默禁用** —— 构建照样成功、
+> 本地预览也看不出异常,只有别人分享链接、卡片没图时才暴露。因此构建期会跑一遍产物断言
+> (`scripts/verify-build.ts`):og 图或正文图片缺失、草稿泄进订阅源、MDC 组件没渲染出来、
+> 代码块覆写失效……任意一项不通过就让构建失败。也可以事后单独跑 `pnpm verify:build`。
 
 ## 相关文档
 

@@ -38,3 +38,51 @@ const preset = computed(() => PRESET[props.type])
     </div>
   </aside>
 </template>
+
+<style>
+.callout {
+  padding: 0.9em 1.1em;
+  background-color: var(--c-bg-soft);
+  border-left: 3px solid var(--c-callout);
+  border-radius: 0 6px 6px 0;
+}
+
+.callout-note {
+  --c-callout: var(--c-callout-note);
+}
+
+.callout-tip {
+  --c-callout: var(--c-callout-tip);
+}
+
+.callout-warning {
+  --c-callout: var(--c-callout-warning);
+}
+
+.callout-caution {
+  --c-callout: var(--c-callout-caution);
+}
+
+.callout-head {
+  display: flex;
+  gap: 0.45em;
+  align-items: center;
+  margin-bottom: 0.5em;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--c-callout);
+}
+
+.callout-icon {
+  flex-shrink: 0;
+}
+
+/* 提示框内部自成一个排版上下文 —— .prose > * + * 只管直接子元素,管不到这里面 */
+.callout-body > * + * {
+  margin-top: 0.75em;
+}
+
+.callout-body > :last-child {
+  margin-bottom: 0;
+}
+</style>

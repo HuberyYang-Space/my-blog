@@ -35,3 +35,13 @@ defineProps<{
     </figcaption>
   </figure>
 </template>
+
+<style>
+.figure figcaption {
+  margin-top: 0.7em;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--c-text-mute);
+  text-align: center;
+}
+</style>

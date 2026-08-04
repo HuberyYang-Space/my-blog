@@ -13,7 +13,7 @@
  * 下面这行关掉属性透传,再由模板手动把 $attrs 绑回 <pre>:默认行为会把 attrs
  * 落到根元素,而根元素已经变成外层 div —— Shiki 输出的 class(language-ts /
  * 主题名)、内联的 --shiki-* 颜色变量、以及 transformer 加的 has-focused
- * 都会跟着跑到 div 上,global.css 里所有 `.prose pre` 选择器随即落空。
+ * 都会跟着跑到 div 上,prose.css 里所有 `.prose pre` 选择器随即落空。
  */
 defineOptions({ inheritAttrs: false })
 
@@ -33,15 +33,13 @@ let resetTimer: ReturnType<typeof setTimeout> | undefined
 
 async function copy() {
   try {
-    // clipboard API 只在安全上下文(HTTPS / localhost)存在,http 访问时是 undefined。
-    // 这属于环境限制而非代码错误,所以不吞掉:切到 failed 态让用户看见,自己去手选。
-    if (!navigator.clipboard)
-      throw new Error('clipboard unavailable')
-
-    await navigator.clipboard.writeText(props.code ?? '')
+    // 复制实现(含非安全上下文下的 execCommand 兜底)收敛在 app/utils/clipboard.ts,
+    // 与联系方式那处同一份 —— 否则会出现"一处能复制、一处不能"的分裂。
+    await copyToClipboard(props.code ?? '')
     copyState.value = 'copied'
   }
   catch {
+    // 兜底也失败(极少数环境)时不吞掉:切到 failed 态让用户看见,自己去手选。
     copyState.value = 'failed'
   }
 
@@ -91,3 +89,59 @@ const copyLabel = computed(() => ({
     </span>
   </div>
 </template>
+
+<style>
+/* 外层 .code-block 承担边框与圆角,顶部 .code-block-bar 放文件名与复制按钮。
+   <pre> 自身的排版(字号、行高、配色)属于正文层,在 assets/css/prose.css。 */
+
+.code-block {
+  overflow: hidden;
+  border: 1px solid var(--c-border);
+  border-radius: 6px;
+}
+
+.code-block-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  padding: 0.45em 0.6em 0.45em 1.15em;
+  font-family: var(--font-mono);
+  font-size: 0.775rem;
+  color: var(--c-text-mute);
+  background-color: var(--c-bg-soft);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.code-block-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.code-block-copy {
+  display: inline-flex;
+  flex-shrink: 0;
+  padding: 0.3em;
+  color: var(--c-text-mute);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  transition:
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.code-block-copy:hover,
+.code-block-copy:focus-visible {
+  color: var(--c-text);
+  background-color: var(--c-bg);
+}
+
+/* 复制失败(多见于非安全上下文下 navigator.clipboard 不存在)要看得见,
+   否则用户会以为已经复制成功了 */
+.code-block-copy.is-failed {
+  color: var(--c-callout-caution);
+}
+</style>

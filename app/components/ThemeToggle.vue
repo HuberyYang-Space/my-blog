@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-
 const isDark = ref(false)
 // 挂载前不渲染图标:服务端无从得知用户主题,渲染任一图标都可能与实际配色不符
 const mounted = ref(false)

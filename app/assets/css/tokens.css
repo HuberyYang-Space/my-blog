@@ -1,0 +1,119 @@
+/* ==========================================================================
+   双主题语义化变量
+   深浅两套各自调校,而非简单反色:深色不用纯黑、浅色文字不用纯黑,
+   正文与弱化文字的对比度均单独核对过(均 >= 4.5:1)。
+   ========================================================================== */
+
+:root {
+  --c-bg: #fdfdfd;
+  --c-bg-soft: #f4f4f5;
+  --c-text: #222226;
+  --c-text-soft: #55555a;
+  --c-text-mute: #71717a;
+  --c-border: #e4e4e7;
+  --c-primary: #2b7a6f;
+
+  /* .highlighter(见下方)hover 色块的填涂浓度。两个主题独立调参(20% / 24%),
+     原因同下方 --c-glow-alpha。
+
+     这里只给"浓度"不给"算好的颜色":.highlighter 支持通过 --tint 换色后,
+     色块必须从当次生效的颜色现算,不能锁死在 --c-primary 上。 */
+  --c-marker-ratio: 20%;
+
+  /* 首页全站常驻氛围光背景用,RGB 三元组(非十六进制)是为了配合 rgb(... / <alpha>)
+     语法灵活控制透明度。glow-1 复用 --c-primary 的色值,glow-2 是新增的暖色调
+     (珊瑚橙),只在氛围光背景里出现,不作为通用强调色。 */
+  --c-glow-1: 43 122 111;
+  --c-glow-2: 224 138 79;
+
+  /* 透明度按主题独立调参,而不是两个主题共用一套数值:亮色背景接近纯白,
+     同一套透明度会被大幅稀释到几乎看不见;暗色背景接近纯黑,低透明度反而
+     更像"发光"。两个主题保持同一套"柔和光斑"视觉语言,只是分别把对比度
+     拉到肉眼可见的水平。 */
+  --c-glow-alpha-1: 0.55;
+  --c-glow-alpha-2: 0.48;
+
+  /* 品牌色(见文件末 .highlighter / .tinter 的 --tint 一节)。这些是外部品牌资产,
+     不是本站的语义化主题色,所以刻意不接进 uno.config.ts 的 theme.colors ——
+     它们没有"这是本站的强调色/弱化色"那类语义,只能按品牌逐个指名使用。
+
+     ⚠️ 亮色主题下用的不是官方原色。这几家的品牌色都是为深色背景设计的,
+     直接放到 --c-bg (#fdfdfd) 上对比度分别只有 Vue 2.45:1、React 1.60:1、
+     Nuxt 1.79:1,远低于本文件开头声明的 >= 4.5:1 标准(React/Nuxt 那两个
+     几乎等于看不见字)。因此亮色主题一律用压暗变体,暗色主题才用官方原色。
+
+     两类值的出处不同,不要一并当成官方值维护:
+     - react 亮色 #087EA4 是 react.dev 亮色主题自己在用的链接色,等于官方
+       给出的"亮底可读版";
+     - vue / nuxt 官方没有公布亮底变体,#2B825B / #008551 是保持色相与饱和度、
+       只压亮度算到刚过 4.5:1 的结果。改动时需重新核对对比度。
+
+     另:Vue 与 Nuxt 本身都是绿色,和 --c-primary 在两个主题下都会撞成一片
+     难以分辨的绿。这是已知且接受的 —— 链接文字本身就是品牌名,颜色只做氛围
+     点缀不承载信息(也正合"信息不得仅靠颜色传达")。
+     Next.js 没有彩色品牌色(标识就是纯黑/纯白),直接复用 --c-text,不单列变量。 */
+  --c-brand-vue: #2b825b;
+  --c-brand-react: #087ea4;
+  --c-brand-nuxt: #008551;
+
+  /* 提示框的四种语气。只用于图标与标题文字(底色统一是 --c-bg-soft),
+     故按 4.5:1 的正文文字标准取色,而非大色块的 3:1。 */
+  --c-callout-note: #4a6fa5;
+  --c-callout-tip: #2b7a6f;
+  --c-callout-warning: #9a6700;
+  --c-callout-caution: #b3452c;
+
+  /* 代码块标记的底色。画在代码底下,必须足够淡才不压过 Shiki 的语法配色,
+     所以用透明度而非实色 —— 实色会因主题不同需要各配一套。 */
+  --c-code-mark: rgb(43 122 111 / 0.12);
+  --c-code-add: rgb(34 134 58 / 0.14);
+  --c-code-add-text: #22863a;
+  --c-code-remove: rgb(203 36 49 / 0.13);
+  --c-code-remove-text: #cb2431;
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  color-scheme: light;
+}
+
+.dark {
+  --c-bg: #121215;
+  --c-bg-soft: #1c1c20;
+  --c-text: #d4d4d8;
+  --c-text-soft: #a1a1aa;
+  --c-text-mute: #8a8a91;
+  --c-border: #2a2a30;
+  --c-primary: #5eb8aa;
+
+  --c-marker-ratio: 24%;
+
+  /* 暗色下 glow-2 比浅色更柔和(饱和度降低),避免深底衬托下过艳刺眼 */
+  --c-glow-1: 94 184 170;
+  --c-glow-2: 214 150 100;
+
+  /* 暗色背景本身就衬得住低透明度的光斑,沿用原有数值即可 */
+  --c-glow-alpha-1: 0.28;
+  --c-glow-alpha-2: 0.24;
+
+  /* 暗色主题用官方原色,对比度依次 7.6:1 / 11.6:1 / 10.4:1,均达标 */
+  --c-brand-vue: #42b883;
+  --c-brand-react: #61dafb;
+  --c-brand-nuxt: #00dc82;
+
+  /* 深底上提亮,浅色那套直接搬过来只有 3:1 出头,标题文字读着发闷 */
+  --c-callout-note: #7ba3d8;
+  --c-callout-tip: #5eb8aa;
+  --c-callout-warning: #d9a441;
+  --c-callout-caution: #e8836a;
+
+  /* 代码块标记在深色 Shiki 主题下要更亮一档才看得出,透明度也相应提高 */
+  --c-code-mark: rgb(94 184 170 / 0.16);
+  --c-code-add: rgb(63 185 80 / 0.16);
+  --c-code-add-text: #3fb950;
+  --c-code-remove: rgb(248 81 73 / 0.15);
+  --c-code-remove-text: #f85149;
+
+  color-scheme: dark;
+}

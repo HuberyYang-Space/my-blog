@@ -16,7 +16,7 @@ const { data: tags } = await useAsyncData('home-tags', async () => {
 
 // 氛围光背景的鼠标视差。
 // .glow-core 的自动漂移(外层 transform)、呼吸缩放(scale)与这里的视差
-// transform 分属不同节点/属性,互不覆盖,详见 global.css 顶部的说明。
+// transform 分属不同节点/属性,互不覆盖,详见本文件 <style> 块顶部的说明。
 const coreA = ref<HTMLElement>()
 const coreB = ref<HTMLElement>()
 
@@ -106,3 +106,181 @@ onMounted(() => {
     </section>
   </BaseLayout>
 </template>
+
+<style>
+/* ==========================================================================
+   首页:全站常驻氛围光背景
+   position: fixed 让光斑相对视口铺满,不受内容列 max-w-2xl 窄栏的宽度限制,
+   也不需要 100vw 破框 hack——不会有滚动条宽度引发横向滚动条的风险。
+   只需祖先节点(BaseLayout/Header)都没有 transform/filter/perspective/contain,
+   fixed 定位就会一直相对浏览器视口本身,已核对过没有这类属性。
+
+   每个光斑拆成两层节点:
+   - 外层(.glow-a/.glow-b)只负责自动漂移的位置(transform: translate 关键帧)
+   - 内层(.glow-core)负责实际视觉(渐变+模糊)+ 呼吸缩放(scale 关键帧)+
+     首页脚本驱动的鼠标视差(直接写 transform)
+   三者分别落在 transform / scale / filter 等不同 CSS 属性或不同节点上,
+   不会互相覆盖。呼吸用独立的 scale 属性(CSS Transforms Level 2)而不是
+   transform: scale(),这样才能和视差脚本写入的 transform 位移共存。
+
+   两个圆各自走独立的多点闭环路径("视差漂浮"),百分比停靠点、时长、相位都
+   刻意错开,避免看起来像 from/to 两点式的直线来回("乒乓")那样机械。
+   ========================================================================== */
+
+.ambient-glow {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.hero {
+  padding: 2rem 0;
+}
+
+.hero-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero-avatar {
+  flex-shrink: 0;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--c-border);
+}
+
+.hero h1 {
+  font-size: clamp(2.25rem, 5vw, 3.5rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.hero p {
+  margin-top: 0.75rem;
+  font-size: 1.05rem;
+}
+
+.hero-cursor {
+  display: inline-block;
+  margin-left: 0.05em;
+  font-weight: 300;
+  animation: hero-cursor-breathe 1.5s ease-in-out infinite;
+}
+
+@keyframes hero-cursor-breathe {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-cursor {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+.glow-a,
+.glow-b {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.glow-core {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: glow-breathe 11s ease-in-out infinite;
+}
+
+/* 右上角,冷色调 —— 刻意避开左上角的 <h1> 标题,窄屏下内容列几乎顶到视口边缘,
+   光斑堆在标题背后会拉低文字对比度。 */
+.glow-a {
+  top: -14rem;
+  right: -10rem;
+  width: 34rem;
+  height: 34rem;
+  animation: ambient-drift-a 24s ease-in-out infinite;
+}
+
+/* 左下角,暖色调,与 glow-a 对角分布 */
+.glow-b {
+  bottom: -16rem;
+  left: -12rem;
+  width: 32rem;
+  height: 32rem;
+  animation: ambient-drift-b 30s ease-in-out infinite;
+  animation-delay: -12s;
+}
+
+.glow-core-a {
+  background: radial-gradient(circle, rgb(var(--c-glow-1) / var(--c-glow-alpha-1)), transparent 70%);
+  filter: blur(90px);
+}
+
+.glow-core-b {
+  background: radial-gradient(circle, rgb(var(--c-glow-2) / var(--c-glow-alpha-2)), transparent 70%);
+  /* 11s 呼吸周期的一半,让两个光斑的呼吸相位彻底错开 */
+  animation-delay: -5.5s;
+  filter: blur(100px);
+}
+
+@keyframes glow-breathe {
+  0%,
+  100% {
+    scale: 1;
+    opacity: 0.5;
+  }
+
+  50% {
+    scale: 1.22;
+    opacity: 1;
+  }
+}
+
+@keyframes ambient-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  22% {
+    transform: translate(-6rem, 4rem);
+  }
+
+  48% {
+    transform: translate(-9rem, -3rem);
+  }
+
+  74% {
+    transform: translate(-2.5rem, -7.5rem);
+  }
+}
+
+@keyframes ambient-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  28% {
+    transform: translate(7rem, -5rem);
+  }
+
+  56% {
+    transform: translate(2.5rem, 6.5rem);
+  }
+
+  82% {
+    transform: translate(-4rem, 2.5rem);
+  }
+}
+</style>

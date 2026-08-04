@@ -1,0 +1,177 @@
+/* ==========================================================================
+   .underline-sweep —— 从左往右划出 + 原路缩回的下划线动画
+   悬停/键盘聚焦时下划线从左往右长出;移开后走同一条 transition 原路缩回,
+   视觉上是右边先往左收(锚点固定在左边)。这是单条 background-size 过渡的
+   天然效果,不需要额外代码区分"消失"方向。
+
+   用 background-size 动画而不是伪元素 + scaleX:后者在会换行的行内链接上会
+   退化成一个错位矩形,而 gradient 配 box-decoration-break: clone 每行各画
+   一份。目前只用在头部导航,但这个类要能原样推广到正文链接,所以从一开始就按
+   能换行的场景来写。代价是 gradient 动画走 paint 而非合成层,这种尺寸下无影响。
+
+   起始值必须写 0% 而不是 0:0 是长度(0px),与目标值 100% 是百分比,混合单位
+   的插值要靠 calc(),background-size 上这条在 WebKit 里不生效 —— 结果不是过渡
+   而是瞬间跳变。写成百分比↔百分比才是所有浏览器都保证能插值的形式。
+
+   background-origin: border-box 让这条线画进 border-bottom 所在的 1px 边框带:
+   - 未激活项边框是 transparent,动画线透出来,和激活态的 border-bottom 像素级重合;
+   - 激活项边框是不透明主色,会把这条动画线盖住 —— 悬停激活项时下划线纹丝不动,
+     不会有多余的动画。
+   高度写死 1px(而不是 100%):background-size 的百分比是相对于背景定位区域
+   (border-box,含 padding + border 整个高度)算的,写 100% 会把线铺满整个
+   盒子高度而不是贴底一条,只有宽度需要动画,高度用固定像素值直接对应
+   border-b 的 1px 宽度。
+
+   注意:用了这个类的元素不能再挂 UnoCSS 的 transition-* 工具类。两者都在写
+   transition 那组长属性、选择器权重又相同,只能靠打包顺序决胜负,结果是必然
+   有一个被整条改写掉(踩过:transition-colors 曾把 transition-property 抢成
+   color/background-color/... ,background-size 直接失去过渡)。
+
+   类名踩过坑:曾经叫 .link-underline,UnoCSS 会把类名整体当成自己的"变体-工具类"
+   简写语法解析——"link" 匹配到 :link 伪类变体,"underline" 匹配到
+   text-decoration-line: underline 工具类,于是额外生成了一条
+   .link-underline:link{text-decoration-line:underline},在链接上叠出一条多余的
+   下划线。现在这样以 .underline-sweep 命名,前后两段都不是 UnoCSS 认识的变体/
+   工具类关键词,不会被误解析。新增自定义类名时同理要避开这类可拆分的组合词。
+
+   prefers-reduced-motion 由 reset.css 的全局媒体查询统一降级,无需重复处理。
+   ========================================================================== */
+
+.underline-sweep {
+  background-image: linear-gradient(var(--c-primary), var(--c-primary));
+  background-origin: border-box;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition: background-size 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* 键盘聚焦与鼠标悬停给同等反馈,不让键盘用户只拿到一个通用焦点环 */
+.underline-sweep:hover,
+.underline-sweep:focus-visible {
+  background-size: 100% 1px;
+}
+
+/* ==========================================================================
+   .highlighter —— 可点击文本通用样式:主题色文字 + 常驻下划线 + hover 色块
+   面向页面正文、markdown 链接等泛用的"可点击文本"场景:下划线常驻(不依赖
+   hover/激活态),hover/focus 时只多一个从下往上涂满的色块。
+
+   色块用 background-origin: padding-box,止于 padding 盒边缘、不越过
+   border-bottom 所在的边框带,色块底边与下划线顶边因此天然对齐、不留缝。
+
+   色块与文字等宽,不做左右出血。早先按"真实笔头比字宽"的思路用
+   padding-inline: 0.3em + 等量负 margin 外扩过,但 border-bottom 画在 padding
+   之外,下划线会跟着变长 0.6em;内联进中文正文时(如关于页那句"我是 XXX")
+   色块和下划线都比字宽出一截,读起来松垮,所以取消出血、让色块严格贴合字宽。
+
+   两条约束与 .underline-sweep 完全相同,细节见上方该类注释:元素不能再挂
+   UnoCSS 的 transition-* 工具类;类名不能带连字符,否则会被当成"变体-工具类"
+   简写误解析。
+
+   换色见下方 --tint 一节。
+
+   prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
+   ==========================================================================
+
+   --tint —— .highlighter / .tinter 共用的颜色参数
+
+   两个类是"同一件事的两档强度",共用一个参数名,调用处在 highlighter 和 tinter
+   之间切换时不用连带改另一半 class。不传时落到 --c-primary,传了就整体换色
+   (文字、下划线、hover 色块都跟着走)。
+
+   用法:走 UnoCSS 的任意属性类,不要写 inline style ——
+     <a class="highlighter [--tint:var(--c-brand-vue)]">Vue</a>
+   任意属性类由 presetWind3(内含 preset-mini 的 cssProperty 规则)编译成
+   一条 { --tint: ... },无需额外配置。不用 style="--tint: ..." 是因为将来若加
+   CSP,inline style 属性会被 style-src 拦掉,除非开 unsafe-inline。
+
+   ⚠️ 两个类只能"消费"--tint,绝不能自己声明它 —— 内部一律读
+   var(--tint, var(--c-primary)) 并存进私有的 --_tint。工具类
+   .[--tint:...] 与 .highlighter 权重同为 (0,1,0),一旦两边都写 --tint 就退化成
+   靠打包顺序决胜负,即上方 transition 那个坑的同款形态;默认值语法从根上绕开
+   权重竞争,与规则先后无关。
+
+   焦点环(见 Reset 一节的 :focus-visible)刻意不参数化,始终用 --c-primary:
+   它是全站统一的可达性指示器,跟着每个链接换色会让键盘用户失去稳定的视觉锚点,
+   而且浅色品牌色的焦点环在亮色底上基本等于没有。
+   ========================================================================== */
+
+.highlighter {
+  --_tint: var(--tint, var(--c-primary));
+
+  color: var(--_tint);
+  border-bottom: 1px solid var(--_tint);
+  background-image:
+    linear-gradient(
+      color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent),
+      color-mix(in srgb, var(--_tint) var(--c-marker-ratio), transparent)
+    );
+  background-origin: padding-box;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 0%;
+  transition: background-size 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+/* 键盘聚焦与鼠标悬停给同等反馈,不让键盘用户只拿到一个通用焦点环 */
+.highlighter:hover,
+.highlighter:focus-visible {
+  background-size: 100% 100%;
+}
+
+/* ==========================================================================
+   .tinter —— 可点击文本的轻量样式:静止态弱化色,hover/focus 时文字变主题色 +
+   下划线从左往右划出,移开原路缩回。下划线的划出/缩回动画与 Header 导航的
+   .underline-sweep 视觉上一致,但不能靠同时挂 tinter + underline-sweep 两个
+   class 来复用 —— 两者都要写 transition 简写(一个管 color,一个管
+   background-size),同一元素上两条 transition 声明只能靠打包顺序决胜负,
+   必然有一条被整条覆盖掉。所以这里把下划线动画直接内置进 tinter,变色和划线
+   两段过渡写在同一条 transition 声明里,不依赖外部第二个 class。
+
+   静止态特意不显示下划线,也不设 color —— 颜色继承使用处的上下文(返回链接
+   继承 text-mute、标签继承所在导航的弱化色、文章卡片标题继承正文色),同一个
+   类挂到深浅不同的场景里都不会和周围的文字打架,只有 hover/focus 时才统一变
+   主题色。与 .highlighter(常驻主题色 + 常驻下划线 + hover 色块)是有意区分的
+   两档效果:highlighter 更醒目,用于想强调的链接;tinter 更克制,平时融入上下
+   文,只在交互时才提示"这是可点击文本"。
+
+   选择器带上 .prose a:not([class]):Markdown 的 [文字](url) 语法没地方挂
+   class,正文链接靠这条选择器自动拿到 tinter 的观感,写文章不必退化成裸 HTML。
+   :not([class]) 是必需的 —— .prose a 的权重(0,1,1)高过 .highlighter(0,1,0),
+   不排除就会把关于页那种主动挂了 .highlighter 的正文链接连背景带过渡一起改写
+   掉;顺带也放过了脚注返回箭头(带 .data-footnote-backref)。
+
+   换色同样走 --tint(说明见上方 .highlighter 与 --tint 一节)。tinter 静止态本来
+   就不着色,所以 --tint 只影响 hover/focus 时的文字色与那条划出的下划线。
+   .prose a:not([class]) 这一支是 Markdown 正文链接,没地方挂 class 也就没地方
+   传参,恒定落到默认的 --c-primary。
+
+   prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
+   ========================================================================== */
+
+.tinter,
+.prose a:not([class]) {
+  --_tint: var(--tint, var(--c-primary));
+  background-image: linear-gradient(var(--_tint), var(--_tint));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+  transition:
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    background-size 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+.tinter:hover,
+.tinter:focus-visible,
+.prose a:not([class]):hover,
+.prose a:not([class]):focus-visible {
+  color: var(--_tint);
+  background-size: 100% 1px;
+}

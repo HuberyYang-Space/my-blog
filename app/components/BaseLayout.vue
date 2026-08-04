@@ -79,3 +79,22 @@ const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
     </div>
   </div>
 </template>
+
+<style>
+/* 文章详情页(有大纲时)的外层容器:两侧留白 + 正文 48rem + 大纲 14rem + 两道 2.5rem
+   间距,推出的完整宽度是 84rem —— 超过 Tailwind/Wind3 预设的最大关键字 7xl(80rem),
+   所以单独定一个精确值,而不是拿一个偏窄的关键字将就。 */
+.post-shell {
+  max-width: 84rem;
+}
+
+/* 三栏网格,左右两栏用完全相同的 minmax(14rem, 1fr):正文居中依赖两栏"对称",
+   而不是两栏"都是 1fr"——如果大纲那栏有下限、留白那栏没有,空间不够时网格会优先
+   保住有下限的大纲栏,把差额全部从留白栏扣掉,正文就会明显偏左(曾用真实视口验证过)。
+   两栏下限相同,才能保证无论怎么挤压,留白和大纲宽度始终相等、正文真正居中。
+   工具类写不出这种 minmax() 组合值,项目里也没有任意值方括号语法的先例,
+   跟 .site-header 的 color-mix() 一样单独具名一条规则。 */
+.post-grid {
+  grid-template-columns: minmax(14rem, 1fr) minmax(0, 48rem) minmax(14rem, 1fr);
+}
+</style>
