@@ -21,12 +21,16 @@
 }
 
 html {
+  height: 100%;
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
 }
 
+/* html/body 本身永远不滚动 —— 页面唯一的滚动条在 BaseLayout 的 .content-scroll 上,
+   这样固定定位的头部/页脚才不会被内容滚动条挤出视口或被滚动条覆盖出双滚动条。 */
 body {
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
   font-family: var(--font-sans);
   line-height: 1.7;
   color: var(--c-text);

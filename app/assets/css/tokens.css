@@ -75,6 +75,12 @@
     ui-sans-serif, system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
+  /* 头部/页脚固定高度:36px(SearchTrigger/ThemeToggle 按钮实际高度)+ 上下各 0.75rem
+     内边距 = 3.75rem。页脚高度必须和头部一致,用 var() 引用而非重复字面量,两者不会漂移。
+     非主题相关,不随 .dark 变化。 */
+  --header-h: 3.75rem;
+  --footer-h: var(--header-h);
+
   color-scheme: light;
 }
 

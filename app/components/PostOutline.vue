@@ -30,6 +30,9 @@ const activeId = ref<string>()
 // getBoundingClientRect 重新扫一遍,而不是直接信任回调传入的 entries:
 // entries 只包含"这一次状态发生变化"的标题,单独用它判断会在两个标题之间
 // 出现"谁都不是当前项"的空档。
+//
+// 80px 与 tokens.css 的 --header-h(60px)是同一个物理量(头部高度)的两份独立
+// 表达 —— 这里留了一点余量而非直接等于头部高度。头部改高度时记得同步这个数值。
 const HEADER_OFFSET = 80
 
 let observer: IntersectionObserver | undefined

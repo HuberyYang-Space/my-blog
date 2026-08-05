@@ -23,8 +23,8 @@ function navLinkClass(active: boolean) {
 </script>
 
 <template>
-  <header class="site-header sticky top-0 z-50">
-    <nav class="mx-auto max-w-2xl flex items-center justify-between gap-4 px-6 py-3">
+  <header class="site-header">
+    <nav class="mx-auto max-w-2xl w-full flex items-center justify-between gap-4 px-6 py-3">
       <div class="flex items-baseline gap-5">
         <NuxtLink
           to="/"
@@ -53,10 +53,24 @@ function navLinkClass(active: boolean) {
 </template>
 
 <style>
-/* 头部:半透明玻璃背景,随主题变量自动适配深浅色,与下方内容保持模糊分层。
-   工具类无法干净表达 color-mix(),单独具名一条规则。 */
+/* 头部:固定在视口顶部,半透明玻璃背景随主题变量自动适配深浅色,与下方滚动的内容
+   保持模糊分层 —— fixed 而非 sticky,好让内容真的滚动到头部背后,backdrop-filter
+   才有意义。position 只在这里表达一次,不在模板上叠加工具类,避免两处来源打架。
+   高度写死为 --header-h(见 tokens.css),不再是内容撑开的 auto 高度,与
+   BaseLayout 的 .content-scroll 用同一个变量做 padding 补偿。 */
 .site-header {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  height: var(--header-h);
+  /* 用 flex + align-items: center 纵向居中 nav,不依赖"nav 自身高度刚好等于
+     --header-h"这种巧合 —— 内容(如按钮尺寸)以后变了也不会跑出固定高度的头部盒子。
+     flex 项默认按内容收缩宽度,nav 需要显式 w-full 才能让自己的 mx-auto 生效
+     (见模板),否则 max-w-2xl mx-auto 在 flex 容器里没有多余空间可居中。 */
+  display: flex;
+  align-items: center;
   background-color: color-mix(in srgb, var(--c-bg) 72%, transparent);
   /* 模糊必须加在这条全宽规则上,而不是内层居中的 nav —— 否则视口宽于内容列时,
      header 露出的左右留白区域只有半透明色、没有模糊,和中间的 nav 区域不一致。 */
