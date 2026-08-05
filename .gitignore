@@ -16,3 +16,7 @@ pnpm-debug.log*
 .DS_Store
 
 .idea/
+
+# Claude Code 本地产物与个人配置(settings.local.json、预览用的 launch.json、
+# 调度锁文件、agent worktree 暂存目录),不随仓库分发。
+.claude/
