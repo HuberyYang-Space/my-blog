@@ -56,6 +56,13 @@
   --c-brand-react: #087ea4;
   --c-brand-nuxt: #008551;
 
+  /* 联系方式三个链接的品牌色。GitHub 官方黑 #181717 在亮色背景下可读,
+     微信绿 #07c160 本身对比度已够(两个主题同值),邮箱没有品牌方,
+     取一个和站点主色区分度高、观感现代的蓝。 */
+  --c-brand-email: #2563eb;
+  --c-brand-github: #181717;
+  --c-brand-wechat: #07c160;
+
   /* 提示框的四种语气。只用于图标与标题文字(底色统一是 --c-bg-soft),
      故按 4.5:1 的正文文字标准取色,而非大色块的 3:1。 */
   --c-callout-note: #4a6fa5;
@@ -109,6 +116,13 @@
   --c-brand-vue: #42b883;
   --c-brand-react: #61dafb;
   --c-brand-nuxt: #00dc82;
+
+  /* GitHub 黑在暗色背景下翻转成近白色(取自 GitHub 自己暗色主题的正文文字色),
+     否则纯黑文字会和暗色背景融在一起看不清;微信绿在深底上对比度已经够,
+     两个主题沿用同一个值。 */
+  --c-brand-email: #60a5fa;
+  --c-brand-github: #e6edf3;
+  --c-brand-wechat: #07c160;
 
   /* 深底上提亮,浅色那套直接搬过来只有 3:1 出头,标题文字读着发闷 */
   --c-callout-note: #7ba3d8;

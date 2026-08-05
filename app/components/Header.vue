@@ -26,7 +26,7 @@ function navLinkClass(active: boolean) {
       <div class="flex items-baseline gap-5">
         <NuxtLink
           to="/"
-          class="underline-sweep border-b pb-px text-base font-semibold tracking-tight"
+          class="underline-sweep border-b pb-px text-base font-normal tracking-tight"
           :aria-current="isHome ? 'page' : undefined"
           :class="navLinkClass(isHome)"
         >
@@ -34,7 +34,7 @@ function navLinkClass(active: boolean) {
         </NuxtLink>
         <NuxtLink
           to="/about"
-          class="underline-sweep border-b pb-px text-base font-semibold tracking-tight"
+          class="underline-sweep border-b pb-px text-base font-normal tracking-tight"
           :aria-current="isAbout ? 'page' : undefined"
           :class="navLinkClass(isAbout)"
         >

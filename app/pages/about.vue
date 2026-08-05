@@ -13,10 +13,12 @@ const works = [
 // href 缺省表示这一项没有可跳转的目标(微信号只能复制),渲染成点击复制的按钮
 // 而不是 href="javascript:void(0)" 的假链接 —— 假链接会被读屏软件播报成"链接"、
 // 键盘 Tab 停上去按回车却什么都不发生,将来加 CSP 也会被 script-src 拦掉。
-const contacts: { icon: string, text: string, href?: string }[] = [
-  { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', href: 'mailto:18830279823@163.com' },
-  { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang' },
-  { icon: 'i-ph-wechat-logo', text: 'HuberyYang_' },
+// tint 是字面量的 UnoCSS 任意属性类,不能从 icon/text 拼出来 —— UnoCSS 靠扫描
+// 源码文本收集候选类名,拼接结果不在源码里,产物中就没有对应规则。
+const contacts: { icon: string, text: string, href?: string, tint: string }[] = [
+  { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', href: 'mailto:18830279823@163.com', tint: '[--tint:var(--c-brand-email)]' },
+  { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang', tint: '[--tint:var(--c-brand-github)]' },
+  { icon: 'i-ph-wechat-logo', text: 'HuberyYang_', tint: '[--tint:var(--c-brand-wechat)]' },
 ]
 
 // 站外链接才需要新开标签页,mailto: 这类协议链接不需要。
@@ -49,13 +51,10 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
 
 <template>
   <BaseLayout title="关于" :description="`关于 ${SITE.title} 与这个站点。`">
-    <section class="py-4">
-      <h1 class="text-xl font-semibold tracking-tight">
-        关于
-      </h1>
-    </section>
-
-    <section class="prose mt-6">
+    <!-- 顶部不再重复"关于"标题:Header 导航已经用 aria-current 高亮当前项,
+         这里再放一个同义的 h1 只是信息冗余。pt-4 承接原先 h1 所在 section 的
+         顶距,不让正文紧贴头部。 -->
+    <section class="prose pt-4">
       <!--
         框架名链接的颜色走 .highlighter 的 --tint 参数（见 assets/css/links.css 的 --tint 一节），
         每家取各自品牌色；Next.js 的标识是纯黑白，直接用 --c-text；AI 不是产品，
@@ -77,17 +76,20 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
     </nav>
 
     <nav aria-label="联系方式" class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
-      <template v-for="{ icon, text, href } in contacts" :key="text">
+      <template v-for="{ icon, text, href, tint } in contacts" :key="text">
         <!--
-          .tinter 不可省:全局 a 规则是 color: inherit + 无下划线且没有通用 a:hover,
+          .tinge 不可省:全局 a 规则是 color: inherit + 无下划线且没有通用 a:hover,
           不挂样式的链接看上去就是一段普通文字,鼠标移上去也没有任何反馈。
+          三个链接各自的品牌色只在 hover 时体现(平时融入弱化色的正文),
+          不用 .tinter 是因为这里不需要下划线动画,色块本身已是足够的反馈。
         -->
         <a
           v-if="href"
           :href="href"
           :target="isExternal(href) ? '_blank' : undefined"
           :rel="isExternal(href) ? 'noreferrer' : undefined"
-          class="tinter inline-flex items-center"
+          class="tinge inline-flex items-center"
+          :class="tint"
         >
           <span :class="icon" />
           {{ text }}
@@ -95,7 +97,8 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
         <button
           v-else
           type="button"
-          class="tinter inline-flex items-center p-0"
+          class="tinge inline-flex items-center p-0"
+          :class="tint"
           @click="onCopy(text)"
         >
           <span :class="icon" />

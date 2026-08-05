@@ -48,16 +48,12 @@ function scrollToTop() {
 </template>
 
 <style>
-/* 定位用 --footer-h 而不是写死数值:页脚在文章详情页会被 hideFooter 隐藏,但
-   .content-scroll 的 padding-bottom 始终按这个变量预留空间(见 BaseLayout.vue),
-   按钮跟着同一个变量走,不管页脚是否实际渲染都不会贴底或被遮住。
+/* 静态在文档流中(BaseLayout 把它放进网格第二行的第三列,自然贴着大纲左边、
+   分页器底边,见 BaseLayout.vue),不再是悬浮在视口上的元素,因此不需要
+   position/z-index/backdrop-filter 这类"盖在内容之上"才要用的属性。
    外观对齐 SearchTrigger 的既有语言(边框 + 6px 圆角 + 36px 见方),不用本站没有
    先例的圆形悬浮按钮形状。 */
 .scroll-top-button {
-  position: fixed;
-  right: 1.5rem;
-  bottom: calc(var(--footer-h) + 1rem);
-  z-index: 40;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,8 +63,6 @@ function scrollToTop() {
   border-radius: 6px;
   color: var(--c-text-mute);
   background-color: color-mix(in srgb, var(--c-bg) 85%, transparent);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
   transition:
     color 0.2s ease,
     border-color 0.2s ease;

@@ -174,3 +174,24 @@
   color: var(--_tint);
   background-size: 100% 1px;
 }
+
+/* ==========================================================================
+   .tinge —— 可点击文本的最轻样式:只变文字色,不画下划线
+   用于联系方式这类挂了品牌色(GitHub 黑、微信绿……)的图标+文字组合 ——
+   下划线动画在这种场景没有意义(色块本身就是最强的反馈),画出来只是多余的
+   视觉噪音。图标沿用 currentColor,颜色变化时自动跟着文字走,不需要单独处理。
+
+   换色同样走 --tint(说明见上方 .highlighter 与 --tint 一节)。
+   prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
+   ========================================================================== */
+
+.tinge {
+  --_tint: var(--tint, var(--c-primary));
+
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tinge:hover,
+.tinge:focus-visible {
+  color: var(--_tint);
+}
