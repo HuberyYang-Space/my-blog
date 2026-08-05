@@ -51,10 +51,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
 
 <template>
   <BaseLayout title="关于" :description="`关于 ${SITE.title} 与这个站点。`">
-    <!-- 顶部不再重复"关于"标题:Header 导航已经用 aria-current 高亮当前项,
-         这里再放一个同义的 h1 只是信息冗余。pt-4 承接原先 h1 所在 section 的
-         顶距,不让正文紧贴头部。 -->
-    <section class="prose pt-4">
+    <section class="prose pt-12">
       <!--
         框架名链接的颜色走 .highlighter 的 --tint 参数（见 assets/css/links.css 的 --tint 一节），
         每家取各自品牌色；Next.js 的标识是纯黑白，直接用 --c-text；AI 不是产品，

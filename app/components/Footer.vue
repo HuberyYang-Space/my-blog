@@ -20,10 +20,11 @@ onMounted(() => {
     <div class="mx-auto max-w-2xl w-full flex items-center justify-between gap-4 px-6">
       <p>© {{ year }} {{ SITE.title }}</p>
       <!--
-        必须挂 .tinter:全局的 a 规则是 color: inherit + 无下划线,且没有通用 a:hover。
+        必须挂 .tinge:全局的 a 规则是 color: inherit + 无下划线,且没有通用 a:hover。
         不挂样式的链接与周围纯文本在视觉上完全无法区分,悬停也毫无反馈。
+        用 .tinge 而非 .tinter:页脚是次要信息,不需要下划线动画。
       -->
-      <a href="/rss.xml" class="tinter">RSS</a>
+      <a href="/rss.xml" class="tinge">RSS</a>
     </div>
   </footer>
 </template>
