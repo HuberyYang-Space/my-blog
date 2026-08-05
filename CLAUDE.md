@@ -152,10 +152,14 @@ app/
   `.callout-body > * + *` 这类作用于 slot 的规则会直接失效。
 - **跨组件边界的选择器留在全局**。`.prose pre` 横跨 `[slug].vue` 与 `ProsePre.vue`,
   归 `prose.css`;`ProsePre` 自己的外框(`.code-block*`)才写进组件。
-- **UnoCSS 会扫 `<style>` 块里的 CSS 属性值当类名候选**(`backdrop-filter:` → 生成 `.backdrop-filter`,
-  `animation: … ease-out` → `.ease-out`),凭空产出没人使用的规则。`uno.config.ts` 里已用自定义
-  `extractorDefault` 在提取前剥掉 `<style>` 块堵住这条。注意 `content.pipeline.exclude` **不管用** ——
-  那个按模块 id 过滤,而 UnoCSS 扫的是整个 `.vue` 文件,不是 Vite 拆出来的 `?vue&type=style` 子模块。
+- **UnoCSS 会扫 `<style>` 块里的 CSS 属性值当类名候选**(`position: absolute` → 生成 `.absolute`,
+  `animation: … ease-out` → `.ease-out`),产物里因此固定多出 8 条没人使用的死规则:
+  `absolute` / `fixed` / `ease-in-out` / `ease-out` / `flex-shrink` / `h1` / `outline` /
+  `tabular-nums`。**这是刻意接受的**,合计 444 B(压缩前,占工具类 CSS 的 1.5%),且与手写 CSS、
+  模板类名零碰撞。**不要为它写自定义 `extractorDefault`** —— 理由写在 `uno.config.ts` 顶部,
+  一句话是:正则分不清真样式块和注释里提到的 `<style>`,踩中时整页工具类静默消失,而
+  构建成功、且只在 dev 复现。注意 `content.pipeline.exclude` 也**不管用** —— 那个按模块 id
+  过滤,而 UnoCSS 扫的是整个 `.vue` 文件,不是 Vite 拆出来的 `?vue&type=style` 子模块。
 - **reset 已预置 `border-style: solid; border-width: 0`**,用边框工具类直接写 `border-b` 即可,
   不需要再补 `border-0` / `border-solid`。(CSS 的 `border-style` 初始值是 `none`,而 `none` 会把
   任何宽度折算成 0 —— 不预置的话每个用边框的地方都得踩一次,还得各写一段注释解释。)
