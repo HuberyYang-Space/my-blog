@@ -57,6 +57,9 @@ useHead({
 const slots = useSlots()
 const hasAside = computed(() => Boolean(slots.aside))
 const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
+
+// 传给 ScrollToTopButton,让它监听真正的滚动容器,而不是自己再找一次
+const scrollEl = ref<HTMLDivElement | null>(null)
 </script>
 
 <template>
@@ -64,7 +67,7 @@ const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
     <Header />
     <!-- 唯一的滚动容器:头部/页脚固定在视口,页面只有这一处出现滚动条,不会外溢到
          头尾。上下 padding 用 --header-h/--footer-h 补偿被固定元素遮住的空间。 -->
-    <div class="content-scroll">
+    <div ref="scrollEl" class="content-scroll">
       <div
         class="mx-auto px-6"
         :class="hasAside ? 'post-shell' : contentWidth"
@@ -83,6 +86,7 @@ const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
       </div>
     </div>
     <Footer v-if="!hideFooter" />
+    <ScrollToTopButton :scroll-target="scrollEl" />
   </div>
 </template>
 

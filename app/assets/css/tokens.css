@@ -75,11 +75,13 @@
     ui-sans-serif, system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* 头部/页脚固定高度:36px(SearchTrigger/ThemeToggle 按钮实际高度)+ 上下各 0.75rem
-     内边距 = 3.75rem。页脚高度必须和头部一致,用 var() 引用而非重复字面量,两者不会漂移。
-     非主题相关,不随 .dark 变化。 */
+  /* 头部固定高度:36px(SearchTrigger/ThemeToggle 按钮实际高度)+ 上下各 0.75rem
+     内边距 = 3.75rem。非主题相关,不随 .dark 变化。 */
   --header-h: 3.75rem;
-  --footer-h: var(--header-h);
+  /* 页脚内容只有一行版权 + 一个 RSS 链接,不需要跟头部同高 —— 曾经用
+     var(--header-h) 转发是为了"头尾视觉对称",但对内容型博客来说页脚常驻占掉
+     一整条头部高度并不划算,改成更紧凑的独立值,把空间让给内容区。 */
+  --footer-h: 2.5rem;
 
   color-scheme: light;
 }

@@ -10,7 +10,8 @@ defineProps<{
 </script>
 
 <template>
-  <NuxtLink :to="href" class="tinter text-sm text-text-mute">
-    ← <slot />
+  <NuxtLink :to="href" class="group inline-flex items-center gap-1.5 text-sm text-text-mute">
+    <span class="i-ph-arrow-left transition-transform group-hover:-translate-x-0.5" />
+    <span class="tinter"><slot /></span>
   </NuxtLink>
 </template>

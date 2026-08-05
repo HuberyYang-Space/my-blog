@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { SITE } from '~/config'
-
 const route = useRoute()
 // 精确匹配而非 startsWith:后者会把将来可能出现的 /about-xxx 也点亮成"关于"
 const isHome = computed(() => route.path === '/')
@@ -32,11 +30,11 @@ function navLinkClass(active: boolean) {
           :aria-current="isHome ? 'page' : undefined"
           :class="navLinkClass(isHome)"
         >
-          {{ SITE.title }}
+          首页
         </NuxtLink>
         <NuxtLink
           to="/about"
-          class="underline-sweep border-b pb-px text-sm"
+          class="underline-sweep border-b pb-px text-base font-semibold tracking-tight"
           :aria-current="isAbout ? 'page' : undefined"
           :class="navLinkClass(isAbout)"
         >

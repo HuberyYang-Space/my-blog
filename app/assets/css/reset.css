@@ -89,6 +89,36 @@ pre {
   font-family: var(--font-mono);
 }
 
+/* 全局滚动条:细、直角、静止态几乎不可见,hover/active 时轻微发亮 + 极淡的主题色光晕。
+   写成 * 选择器一次覆盖全站,而不是分别写进 .content-scroll、搜索结果列表、宽表格、
+   代码块横向滚动等各处 —— 那样每新增一个滚动区域都要记得补一份,漏改不会报错。
+   颜色源自 --c-text-mute,双主题下自动跟着换,不是写死的灰色。
+   Firefox 的 scrollbar-width/scrollbar-color 只能控制粗细与两个颜色,做不到直角和
+   发光,是浏览器 API 的上限,不是漏改。 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--c-text-mute) 40%, transparent) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--c-text-mute) 40%, transparent);
+  border-radius: 0;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--c-text-mute) 65%, transparent);
+  box-shadow: 0 0 4px color-mix(in srgb, var(--c-primary) 50%, transparent);
+}
+
 /* 键盘可达性:仅在键盘导航时显示焦点环 */
 :focus-visible {
   outline: 2px solid var(--c-primary);
@@ -97,7 +127,11 @@ pre {
 
 /* 尊重用户的减少动效偏好 */
 @media (prefers-reduced-motion: reduce) {
-  html {
+  /* .content-scroll(见 BaseLayout.vue)是后来的重构才引入的实际滚动容器,
+     html 的 scroll-behavior 已经不承担真正的滚动,这里一并覆盖,否则锚点跳转
+     在开启该偏好后仍会平滑滚动。 */
+  html,
+  .content-scroll {
     scroll-behavior: auto;
   }
 

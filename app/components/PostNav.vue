@@ -32,7 +32,7 @@ defineProps<{
         <span class="i-ph-arrow-left transition-transform group-hover:-translate-x-0.5" />
       </span>
       <span class="mt-1 block text-sm text-text-soft">
-        <span class="tinter">{{ newer.title }}</span>
+        <span class="transition-colors group-hover:text-text">{{ newer.title }}</span>
       </span>
     </NuxtLink>
     <NuxtLink
@@ -45,7 +45,7 @@ defineProps<{
         <span class="i-ph-arrow-right transition-transform group-hover:translate-x-0.5" />
       </span>
       <span class="mt-1 block text-sm text-text-soft">
-        <span class="tinter">{{ older.title }}</span>
+        <span class="transition-colors group-hover:text-text">{{ older.title }}</span>
       </span>
     </NuxtLink>
   </nav>

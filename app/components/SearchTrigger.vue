@@ -68,9 +68,12 @@ onUnmounted(() => window.removeEventListener('keydown', onKeydown))
     background-color 0.2s ease;
 }
 
+/* 全站可点击元素 hover 统一变主题色(见 links.css 的 .tinter/.highlighter/
+   .underline-sweep),这里补上此前唯一的例外 —— 背景色仍用中性的 --c-bg-soft,
+   它和文字/边框变色是两件事,不冲突。 */
 .search-trigger:hover {
-  color: var(--c-text);
-  border-color: var(--c-text-mute);
+  color: var(--c-primary);
+  border-color: var(--c-primary);
   background-color: var(--c-bg-soft);
 }
 
