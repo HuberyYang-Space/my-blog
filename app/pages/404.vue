@@ -8,10 +8,13 @@
  * 于是把本页预渲染成 /404/index.html,再由 nuxt.config 的
  * nitro:build:public-assets 钩子覆盖到根级 404.html。
  */
+
+// 与 NotFound 渲染的是同一份文案(见 app/utils/error-copy.ts),不在这里手抄一遍
+const copy = errorCopy(404)
 </script>
 
 <template>
-  <BaseLayout title="页面不存在" description="你访问的页面不存在或已被移动。">
+  <BaseLayout :title="copy.heading" :description="copy.detail">
     <NotFound />
   </BaseLayout>
 </template>

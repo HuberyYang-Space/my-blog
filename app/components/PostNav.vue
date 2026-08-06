@@ -1,18 +1,17 @@
 <script setup lang="ts">
-/**
- * 只声明真正用到的字段,而不是收整个 BlogCollectionItem ——
- * 这样调用方可以只 select 路径与标题,不必为翻页拉取全文。
- */
-interface AdjacentPost {
-  path: string
-  title: string
-}
+import type { PostSummary } from '~/utils/posts'
 
+/**
+ * 收 PostSummary(只有路径与标题)而不是整个 BlogCollectionItem —— 取数层因此
+ * 能只 select 这两列,不必为翻页把全站正文拉一遍。这个"轻量文章"的形状由
+ * app/utils/posts.ts 定义,组件里不再另起一个同形状的接口:两份定义早晚会
+ * 各自加字段,而它们本该是同一件东西。
+ */
 defineProps<{
   /** 较早发布的文章(在按日期倒序的列表里排在当前文章之后) */
-  older?: AdjacentPost
+  older?: PostSummary
   /** 较新发布的文章(在按日期倒序的列表里排在当前文章之前) */
-  newer?: AdjacentPost
+  newer?: PostSummary
 }>()
 </script>
 

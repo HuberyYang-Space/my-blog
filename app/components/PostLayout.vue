@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import type { BlogCollectionItem, TocLink } from '@nuxt/content'
+import type { PostSummary } from '~/utils/posts'
 
 const props = defineProps<{
   post: BlogCollectionItem
   links: TocLink[]
-  /** 较早发布的文章。只需路径与标题,详见 PostNav 的 AdjacentPost */
-  olderPost?: { path: string, title: string }
+  /** 较早发布的文章。只需路径与标题,形状见 app/utils/posts.ts 的 PostSummary */
+  olderPost?: PostSummary
   /** 较新发布的文章 */
-  newerPost?: { path: string, title: string }
+  newerPost?: PostSummary
 }>()
 
 // 大纲只在标题足够多时才有意义 —— 少于 3 个 h2 的短文放一个几乎空的框只是噪音

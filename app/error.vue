@@ -9,11 +9,13 @@ const props = defineProps<{
 }>()
 
 const statusCode = computed(() => props.error?.statusCode ?? 404)
-const heading = computed(() => (statusCode.value === 404 ? '页面不存在' : '出错了'))
+// 与 NotFound 渲染的是同一份文案(见 app/utils/error-copy.ts)——
+// 500 页面不会再顶着一句"页面不存在或已被移动"的 description。
+const copy = computed(() => errorCopy(statusCode.value, props.error?.statusMessage))
 </script>
 
 <template>
-  <BaseLayout :title="heading" description="你访问的页面不存在或已被移动。">
+  <BaseLayout :title="copy.heading" :description="copy.detail">
     <NotFound :status-code="statusCode" :status-message="error?.statusMessage" />
   </BaseLayout>
 </template>

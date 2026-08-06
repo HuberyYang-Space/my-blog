@@ -9,10 +9,11 @@ import { SITE } from '~/config'
 defineOgImage('Hubery.browser')
 
 const { data: posts } = await useAsyncData('posts', () => getPublishedPosts())
-// 复用标签归档页现成的排序规则(文章数倒序、同数按标签名排序),不新增工具函数。
-const { data: tags } = await useAsyncData('home-tags', async () => {
-  return (await getPostsGroupedByTag()).map(group => group.tag)
-})
+
+// 标签直接从上面这份数据算。复用的是纯函数 groupPostsByTag(排序规则与标签归档页
+// 同一套:文章数倒序、同数按标签名排序),而不是取数函数 getPostsGroupedByTag() ——
+// 后者内部会再查一遍全站文章并重新排序,只为了取一列标签名。
+const tags = computed(() => groupPostsByTag(posts.value ?? []).map(group => group.tag))
 
 // 氛围光背景的鼠标视差。
 // .glow-core 的自动漂移(外层 transform)、呼吸缩放(scale)与这里的视差
@@ -91,7 +92,7 @@ onMounted(() => {
     </section>
 
     <nav
-      v-if="tags?.length"
+      v-if="tags.length"
       aria-label="标签导航"
       class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-text-mute font-mono"
     >
