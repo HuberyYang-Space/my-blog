@@ -57,3 +57,57 @@ export const SITE = {
    */
   ogImage: '/_og/s/c_Hubery.browser.png',
 } as const
+
+/**
+ * 文章徽章预设表 —— 标题右侧那些小色块的唯一真源。
+ *
+ * frontmatter 里只写 key(`badges: [wip, translated]`),文案与配色一律从这里取。
+ * 允许每篇内联写 `{ label, tone }` 的话,同一个徽章会散成 N 份副本:改文案要翻遍
+ * 全站,而「连载中」与「连载中 」这种差一个空格的写法不报错,只会静默变成两个徽章。
+ *
+ * 新增徽章 = 在这里加一行。key 经 `content.config.ts` 的 z.enum 进入 schema,
+ * 拼错拦在构建期(为什么还要第二道兜底,见 `app/utils/badges.ts`)。
+ *
+ * ⚠️ draft 是 dev-only。`draft: true` 的文章在生产被 `isPublishedPost()` 整个过滤掉
+ * (不进列表、不预渲染、不进 RSS 与搜索索引),所以「草稿」二字线上永远不会出现 ——
+ * 它留在表里是为了让开发期那个徽章与其余徽章共用同一套渲染,而不是硬编码在模板里。
+ * 想要「已发布但还在写」的线上标记请用 wip,那是另一件事,改 draft 实现不了。
+ *
+ * tone 落到 tokens.css 的语气色,映射写在 `app/components/PostBadges.vue` 的 CSS 里。
+ */
+export const BADGES = {
+  draft: { label: '草稿', tone: 'mute' },
+  wip: { label: '连载中', tone: 'warning' },
+  translated: { label: '译文', tone: 'info' },
+  outdated: { label: '已过时', tone: 'danger' },
+  featured: { label: '精选', tone: 'success' },
+} as const
+
+export type BadgeKey = keyof typeof BADGES
+export type BadgeTone = typeof BADGES[BadgeKey]['tone']
+
+/**
+ * 徽章的渲染顺序 —— 取上面的定义序,不跟 frontmatter 的书写序走。
+ *
+ * 跟着书写序的话,`[wip, translated]` 与 `[translated, wip]` 会渲染成两种样子,
+ * 同一组徽章在不同文章里位置飘忽。定义序还顺带解决了 draft 的排位:它在表里居首,
+ * 自动注入后天然落在最前,不需要再写一条「draft 优先」的特例。
+ */
+export const BADGE_KEYS = Object.keys(BADGES) as BadgeKey[]
+
+/**
+ * 作者可以在 frontmatter 里手写的 key —— 不含 draft。
+ *
+ * draft 只接受由 `draft: true` 自动注入。允许手写的话,一篇 `draft: false` 而
+ * `badges: [draft]` 的文章会被判定为已发布、正常上线,页面上却挂着「草稿」二字 ——
+ * 恰好推翻上面那条「线上永远不会出现」。想标记"已发布但还在写"用 wip。
+ */
+export const AUTHORABLE_BADGE_KEYS = BADGE_KEYS.filter(key => key !== 'draft')
+
+/**
+ * 单篇文章的徽章数量上限。列表项右侧还杵着日期,超过这个数标题行会被挤散。
+ *
+ * 强制在 `app/utils/badges.ts` 做,不在 schema —— `content.config.ts` 里那个
+ * `.max()` 不拦任何东西,理由见 CLAUDE.md 的「徽章约定」。
+ */
+export const MAX_BADGES = 3

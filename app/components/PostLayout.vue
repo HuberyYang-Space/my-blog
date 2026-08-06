@@ -26,7 +26,7 @@ const showOutline = computed(() => props.links.filter(l => l.depth === 2).length
     <article>
       <header class="post-intro mb-10 border-b border-border pb-6 pt-6">
         <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
-          {{ post.title }}
+          {{ post.title }}<PostBadges :post="post" />
         </h1>
         <!--
           元信息行用等宽字体,格式仿 git log / commit trailer(日期 · 标签 · 标签)——

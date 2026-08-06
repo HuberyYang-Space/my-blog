@@ -48,19 +48,20 @@ const preset = computed(() => PRESET[props.type])
 }
 
 .callout-note {
-  --c-callout: var(--c-callout-note);
+  --c-callout: var(--c-tone-info);
 }
 
+/* 提示这一档与站点主色同值,直接引用主色,不另留一个语气色变量 */
 .callout-tip {
-  --c-callout: var(--c-callout-tip);
+  --c-callout: var(--c-primary);
 }
 
 .callout-warning {
-  --c-callout: var(--c-callout-warning);
+  --c-callout: var(--c-tone-warning);
 }
 
 .callout-caution {
-  --c-callout: var(--c-callout-caution);
+  --c-callout: var(--c-tone-danger);
 }
 
 .callout-head {

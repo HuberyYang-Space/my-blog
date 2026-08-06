@@ -3,7 +3,7 @@ import { access, readdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
-import { SITE } from '../app/config.ts'
+import { BADGES, SITE } from '../app/config.ts'
 
 /**
  * 产物断言 —— 构建成功之后再问一遍"产物里真的有那些东西吗"。
@@ -60,6 +60,8 @@ interface ArticleSource {
   components: Set<string>
   /** 正文里有围栏代码块 → 页面上就该出现代码块结构 */
   hasCodeBlock: boolean
+  /** frontmatter 里写的徽章 key → 页面上就该出现对应的 .post-badge-<tone> */
+  badges: string[]
 }
 
 /**
@@ -114,6 +116,13 @@ async function readContent(): Promise<ArticleSource[]> {
     return {
       slug: name.replace(/\.md$/, ''),
       isDraft: /^draft:\s*true\s*$/m.test(frontmatter),
+      // 只认行内数组写法(`badges: [wip, translated]`)—— 与 pnpm new 产出的
+      // frontmatter 一致。这里不引 YAML 解析器:整个文件都在用正则读 frontmatter,
+      // 为一个字段单独换一套读法,反而多一处会和其余检查不一致的地方。
+      badges: (frontmatter.match(/^badges:\s*\[(.*?)\]\s*$/m)?.[1] ?? '')
+        .split(',')
+        .map(s => s.trim().replace(/^['"]|['"]$/g, ''))
+        .filter(Boolean),
       components: new Set(
         [...stripFences(body).matchAll(/^::([a-z][a-z0-9-]*)/gm)].map(m => m[1]!),
       ),
@@ -213,6 +222,21 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
     // 代码照常高亮,只是文件名标题与复制按钮不见了。
     if (article.hasCodeBlock && !html.includes('code-block-bar'))
       fail('prose', `${article.slug} 有代码块却没有 code-block-bar —— ProsePre 覆写可能未生效`)
+
+    // 徽章真的渲染了。失效形态和 MDC 组件同构:PostBadges 没接上、tone 类被删、
+    // 预设表改了 key 而文章没跟着改 —— 三者都是构建成功、页面照常出、只是标题
+    // 旁边那块东西不见了。逐篇核对而不是全站汇总,否则某篇失效会被别篇掩盖。
+    for (const key of article.badges) {
+      const badge = BADGES[key as keyof typeof BADGES]
+      if (!badge) {
+        fail('badge', `${article.slug} 的 badges 里有未知 key "${key}" —— 预设表见 app/config.ts`)
+        continue
+      }
+      if (!html.includes(`post-badge-${badge.tone}`))
+        fail('badge', `${article.slug} 写了 badges: [${key}],页面上却找不到 post-badge-${badge.tone}`)
+      if (!html.includes(badge.label))
+        fail('badge', `${article.slug} 写了 badges: [${key}],页面上却找不到「${badge.label}」`)
+    }
   }
 
   // ---- 7. 前后篇导航接线正确 ----

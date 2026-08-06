@@ -142,6 +142,6 @@ const copyLabel = computed(() => ({
 /* 复制失败(多见于非安全上下文下 navigator.clipboard 不存在)要看得见,
    否则用户会以为已经复制成功了 */
 .code-block-copy.is-failed {
-  color: var(--c-callout-caution);
+  color: var(--c-tone-danger);
 }
 </style>
