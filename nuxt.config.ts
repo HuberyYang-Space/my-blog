@@ -61,7 +61,7 @@ export default defineNuxtConfig({
     head: {
       htmlAttrs: { lang: SITE.locale },
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.ico' },
         { rel: 'alternate', type: 'application/rss+xml', title: SITE.title, href: '/rss.xml' },
       ],
       script: [{ innerHTML: themeInitScript, tagPriority: 'critical' }],
