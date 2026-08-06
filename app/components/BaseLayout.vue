@@ -56,9 +56,8 @@ useHead({
 // 其余页面(首页/about/标签页)不受影响,不会凭空多出空白列。
 const slots = useSlots()
 const hasAside = computed(() => Boolean(slots.aside))
-// footer 具名插槽承载 PostNav/返回链接。只有大纲存在时才把它单独摆进网格第二行
-// 并在同一行第三列放回顶按钮 —— 按钮的对齐目标就是大纲,没有大纲也就没有
-// 按钮需要对齐的参照物,直接不渲染(见 ScrollToTopButton 使用处)。
+// footer 具名插槽承载 PostNav/返回链接,单独摆进网格第二行;大纲存在时靠
+// lg:col-start-2 与正文对齐,没有大纲时退回默认的居中列。
 const hasFooter = computed(() => Boolean(slots.footer))
 const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
 
@@ -87,24 +86,19 @@ const scrollEl = ref<HTMLDivElement | null>(null)
             <slot name="aside" />
           </aside>
 
-          <!-- 网格第二行:footer(PostNav/返回链接)与回顶按钮分别落在第二、三列。
-               两者都不写 grid-row —— 第一行两列已被正文和大纲占满,Grid 的稀疏
-               自动布局会把这两个新的 col-start-2/col-start-3 元素自动挤到第二行。
-               这一行的高度由 footer 内容(PostNav 等)撑开,按钮再用 self-end
-               贴到行底,天然对齐,不需要按具体文章量出像素值。 -->
+          <!-- 网格第二行第二列:footer(PostNav/返回链接)。不写 grid-row ——
+               第一行两列已被正文和大纲占满,Grid 的稀疏自动布局会把这个新的
+               col-start-2 元素自动挤到第二行。 -->
           <div v-if="hasFooter" class="mx-auto w-full" :class="[contentWidth, hasAside ? 'lg:col-start-2' : '']">
             <slot name="footer" />
-          </div>
-          <div
-            v-if="hasAside"
-            class="hidden lg:col-start-3 lg:block lg:w-56 lg:self-end lg:justify-self-end"
-          >
-            <ScrollToTopButton :scroll-target="scrollEl" />
           </div>
         </main>
       </div>
     </div>
     <Footer v-if="!hideFooter" />
+    <!-- fixed 定位,不参与网格,展示范围靠 v-if(仅文章详情页有大纲时)+ lg 断点
+         复刻此前网格版本的可见性,而不是让它出现在所有页面。 -->
+    <ScrollToTopButton v-if="hasAside" class="hidden lg:block" :scroll-target="scrollEl" />
   </div>
 </template>
 

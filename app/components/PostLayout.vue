@@ -58,9 +58,8 @@ const showOutline = computed(() => props.links.filter(l => l.depth === 2).length
       <PostOutline :links="links" />
     </template>
 
-    <!-- footer 具名插槽:BaseLayout 把它放进网格第二行,好让回顶按钮能贴着
-         这里的底边对齐(见 BaseLayout.vue)。PostNav 与返回链接一起放进来,
-         保持原本"翻页 → 返回列表"的阅读顺序不被拆散。 -->
+    <!-- footer 具名插槽:BaseLayout 把它放进网格第二行(见 BaseLayout.vue)。
+         PostNav 与返回链接一起放进来,保持原本"翻页 → 返回列表"的阅读顺序不被拆散。 -->
     <template #footer>
       <PostNav :older="olderPost" :newer="newerPost" />
 
