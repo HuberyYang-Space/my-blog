@@ -16,7 +16,7 @@ const works = [
 // tint 是字面量的 UnoCSS 任意属性类,不能从 icon/text 拼出来 —— UnoCSS 靠扫描
 // 源码文本收集候选类名,拼接结果不在源码里,产物中就没有对应规则。
 const contacts: { icon: string, text: string, href?: string, tint: string }[] = [
-  { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', href: 'mailto:18830279823@163.com', tint: '[--tint:var(--c-brand-email)]' },
+  { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', tint: '[--tint:var(--c-brand-email)]' },
   { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang', tint: '[--tint:var(--c-brand-github)]' },
   { icon: 'i-ph-wechat-logo', text: 'HuberyYang_', tint: '[--tint:var(--c-brand-wechat)]' },
 ]
@@ -58,7 +58,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
         没有官网可指，保持纯文本。这里是一句行内散文而非同构列表，刻意不像下方
         works / contacts 那样抽成数组——拆成 v-for 加分隔符只会更难读。
       -->
-      <p>你好，我是<a class="highlighter" href="https://github.com/Hub-yang" target="_blank" rel="noreferrer">{{ SITE.author }}</a>，前端工程师，开源爱好者，对 <a class="highlighter [--tint:var(--c-brand-vue)]" href="https://vuejs.org/" target="_blank" rel="noreferrer">Vue</a> / <a class="highlighter [--tint:var(--c-brand-react)]" href="https://react.dev/" target="_blank" rel="noreferrer">React</a> / <a class="highlighter [--tint:var(--c-brand-nuxt)]" href="https://nuxt.com/" target="_blank" rel="noreferrer">Nuxt</a> / <a class="highlighter [--tint:var(--c-text)]" href="https://nextjs.org/" target="_blank" rel="noreferrer">Next</a> / AI 感兴趣，开发合作欢迎联系。</p>
+      <p>你好，我是<a class="highlighter" href="https://github.com/Hub-yang" target="_blank" rel="noreferrer">{{ SITE.author }}</a>，前端工程师，开源爱好者，对 <a class="highlighter [--tint:var(--c-brand-vue)]" href="https://vuejs.org/" target="_blank" rel="noreferrer">Vue</a> / <a class="highlighter [--tint:var(--c-brand-react)]" href="https://react.dev/" target="_blank" rel="noreferrer">React</a> / <a class="highlighter [--tint:var(--c-brand-nuxt)]" href="https://nuxt.com/" target="_blank" rel="noreferrer">Nuxt</a> / <a class="highlighter [--tint:var(--c-text)]" href="https://nextjs.org/" target="_blank" rel="noreferrer">Next</a> / AI 感兴趣，定期更新内容，欢迎订阅。</p>
     </section>
 
     <nav aria-label="作品链接" class="mt-6 flex flex-wrap gap-x-3 gap-y-1.5 text-sm text-text-mute font-mono">
@@ -72,7 +72,11 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
       >#{{ label }}</a>
     </nav>
 
-    <nav aria-label="联系方式" class="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
+    <div class="prose mb-1 mt-6 text-sm text-text-mute">
+      合作请联系
+    </div>
+
+    <nav aria-label="联系方式" class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
       <template v-for="{ icon, text, href, tint } in contacts" :key="text">
         <!--
           .tinge 不可省:全局 a 规则是 color: inherit + 无下划线且没有通用 a:hover,

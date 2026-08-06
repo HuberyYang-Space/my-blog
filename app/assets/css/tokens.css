@@ -64,7 +64,7 @@
   /* 联系方式三个链接的品牌色。GitHub 官方黑 #181717 在亮色背景下可读,
      微信绿 #07c160 本身对比度已够(两个主题同值),邮箱没有品牌方,
      取一个和站点主色区分度高、观感现代的蓝。 */
-  --c-brand-email: #2563eb;
+  --c-brand-email: #419eff;
   --c-brand-github: #181717;
   --c-brand-wechat: #07c160;
 
@@ -132,7 +132,7 @@
   /* GitHub 黑在暗色背景下翻转成近白色(取自 GitHub 自己暗色主题的正文文字色),
      否则纯黑文字会和暗色背景融在一起看不清;微信绿在深底上对比度已经够,
      两个主题沿用同一个值。 */
-  --c-brand-email: #60a5fa;
+  --c-brand-email: #419eff;
   --c-brand-github: #e6edf3;
   --c-brand-wechat: #07c160;
 
