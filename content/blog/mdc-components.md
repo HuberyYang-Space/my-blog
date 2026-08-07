@@ -3,9 +3,8 @@ title: 在 Markdown 里写 Vue 组件
 description: MDC 让 markdown 直接调用 Vue 组件——从提示框到真的能点的交互演示。
 date: 2026-08-03
 tags:
-  - Markdown
-  - MDC
-  - Vue
+  - 写作指南
+draft: true
 ---
 
 纯 markdown 的表达力有上限:它能描述结构,描述不了行为。MDC 语法把这层上限打开 —— 在正文里写 `::组件名`,渲染时它就是一个真正的 Vue 组件,有状态、能响应点击、能跑第三方库。
