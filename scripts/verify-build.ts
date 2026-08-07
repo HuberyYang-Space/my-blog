@@ -265,7 +265,17 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
     }[]
 
     if (index.length === 0) {
-      fail('search', '搜索索引是空的 —— 取数或草稿过滤可能把内容全滤掉了')
+      // 已发布文章数为 0 时索引本就该是空的 —— 这是合法的"站点还没有正式内容"状态,
+      // 不是过滤逻辑出错。只有"明明有已发布文章、索引却是空的"才是取数或草稿过滤
+      // 把内容错误地全部滤掉,那种情况才应该拦住构建。
+      if (checkedArticles > 0) {
+        fail('search', '搜索索引是空的,但存在已发布文章 —— 取数或草稿过滤可能把内容全滤掉了')
+      }
+      else {
+        console.warn(
+          '⚠ 搜索索引为空 —— 当前没有已发布文章,属于预期状态,不阻塞构建。',
+        )
+      }
     }
 
     for (const entry of index) {
