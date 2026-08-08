@@ -19,9 +19,16 @@ trustPolicy: no-downgrade
 # mdn-data@2.29.0 报的是 "Missing time in metadata",并非 trust downgrade:
 # pnpm 取到的精简元数据缺 time 字段,实际 registry 有时间戳(2026-07-17),
 # 由 Mozilla mdn-bot 经 GitHub Actions 发布,且是当前 latest。
+# undici-types@6.21.0 是 @types/node 全部 22.x 版本固定依赖的传递包(dependencies
+# 里写死 "~6.21.0",22.x 线上没有更高的 6.21.x 补丁版可换)。核对结果:该版本发布于
+# 2024-11-13,早于这个包开始接入 npm provenance 的时间点(6.23.0 起才有 attestation,
+# 2026-01 才发布);6.21.0 之后再也没有发布过,历史版本不可能补发 attestation。
+# 维护者(matteo.collina / ethan_arrowood)与更高版本一致、未变更,lockfile integrity
+# 与 registry 核对一致。判定为 provenance 覆盖率随时间推进导致的误报,非供应链劫持。
 trustPolicyExclude:
   - semver@6.3.1
   - mdn-data@2.29.0
+  - undici-types@6.21.0
 
 # better-sqlite3 是 @nuxt/content v3 的存储后端(v3 把内容层从文件改为 SQL),
 # 属原生模块,安装时需跑 prebuild-install 拉预编译二进制、失败则回落 node-gyp 编译。
