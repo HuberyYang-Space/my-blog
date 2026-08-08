@@ -1,0 +1,61 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-my-blog
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/setup@v1
+        with:
+          version: 11.15.1
+          runtime: node@24
+          cache: true
+          install: false
+
+      - name: Install CJK fonts for OG image rendering
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+          fc-cache -f
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
+
+      - run: tar -czf dist.tar.gz -C .output/public .
+
+      - uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          fingerprint: ${{ secrets.SERVER_HOST_FINGERPRINT }}
+          port: 22
+          source: dist.tar.gz
+          target: /www/wwwroot/my-blog
+
+      - uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          fingerprint: ${{ secrets.SERVER_HOST_FINGERPRINT }}
+          port: 22
+          script: |
+            cd /www/wwwroot/my-blog/ || exit 1
+            find . -mindepth 1 ! -name 'dist.tar.gz' -exec rm -rf {} +
+            tar -xzf dist.tar.gz
+            rm dist.tar.gz

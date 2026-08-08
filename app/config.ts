@@ -32,7 +32,7 @@ export const SITE = {
    * 但"格式对"不等于"域名对":是否与实际部署地址一致,机器无从判断。
    * 见下方 urlConfirmed。
    */
-  url: 'https://blog.hubery.dev',
+  url: 'https://huberyyang.site:87',
 
   /**
    * 上述域名是否已与实际部署地址核对过。
@@ -44,7 +44,7 @@ export const SITE = {
    * 刻意不做成构建失败:域名没核对是"还没上线",不是"构建坏了",
    * 拿它挡住日常开发得不偿失。
    */
-  urlConfirmed: false,
+  urlConfirmed: true,
 
   /**
    * OG 分享图路径,相对站点根。

@@ -193,9 +193,11 @@ pnpm build
 npx serve .output/public
 ```
 
-> ⚠️ 部署前请核对 `app/config.ts` 中的 `SITE.url` 是否为实际域名 —— canonical、sitemap、RSS 与 OG 图
-> 均依赖该值生成绝对 URL。核对完把同文件的 `urlConfirmed` 改成 `true`,在那之前每次构建都会打印告警。
-> (格式层面的约束——必须 https、无尾斜杠、无路径段——由 `test/config.test.ts` 硬守。)
+线上域名已核对为 `https://huberyyang.site:87`(`app/config.ts` 的 `SITE.url`,canonical、
+sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须 https、无尾斜杠、无路径段——
+由 `test/config.test.ts` 硬守)。push 到 `main` 后由 GitHub Actions(`.github/workflows/deploy.yml`)
+自动构建部署:依次跑 lint / typecheck / test / build,全部通过才会同步到生产服务器,进度与失败
+日志见仓库 Actions 页面。
 
 站点同时输出:
 

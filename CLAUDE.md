@@ -26,8 +26,12 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 - 代码规范:`@antfu/eslint-config` + `@unocss/eslint-plugin`
 - 测试:`vitest`,只跑纯函数单测(`test/`);需要真实运行时才能验证的东西交给产物断言,见下方「守门机制」
 - Git 规范:`@huberyyang/todo-scripts` 的 `commitlint-init` 接入 commitlint + husky + lint-staged。
-  钩子分工:`pre-commit` 跑 lint-staged、`commit-msg` 跑 commitlint、`pre-push` 跑 typecheck + 单测。
-  项目**没有 CI**,`pre-push` 是唯一自动执行的关卡
+  钩子分工:`pre-commit` 跑 lint-staged、`commit-msg` 跑 commitlint、`pre-push` 跑 typecheck + 单测,
+  是代码离开本机前的第一道关。CI 用 GitHub Actions(`.github/workflows/deploy.yml`),push 到
+  `main` 时依次跑 lint(全量,`lint-staged` 只查改动文件,这里补上全量)/ typecheck / test /
+  build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会部署到生产服务器 —— 是独立于
+  本机环境的第二道关,专挡"绕开本机钩子"的路径(网页端改文件、`--no-verify`、直接 push)。
+  失败只挡"部署",不挡"代码进 main"(项目不设 PR 门禁)
 - `better-sqlite3` 是 `@nuxt/content` 的存储后端(v3 把内容层从文件改为 SQL),原生模块,
   需要在 `pnpm-workspace.yaml` 的 `allowBuilds` 里放行
 
@@ -49,10 +53,6 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 
 ## 待办提醒
 
-- ⚠️ `app/config.ts` 的 `SITE.url` 仍是**暂定域名** `https://blog.hubery.dev`,上线前需与实际部署地址核对,
-  核对完把同文件的 `urlConfirmed` 改成 `true`。在那之前每次构建都会打印告警。
-  **刻意不做成构建失败** —— 域名没核对是"还没上线",不是"构建坏了",拿它挡住日常开发得不偿失;
-  而格式层面的约束(必须 https、无尾斜杠、无路径段)由 `test/config.test.ts` 硬守,那些写错是真会静默出错的。
 - ⚠️ 索引里的正文**不截断**。截断能省体积,但省下来的那一截恰恰是"搜不到"的部分,
   而且搜不到不会报错 —— 看起来只是"这站没写过这个词"。当前全站索引 18KB(gzip 6.8KB),
   几十篇的量级下没有截断的必要。
