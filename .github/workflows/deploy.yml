@@ -30,6 +30,14 @@ jobs:
           fc-cache -f
 
       - run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium for OG image rendering
+        run: pnpm exec playwright-core install --with-deps chromium
+        # nuxt-og-image 的 Browser 渲染器用 playwright-core 启动浏览器,在 CI 这种
+        # 没有系统 Chrome 可复用的环境下会退回按需下载 Playwright 自己管理的 Chromium,
+        # 但这个下载在预渲染请求触发时才发起、不在构建主流程里等待完成,曾实测直接
+        # 导致 og:image 渲染 500。显式提前装好,避免这个时序问题。
+
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
