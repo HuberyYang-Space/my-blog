@@ -32,7 +32,7 @@ export const SITE = {
    * 但"格式对"不等于"域名对":是否与实际部署地址一致,机器无从判断。
    * 见下方 urlConfirmed。
    */
-  url: 'https://huberyyang.site:87',
+  url: 'https://huberyyang.site:91',
 
   /**
    * 上述域名是否已与实际部署地址核对过。

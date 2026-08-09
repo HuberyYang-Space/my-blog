@@ -193,7 +193,7 @@ pnpm build
 npx serve .output/public
 ```
 
-线上域名已核对为 `https://huberyyang.site:87`(`app/config.ts` 的 `SITE.url`,canonical、
+线上域名已核对为 `https://huberyyang.site:91`(`app/config.ts` 的 `SITE.url`,canonical、
 sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须 https、无尾斜杠、无路径段——
 由 `test/config.test.ts` 硬守)。push 到 `main` 后由 GitHub Actions(`.github/workflows/deploy.yml`)
 自动构建部署:依次跑 lint / typecheck / test / build,全部通过才会同步到生产服务器,进度与失败
