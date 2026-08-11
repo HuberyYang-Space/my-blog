@@ -22,12 +22,24 @@ import { BADGES, SITE } from '../app/config.ts'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-/** MDC 组件在产物里的指纹:用了某个组件,页面上就该出现对应的类名 */
+/**
+ * MDC 组件在产物里的指纹:用了某个组件,页面上就该出现对应的类名。
+ *
+ * note/tip/warning/caution 不再是本站自己的 Callout 实现(app/components/mdc/
+ * 那份已删除)——@nuxt/ui 检测到 @nuxt/content 后无条件接管这几个块名,注册成
+ * 它自己的 Prose Callout 家族。取的指纹是各自 color 对应的语气色工具类
+ * (note→info / tip→success / warning→warning / caution→error,配色映射见
+ * @nuxt/ui 包内 dist/runtime/components/prose/callout/*.vue 各自的 color prop,
+ * 装在 node_modules 里,不是本仓库自己的代码),而不是某个稳定的
+ * data-slot 之类的结构化标记——NuxtUI 这几个组件没有暴露那种标记,只能退而
+ * 求其次认工具类。这几个 color 关键字不会出现在正文其他任何工具类里
+ * (border-info/25 这种精确到具体色阶的形式,不会被别的语义色类名意外命中)。
+ */
 const MDC_MARKERS: Record<string, string> = {
-  note: 'callout-note',
-  tip: 'callout-tip',
-  warning: 'callout-warning',
-  caution: 'callout-caution',
+  note: 'border-info/25',
+  tip: 'border-success/25',
+  warning: 'border-warning/25',
+  caution: 'border-error/25',
   demo: 'demo-stage',
   illustration: 'class="figure"',
 }

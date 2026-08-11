@@ -19,7 +19,24 @@ const themeInitScript = `(function () {
 })()`
 
 export default defineNuxtConfig({
-  modules: ['@nuxt/content', '@unocss/nuxt', '@nuxtjs/sitemap', 'nuxt-og-image'],
+  // TODO(重构 spike): @unocss/nuxt 与 @nuxt/ui 暂时并存,只为验证 ContentToc
+  // 可行性,CSS 引擎替换在 Stage 2 处理。
+  modules: ['@nuxt/content', '@unocss/nuxt', '@nuxt/ui', '@nuxtjs/sitemap', 'nuxt-og-image'],
+
+  // @nuxt/ui@4.10.0 的 ModuleOptions 里没有 `global` 这个选项(查过
+  // dist/module.d.mts 与 dist/module.mjs 的真实注册逻辑)。不需要它:检测到
+  // @nuxt/content 时,Prose 组件族(含 Callout 家族)自动带 global:true 注册,
+  // MDC 的 ::note/::tip/::warning/::caution 因此不必额外配置就能解析到。
+
+  icon: {
+    clientBundle: {
+      // 提示框(app/app.config.ts 的 ui.icons)用的 Phosphor 图标不在 @nuxt/ui
+      // 自己信任的默认图标集合(它只信任自己默认值来源的 lucide)里,不会被
+      // 自动收进离线包,构建期会静默退化成向 api.iconify.design 发运行时请求。
+      // 显式列出来强制离线打包,图标名变了要跟着改这里。
+      icons: ['ph:info', 'ph:lightbulb', 'ph:warning', 'ph:fire'],
+    },
+  },
 
   // 纯静态输出:产物需可脱离 Node 运行时,由任意静态文件服务器托管。
   ssr: true,

@@ -11,6 +11,11 @@
  * 3. links  —— 三种可点击文本样式,被多个组件与 markdown 正文共用
  * 4. prose  —— 文章正文排版,作用于 markdown 产出的 DOM(不属于任何 SFC)
  */
+/* TODO(重构 spike): 临时接入,只为验证 @nuxt/ui 能装能跑,Stage 2 会正式接入
+   @theme 语义色映射与暗色模式变体配置。 */
+@import 'tailwindcss';
+@import '@nuxt/ui';
+
 @import './tokens.css';
 @import './reset.css';
 @import './links.css';

@@ -38,3 +38,8 @@ allowBuilds:
   better-sqlite3: true
   esbuild: true
   sharp: true
+  # @nuxt/ui 传递依赖。postinstall 脚本(scripts/postinstall.js)只读取本包
+  # lib/ 目录下按 Vue 2/3 预先编译好的文件,按检测到的 Vue 版本复制覆盖同目录下的
+  # 入口文件,不访问项目其他文件、不发网络请求。维护者 antfu(与本项目
+  # @antfu/eslint-config 同一作者),Vue 生态广泛依赖(Pinia、VueUse 等),长期活跃。
+  vue-demi: true
