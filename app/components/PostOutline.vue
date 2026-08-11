@@ -67,6 +67,27 @@ onMounted(() => {
 // 客户端路由切换时组件会卸载,必须断开观察者 —— 页面之间是软导航,
 // 不会有整页重载来自动回收它。
 onUnmounted(() => observer?.disconnect())
+
+// 大纲点击自己接管滚动,不走原生锚点跳转。原生跳转会改 route.hash,触发
+// [slug].vue 里那个 watcher 对同一个标题再调一次 scrollIntoView —— 两次滚动
+// 对文档中段的标题会收敛到同一个位置(无害),但对滚动范围已被夹到上限的标题
+// (本站目前只有末尾的 FAQ 一节符合)会在动画中途被打断、停在错误位置,表现为
+// 正文上移、底部空出一截。自己接管后 route.hash 不再变化,那个 watcher 对大纲
+// 点击而言根本不会触发,不需要再去改 [slug].vue。
+function onOutlineLinkClick(event: MouseEvent, id: string) {
+  // 只接管普通左键点击;修饰键/中键点击(新标签页打开、复制链接等)保留原生
+  // 行为,与 Vue Router 自家 RouterLink 的点击拦截规则一致。
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.altKey || event.shiftKey)
+    return
+
+  event.preventDefault()
+  const target = document.getElementById(id)
+  if (!target)
+    return
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' })
+}
 </script>
 
 <template>
@@ -83,6 +104,7 @@ onUnmounted(() => observer?.disconnect())
             item.depth === 3 ? 'pl-6' : 'pl-3',
             activeId === item.id ? 'border-primary text-text' : 'border-transparent text-text-mute',
           ]"
+          @click="onOutlineLinkClick($event, item.id)"
         >
           {{ item.text }}
         </a>
