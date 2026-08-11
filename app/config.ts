@@ -79,8 +79,10 @@ export const BADGES = {
   draft: { label: '草稿', tone: 'mute' },
   wip: { label: '连载中', tone: 'warning' },
   translated: { label: '译文', tone: 'info' },
-  outdated: { label: '已过时', tone: 'danger' },
+  outdated: { label: '已过时', tone: 'warning' },
+  ssl: { label: 'SSL', tone: 'danger' },
   featured: { label: '精选', tone: 'success' },
+  server: { label: '服务器', tone: 'success' },
 } as const
 
 export type BadgeKey = keyof typeof BADGES

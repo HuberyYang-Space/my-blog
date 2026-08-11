@@ -51,6 +51,21 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
   下一次 install 必然要删掉 `node_modules` 重建 —— 这是正常代价,在**终端里**跑一次 `pnpm install` 确认即可。
   (该文件在 pnpm 11 起内容是 JSON,按 YAML 的行首键去 grep 会扑空。)
 
+### 本地开发的已知限制:markdown 编辑不会热更新
+
+- **`@nuxt/content` 3.15.2(当前最新版)在自定义 collection 下,dev 模式改 `content/blog/*.md`
+  不会触发页面更新**,需要手动重启 `pnpm dev` 才能看到最新内容。这是上游未解决的问题
+  ([nuxt/content#3512](https://github.com/nuxt/content/issues/3512)),不是本项目配置错误。
+- 现象具体是:Vite 能侦测到文件变化(日志打出 `Vite server hmr N files`),但内容库
+  `.data/content/contents.sqlite` 不会重新写入 —— 文件改了,数据库时间戳却停在旧值,
+  页面自然拿不到新内容。**日志"看起来在动"不代表内容真的更新了**,判断要看数据库或页面
+  实际内容,不能只看有没有 HMR 日志。
+- 已实测过的 workaround 均**无效**:升级到最新版(已是最新)、加
+  `experimental: { watcher: 'chokidar' }`。项目当前不在 `nuxt.config.ts` 里保留这个配置项,
+  没有理由留一段不起作用的代码。
+- 目前的应对方式就是手动重启:改完 markdown,`Ctrl+C` 杀掉 `pnpm dev` 再重新跑一次。
+  接受这个成本,不为它引入额外的自动重启脚本。
+
 ## 待办提醒
 
 - ⚠️ 索引里的正文**不截断**。截断能省体积,但省下来的那一截恰恰是"搜不到"的部分,
