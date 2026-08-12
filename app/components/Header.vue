@@ -54,8 +54,9 @@ function navLinkClass(active: boolean) {
 /* 头部:固定在视口顶部,半透明玻璃背景随主题变量自动适配深浅色,与下方滚动的内容
    保持模糊分层 —— fixed 而非 sticky,好让内容真的滚动到头部背后,backdrop-filter
    才有意义。position 只在这里表达一次,不在模板上叠加工具类,避免两处来源打架。
-   高度写死为 --header-h(见 tokens.css),不再是内容撑开的 auto 高度,与
-   BaseLayout 的 .content-scroll 用同一个变量做 padding 补偿。 */
+   高度写死为 --header-h(见 tokens.css),不再是内容撑开的 auto 高度 —— 因为它
+   脱离文档流,内容区要靠同一个变量做 padding 补偿(见 BaseLayout 的 .page-main),
+   高度一旦由内容撑开,补偿值就对不上了。 */
 .site-header {
   position: fixed;
   top: 0;

@@ -10,13 +10,9 @@ const props = withDefaults(defineProps<{
   publishedDate?: Date | string
   /** 加宽正文容器(max-w-2xl → max-w-3xl)。目前仅文章详情页需要,给代码块/表格留呼吸空间 */
   wide?: boolean
-  /** 隐藏页脚。目前仅文章详情页(PostLayout)传入 —— 正文页页脚会被固定定位挡在
-   *  最后一屏内容上,且详情页已有 PostNav/返回链接收尾,不需要页脚重复一次导航 */
-  hideFooter?: boolean
 }>(), {
   ogType: 'website',
   wide: false,
-  hideFooter: false,
 })
 
 const route = useRoute()
@@ -60,17 +56,16 @@ const hasAside = computed(() => Boolean(slots.aside))
 // lg:col-start-2 与正文对齐,没有大纲时退回默认的居中列。
 const hasFooter = computed(() => Boolean(slots.footer))
 const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
-
-// 传给 ScrollToTopButton,让它监听真正的滚动容器,而不是自己再找一次
-const scrollEl = ref<HTMLDivElement | null>(null)
 </script>
 
 <template>
-  <div>
+  <!-- 页面滚动的是 document 本身(见 assets/css/reset.css),这里不再有自定义滚动
+       容器。min-h-dvh + flex 列:内容不足一屏时 .page-main 的 flex-1 把页脚顶到
+       视口底部,内容超过一屏时页脚自然跟在内容后面随页面滚走。 -->
+  <div class="flex flex-col min-h-dvh">
     <Header />
-    <!-- 唯一的滚动容器:头部/页脚固定在视口,页面只有这一处出现滚动条,不会外溢到
-         头尾。上下 padding 用 --header-h/--footer-h 补偿被固定元素遮住的空间。 -->
-    <div ref="scrollEl" class="content-scroll">
+    <!-- 头部是 fixed 的,不占文档流高度,这里用 padding-top 补偿被它遮住的空间 -->
+    <div class="page-main flex-1">
       <div
         class="mx-auto px-6"
         :class="hasAside ? 'post-shell' : contentWidth"
@@ -95,34 +90,27 @@ const scrollEl = ref<HTMLDivElement | null>(null)
         </main>
       </div>
     </div>
-    <Footer v-if="!hideFooter" />
-    <!-- fixed 定位,不参与网格,展示范围靠 v-if(仅文章详情页有大纲时)+ lg 断点
-         复刻此前网格版本的可见性,而不是让它出现在所有页面。 -->
-    <ScrollToTopButton v-if="hasAside" class="hidden lg:block" :scroll-target="scrollEl" />
+    <Footer />
+    <!-- fixed 定位,不参与文档流,展示范围靠 v-if(仅文章详情页有大纲时)+ lg 断点,
+         而不是让它出现在所有页面。 -->
+    <ScrollToTopButton v-if="hasAside" class="hidden lg:block" />
   </div>
 </template>
 
 <style>
-/* 页面唯一的滚动容器。Header/Footer 固定在视口(见各自组件),这里用与它们相同的
-   --header-h/--footer-h 做上下 padding 补偿,避免固定元素遮住首尾内容。
-   100dvh 而非 100%/100vh:不需要 html/body/#__nuxt/BaseLayout 根节点逐层传递
-   height:100%,dvh 直接相对视口计算,改动面更小,移动端地址栏收起/展开也能正确响应。 */
-.content-scroll {
-  height: 100dvh;
-  overflow-y: auto;
-  overflow-x: hidden;
+/* 头部是 fixed 的(见 Header.vue),不占文档流高度,内容会从视口顶端开始排布并被
+   它盖住 —— 用与它同源的 --header-h 做 padding 补偿。页脚已经是正常流里的普通
+   元素,不需要对应的 padding-bottom。 */
+.page-main {
   padding-top: var(--header-h);
-  padding-bottom: var(--footer-h);
-  scroll-behavior: smooth;
 }
 
-/* 大纲(TOC)的 sticky 定位。它的最近可滚动祖先是 .content-scroll 而非视口 ——
-   .content-scroll 自己已经用 padding-top 把内容推到头部下方,sticky 的 top 因此
-   不需要再重复补偿一次头部高度,只留一点呼吸间距,且从 --header-h 派生,
-   不是需要手动跟头部高度保持同步的另一个魔数。 */
+/* 大纲(TOC)的 sticky 定位。滚动容器是 document,所以 top 要完整避开固定头部 ——
+   与标题的停靠位置是同一个物理量,直接复用 --scroll-offset(见 tokens.css),
+   不再手写一遍 calc,头部改高度时不会漂移。 */
 .toc-aside {
   position: sticky;
-  top: calc(var(--header-h) + 1rem);
+  top: var(--scroll-offset);
 }
 
 /* 文章详情页(有大纲时)的外层容器:两侧留白 + 正文 48rem + 大纲 14rem + 两道 2.5rem

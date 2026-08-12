@@ -94,10 +94,12 @@
   /* 头部固定高度:36px(SearchTrigger/ThemeToggle 按钮实际高度)+ 上下各 0.75rem
      内边距 = 3.75rem。非主题相关,不随 .dark 变化。 */
   --header-h: 3.75rem;
-  /* 页脚内容只有一行版权 + 一个 RSS 链接,不需要跟头部同高 —— 曾经用
-     var(--header-h) 转发是为了"头尾视觉对称",但对内容型博客来说页脚常驻占掉
-     一整条头部高度并不划算,改成更紧凑的独立值,把空间让给内容区。 */
-  --footer-h: 2.5rem;
+  /* 锚点/大纲跳转时标题要停在的位置 —— 固定头部高度再留 1rem 呼吸间距,
+     不留余量的话标题会紧贴头部下沿显得局促。
+     这个变量是该偏移量的唯一真源,三处消费:prose.css 的 scroll-margin-top、
+     reset.css 的 scroll-padding-top、router.options.ts 里读它算滚动落点。
+     头部改高度时三处自动跟着变,不需要手工同步。 */
+  --scroll-offset: calc(var(--header-h) + 1rem);
 
   color-scheme: light;
 }

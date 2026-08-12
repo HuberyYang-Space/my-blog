@@ -20,17 +20,28 @@
   margin: 0;
 }
 
+/* document 自己就是滚动容器。overflow-y: scroll(而非 auto)让滚动条槽位常驻,
+   短页面与长页面之间切换时内容不会因为滚动条出现/消失而横向跳动。
+
+   **刻意不写 scroll-behavior: smooth。** 实测(生产构建、prefers-reduced-motion
+   为 false)长距离程序化滚动一旦走平滑动画就不可靠:同一句
+   window.scrollTo({ top: 6156 }) 反复跑,落点在 0 / 166 / 6156 之间随机漂移,
+   而 behavior: 'instant' 每次都精确到位。失败时**不报错**,只是页面停在原地或
+   停在错误位置 —— 正是本站最需要防的那种静默失败。
+   平滑滚动的观感不值得用"点了大纲有时没反应"来换,因此程序化滚动一律用
+   instant(见 router.options.ts),这也和参考实现 antfu.me 的行为一致。 */
 html {
-  height: 100%;
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  overflow-y: scroll;
+
+  /* 原生锚点跳转(直接访问 /posts/x#faq、或点击不经过 router 的 <a href="#x">)
+     停靠时避开固定头部。router.options.ts 也读这条计算值来算滚动落点 ——
+     自定义属性 --scroll-offset 是 calc(),getPropertyValue 拿到的是未求值的
+     字符串,而 scrollPaddingTop 是真实属性,getComputedStyle 必定返回 px。 */
+  scroll-padding-top: var(--scroll-offset);
 }
 
-/* html/body 本身永远不滚动 —— 页面唯一的滚动条在 BaseLayout 的 .content-scroll 上,
-   这样固定定位的头部/页脚才不会被内容滚动条挤出视口或被滚动条覆盖出双滚动条。 */
 body {
-  height: 100%;
-  overflow: hidden;
   font-family: var(--font-sans);
   line-height: 1.7;
   color: var(--c-text);
@@ -90,7 +101,7 @@ pre {
 }
 
 /* 全局滚动条:细、直角、静止态几乎不可见,hover/active 时轻微发亮 + 极淡的主题色光晕。
-   写成 * 选择器一次覆盖全站,而不是分别写进 .content-scroll、搜索结果列表、宽表格、
+   写成 * 选择器一次覆盖全站,而不是分别写进页面滚动条、搜索结果列表、宽表格、
    代码块横向滚动等各处 —— 那样每新增一个滚动区域都要记得补一份,漏改不会报错。
    颜色源自 --c-text-mute,双主题下自动跟着换,不是写死的灰色。
    Firefox 的 scrollbar-width/scrollbar-color 只能控制粗细与两个颜色,做不到直角和
@@ -127,14 +138,6 @@ pre {
 
 /* 尊重用户的减少动效偏好 */
 @media (prefers-reduced-motion: reduce) {
-  /* .content-scroll(见 BaseLayout.vue)是后来的重构才引入的实际滚动容器,
-     html 的 scroll-behavior 已经不承担真正的滚动,这里一并覆盖,否则锚点跳转
-     在开启该偏好后仍会平滑滚动。 */
-  html,
-  .content-scroll {
-    scroll-behavior: auto;
-  }
-
   *,
   *::before,
   *::after {

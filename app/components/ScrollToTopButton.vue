@@ -1,46 +1,38 @@
 <script setup lang="ts">
-const props = defineProps<{
-  /** BaseLayout 的 .content-scroll 元素 —— 由父组件把 DOM 引用传进来,
-   *  避免自己再用 document.querySelector('.content-scroll') 隐式依赖一个类名字符串。 */
-  scrollTarget: HTMLElement | null
-}>()
-
 const SHOW_THRESHOLD = 400
 
 const visible = ref(false)
 
 // 点击回顶后,scrollTo({ smooth: true }) 会在动画过程中持续触发 scroll 事件,
-// 期间 scrollTop 仍然会短暂高于阈值 —— 不加这道屏蔽的话 onScroll 会把 visible
+// 期间滚动位置仍然会短暂高于阈值 —— 不加这道屏蔽的话 onScroll 会把 visible
 // 重新置回 true,按钮出现"消失又重新淡入"的弹跳。用原生 scrollend(而非等
-// scrollTop 归零)解除屏蔽:滚动动画如果被用户中途反向滑动打断,scrollTop
-// 可能永远不会再降到 0,靠"归零"判断会让这个标志卡死在 true,之后所有滚动
-// 都被忽略、按钮再也不会出现;scrollend 不管动画是正常结束还是被打断,
-// 滚动一旦停下来就必定触发一次。
+// 位置归零)解除屏蔽:滚动动画如果被用户中途反向滑动打断,位置可能永远不会
+// 再降到 0,靠"归零"判断会让这个标志卡死在 true,之后所有滚动都被忽略、
+// 按钮再也不会出现;scrollend 不管动画是正常结束还是被打断,滚动一旦停下来
+// 就必定触发一次。
 const scrollingToTop = ref(false)
 
 function onScroll() {
   if (scrollingToTop.value)
     return
-  visible.value = (props.scrollTarget?.scrollTop ?? 0) > SHOW_THRESHOLD
+  visible.value = window.scrollY > SHOW_THRESHOLD
 }
 
 function onScrollEnd() {
   scrollingToTop.value = false
 }
 
-// 用 watch 而不是 onMounted 直接读 props.scrollTarget:后者依赖"父组件的模板 ref
-// 一定先于子组件 onMounted 就绪"这个 Vue 内部时序细节,watch(immediate: true) 则是
-// 不管值何时到位都能正确挂上监听器,不必依赖这层隐式保证。
-watch(() => props.scrollTarget, (el, prevEl) => {
-  prevEl?.removeEventListener('scroll', onScroll)
-  prevEl?.removeEventListener('scrollend', onScrollEnd)
-  el?.addEventListener('scroll', onScroll, { passive: true })
-  el?.addEventListener('scrollend', onScrollEnd, { passive: true })
-}, { immediate: true })
+// 滚动的是 document 本身,事件监听挂在 window 上。scroll/scrollend 都会从
+// document 冒泡到 window,不需要再由父组件传入某个具体的滚动容器元素。
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  window.addEventListener('scrollend', onScrollEnd, { passive: true })
+  onScroll()
+})
 
 onUnmounted(() => {
-  props.scrollTarget?.removeEventListener('scroll', onScroll)
-  props.scrollTarget?.removeEventListener('scrollend', onScrollEnd)
+  window.removeEventListener('scroll', onScroll)
+  window.removeEventListener('scrollend', onScrollEnd)
 })
 
 function scrollToTop() {
@@ -50,7 +42,7 @@ function scrollToTop() {
   scrollingToTop.value = true
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  props.scrollTarget?.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
+  window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })
 }
 </script>
 
@@ -70,9 +62,8 @@ function scrollToTop() {
 
 <style>
 /* 悬浮在视口右下角,不参与文档流(BaseLayout 只用 v-if + class 控制展示范围,
-   不再把它摆进网格,见 BaseLayout.vue)。bottom 直接写死间距,不必像最早那版
-   一样跟 --footer-h 联动 —— 这个按钮现在只在文章详情页出现,而该页面恒传
-   hide-footer,Footer 组件从不渲染,不存在"页脚可能占位也可能不占位"的情况。
+   不再把它摆进网格,见 BaseLayout.vue)。bottom 直接写死间距即可 —— 页脚已经是
+   正常流里的普通元素,会随内容滚走,不会常驻在视口底部跟这个按钮抢位置。
    外观对齐 SearchTrigger 的既有语言(边框 + 6px 圆角 + 36px 见方),不用本站没有
    先例的圆形悬浮按钮形状。 */
 .scroll-top-button {
