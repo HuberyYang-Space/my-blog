@@ -22,7 +22,7 @@ function navLinkClass(active: boolean) {
 
 <template>
   <header class="site-header">
-    <nav class="mx-auto max-w-2xl w-full flex items-center justify-between gap-4 px-6 py-3">
+    <nav class="mx-auto max-w-3xl w-full flex items-center justify-between gap-4 px-6 py-3">
       <div class="flex items-baseline gap-5">
         <NuxtLink
           to="/"

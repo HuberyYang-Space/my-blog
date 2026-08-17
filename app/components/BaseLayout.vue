@@ -8,11 +8,8 @@ const props = withDefaults(defineProps<{
   ogType?: 'website' | 'article'
   /** 仅 ogType 为 'article' 时有意义,输出 article:published_time */
   publishedDate?: Date | string
-  /** 加宽正文容器(max-w-2xl → max-w-3xl)。目前仅文章详情页需要,给代码块/表格留呼吸空间 */
-  wide?: boolean
 }>(), {
   ogType: 'website',
-  wide: false,
 })
 
 const route = useRoute()
@@ -48,14 +45,12 @@ useHead({
   link: [{ rel: 'canonical', href: () => canonical.value }],
 })
 
-// aside 具名插槽承载文章大纲。只有传入内容时才腾出右侧 sticky 列,
-// 其余页面(首页/about/标签页)不受影响,不会凭空多出空白列。
+// aside 具名插槽承载文章大纲。只有传入内容时才渲染右侧浮层,
+// 其余页面(首页/about/标签页)不受影响,阅读列宽度也不会跟着变化
+// (大纲是 fixed 定位的独立浮层,不参与阅读列的宽度计算,见下方 .toc-aside)。
 const slots = useSlots()
 const hasAside = computed(() => Boolean(slots.aside))
-// footer 具名插槽承载 PostNav/返回链接,单独摆进网格第二行;大纲存在时靠
-// lg:col-start-2 与正文对齐,没有大纲时退回默认的居中列。
 const hasFooter = computed(() => Boolean(slots.footer))
-const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
 </script>
 
 <template>
@@ -66,34 +61,28 @@ const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
     <Header />
     <!-- 头部是 fixed 的,不占文档流高度,这里用 padding-top 补偿被它遮住的空间 -->
     <div class="page-main flex-1">
-      <div
-        class="mx-auto px-6"
-        :class="hasAside ? 'post-shell' : contentWidth"
-      >
-        <main :class="hasAside ? 'post-grid lg:grid lg:items-start lg:gap-x-10' : ''">
-          <div class="mx-auto w-full" :class="[contentWidth, hasAside ? 'lg:col-start-2' : '']">
-            <slot />
-          </div>
-          <aside
-            v-if="hasAside"
-            class="toc-aside hidden lg:col-start-3 lg:block lg:w-56 lg:justify-self-end lg:pt-6"
-          >
-            <slot name="aside" />
-          </aside>
-
-          <!-- 网格第二行第二列:footer(PostNav/返回链接)。不写 grid-row ——
-               第一行两列已被正文和大纲占满,Grid 的稀疏自动布局会把这个新的
-               col-start-2 元素自动挤到第二行。 -->
-          <div v-if="hasFooter" class="mx-auto w-full" :class="[contentWidth, hasAside ? 'lg:col-start-2' : '']">
+      <!-- 阅读列宽度的唯一真源:max-w-3xl,与 Header.vue 的导航条完全同源同宽,
+           首页/about/标签页/文章页(无论是否有大纲)不再有第二个宽度值。 -->
+      <div class="mx-auto max-w-3xl w-full px-6">
+        <main>
+          <slot />
+          <div v-if="hasFooter">
             <slot name="footer" />
           </div>
         </main>
       </div>
     </div>
     <Footer />
-    <!-- fixed 定位,不参与文档流,展示范围靠 v-if(仅文章详情页有大纲时)+ lg 断点,
-         而不是让它出现在所有页面。 -->
-    <ScrollToTopButton v-if="hasAside" class="hidden lg:block" />
+    <!-- 大纲是 fixed 定位的独立浮层,刻意不放进上面的居中容器 —— 阅读列的宽度和
+         位置不应该因为这个可选功能存在与否而改变。定位见下方 .toc-aside。 -->
+    <aside v-if="hasAside" class="toc-aside">
+      <slot name="aside" />
+    </aside>
+    <!-- fixed 定位,不参与文档流,展示范围靠 v-if(仅文章详情页有大纲时)+ 下方
+         .scroll-top-button-visible 断点,而不是让它出现在所有页面。断点必须和
+         .toc-aside 一致,否则两者的显示区间对不上,会出现"大纲不见了但回顶按钮
+         还占着它的位置"这类错位。 -->
+    <ScrollToTopButton v-if="hasAside" class="scroll-top-button-visible" />
   </div>
 </template>
 
@@ -105,28 +94,55 @@ const contentWidth = computed(() => (props.wide ? 'max-w-3xl' : 'max-w-2xl'))
   padding-top: var(--header-h);
 }
 
-/* 大纲(TOC)的 sticky 定位。滚动容器是 document,所以 top 要完整避开固定头部 ——
-   与标题的停靠位置是同一个物理量,直接复用 --scroll-offset(见 tokens.css),
-   不再手写一遍 calc,头部改高度时不会漂移。 */
+/* 大纲(TOC)浮层。定位在阅读列右边界之外的"多余空间"里,阅读列本身(max-w-3xl,
+   半宽 24rem)完全不知道它的存在,不会因为大纲出现/消失而改变宽度或位置。
+   left 的计算:50%(视口中点)+ 24rem(阅读列半宽,到达阅读列右边界)+ 2.5rem
+   (与阅读列的间距)。
+   top 与标题的滚动停靠位置同源,见 --scroll-offset(tokens.css)。
+   原先挂在 grid 单元格里的 position: sticky 有"内容太多就被推走"的自然退路,
+   改成 fixed 后失去这条退路,因此显式加 max-height + overflow-y 让超长大纲
+   在自己内部滚动,而不是在视口底部被截断且无法触达。
+   默认 display: none,显示断点见下方 @media —— 值不落在 UnoCSS/Wind3 预设的
+   xl(1280px)/2xl(1536px)关键字上,沿用 .post-shell 的先例手写精确值,
+   而不是硬套一个不够用或过度保守的关键字。 */
 .toc-aside {
-  position: sticky;
+  display: none;
+  position: fixed;
   top: var(--scroll-offset);
+  left: calc(50% + 24rem + 2.5rem);
+  width: 14rem;
+  max-height: calc(100vh - var(--scroll-offset) - 2.5rem);
+  overflow-y: auto;
 }
 
-/* 文章详情页(有大纲时)的外层容器:两侧留白 + 正文 48rem + 大纲 14rem + 两道 2.5rem
-   间距,推出的完整宽度是 84rem —— 超过 Tailwind/Wind3 预设的最大关键字 7xl(80rem),
-   所以单独定一个精确值,而不是拿一个偏窄的关键字将就。 */
-.post-shell {
-  max-width: 84rem;
+/* 回顶按钮只在有大纲时才渲染(见模板),可见区间必须和 .toc-aside 完全一致,
+   否则会出现"大纲消失了、按钮还占着位置"的错位。用两个类名的复合选择器
+   (而非单独 .scroll-top-button)是为了让这条规则的权重稳赢
+   ScrollToTopButton.vue 自己的 .scroll-top-button { display: flex }——
+   两条单类选择器权重相同的话,谁生效只能看两个 SFC 的样式打包顺序,
+   属于本项目明确要避免的那种"打包顺序决胜负"。 */
+.scroll-top-button.scroll-top-button-visible {
+  display: none;
 }
 
-/* 三栏网格,左右两栏用完全相同的 minmax(14rem, 1fr):正文居中依赖两栏"对称",
-   而不是两栏"都是 1fr"——如果大纲那栏有下限、留白那栏没有,空间不够时网格会优先
-   保住有下限的大纲栏,把差额全部从留白栏扣掉,正文就会明显偏左(曾用真实视口验证过)。
-   两栏下限相同,才能保证无论怎么挤压,留白和大纲宽度始终相等、正文真正居中。
-   工具类写不出这种 minmax() 组合值,项目里也没有任意值方括号语法的先例,
-   跟 .site-header 的 color-mix() 一样单独具名一条规则。 */
-.post-grid {
-  grid-template-columns: minmax(14rem, 1fr) minmax(0, 48rem) minmax(14rem, 1fr);
+/* 断点算式必须把 ScrollToTopButton 自己的footprint 算进去,不能只留一个笼统的
+   "安全边距"——两者是两套不同的定位参照系(大纲相对阅读列中心,按钮相对视口
+   右边缘),边距不够时大纲右边界会反过来越过按钮左边界。用真实浏览器量出来的
+   数字反推(ScrollToTopButton.vue:right 2rem + width 36px = 2.25rem):
+
+     大纲右边界(距视口左侧) = 50vw + 24rem 阅读列半宽 + 2.5rem 间距 + 14rem 大纲宽
+     按钮左边界(距视口左侧) = 100vw - 2rem - 2.25rem
+     两者之间留 1.25rem 净空 → 解出 vw ≥ 92rem(1472px)
+
+   同样卡在 xl(1280px)/2xl(1536px)两个关键字中间,沿用 .post-shell 的先例
+   手写精确值。1472px 已用真实浏览器核对过:两者之间净空 20px,不会重叠。 */
+@media (min-width: 92rem) {
+  .toc-aside {
+    display: block;
+  }
+
+  .scroll-top-button.scroll-top-button-visible {
+    display: flex;
+  }
 }
 </style>
