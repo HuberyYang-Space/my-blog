@@ -319,7 +319,7 @@ app/
 
 ### Issue tracker
 
-Issues 通过 GitHub Issues 管理(仓库 `Hub-yang/my-blog`),使用 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
+Issues 通过 GitHub Issues 管理(仓库 `HuberyYang-Space/my-blog`),使用 `gh` CLI 操作。详见 `docs/agents/issue-tracker.md`。
 
 ### Domain docs
 

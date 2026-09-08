@@ -214,3 +214,7 @@ sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须
 ## 相关文档
 
 - [`CLAUDE.md`](./CLAUDE.md) —— 项目级开发约定
+
+## License
+
+[MIT](./LICENSE) © Hubery Yang
