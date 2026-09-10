@@ -294,6 +294,27 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
     }
   }
 
+  // ---- 9. 首页标题的文字还在 ----
+  // 标题挂着一层液态特效:效果一旦接管,<h1> 里的文字就被涂成透明,真正看得见的
+  // 是盖在上面的 canvas。这个设计的前提是"文字始终留在 DOM 里" —— SEO、屏幕阅读器、
+  // 以及静态产物全靠它。哪天把文字改成由 canvas 生成、或者顺手删掉那个 <span>,
+  // 页面看起来一模一样(canvas 照常画字),搜索引擎拿到的却是一个空标题,而且不报错。
+  const homepage = join(publicDir, 'index.html')
+  if (!await exists(homepage)) {
+    fail('hero', '产物里没有首页 index.html')
+  }
+  else {
+    const html = await readFile(homepage, 'utf8')
+    // 必须定位到那个 span 内部再比对,不能全文搜「Hubery」:<title> 标签里也有同样
+    // 一串字,h1 的文字全没了这条照样绿 —— 一个永远不会失败的断言比没有断言更糟,
+    // 它会让人以为这里已经守住了。
+    const heroWord = html.match(/class="hero-title-word"[^>]*>([^<]*)</)?.[1]
+    if (heroWord === undefined)
+      fail('hero', '首页找不到 hero-title-word —— HeroTitle 组件可能没接上,或类名被改了')
+    else if (heroWord !== SITE.title)
+      fail('hero', `首页 <h1> 里的文字是「${heroWord}」,期望「${SITE.title}」—— 标题可能只剩 canvas 了`)
+  }
+
   if (problems.length) {
     throw new Error(
       `产物断言未通过,共 ${problems.length} 项:\n  ${problems.join('\n  ')}`,

@@ -84,7 +84,9 @@ onMounted(() => {
           loading="eager"
           decoding="async"
         >
-        <h1>{{ SITE.title }}<span class="hero-cursor" aria-hidden="true">_</span></h1>
+        <HeroTitle :text="SITE.title">
+          <span class="hero-cursor" aria-hidden="true">_</span>
+        </HeroTitle>
       </div>
       <p class="text-text-soft">
         {{ SITE.description }}
@@ -151,12 +153,6 @@ onMounted(() => {
   border-radius: 50%;
   object-fit: cover;
   border: 1px solid var(--c-border);
-}
-
-.hero h1 {
-  font-size: clamp(2.25rem, 5vw, 3.5rem);
-  font-weight: 700;
-  letter-spacing: -0.02em;
 }
 
 .hero p {
