@@ -32,7 +32,17 @@
 import { Flowmap, Mesh, Program, Renderer, Texture, Triangle, Vec2 } from 'ogl'
 import { approach } from '~/utils/animation'
 
-const props = defineProps<{ text: string }>()
+const props = withDefaults(defineProps<{
+  text: string
+  /**
+   * 渲染成什么标签。
+   *
+   * 首页那处是页面主标题,所以默认 h1;正文里的演示必须传 div —— 文章页已经有一个
+   * h1(文章标题),再插一个会在文档大纲里多出一个同级标题。这个错不会报错,
+   * 页面看起来也一模一样,只有屏幕阅读器和爬虫读到的结构变了。
+   */
+  as?: 'h1' | 'div'
+}>(), { as: 'h1' })
 
 const PAD_CSS = 48
 const MAX_DPR = 2
@@ -391,7 +401,9 @@ onMounted(() => {
 <template>
   <div ref="root" class="hero-title" :class="{ 'is-active': active }">
     <!-- span 与插槽之间不留空白,否则渲染出的空格会把光标推开一格 -->
-    <h1><span ref="textEl" class="hero-title-word">{{ props.text }}</span><slot /></h1>
+    <component :is="props.as" class="hero-title-line">
+      <span ref="textEl" class="hero-title-word">{{ props.text }}</span><slot />
+    </component>
     <canvas ref="canvas" aria-hidden="true" />
   </div>
 </template>
@@ -401,7 +413,8 @@ onMounted(() => {
   position: relative;
 }
 
-.hero-title h1 {
+/* 样式挂 class 而不是 h1 标签选择器 —— 标签由 as 决定,挂标签的话传 div 时字号会整个丢掉 */
+.hero-title-line {
   font-size: clamp(2.25rem, 5vw, 3.5rem);
   font-weight: 700;
   letter-spacing: -0.02em;
