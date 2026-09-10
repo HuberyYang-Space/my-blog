@@ -56,6 +56,10 @@ async function exists(path: string): Promise<boolean> {
 interface ArticleSource {
   slug: string
   isDraft: boolean
+  /** frontmatter 里的标题 → 页面上就该出现它,而不是从 slug 推导出来的那个 */
+  title: string
+  /** 剥掉 frontmatter 之后还有没有正文 */
+  hasBody: boolean
   /** 正文里真正调用了的 MDC 组件(已排除代码块里的示例) */
   components: Set<string>
   /** 正文里有围栏代码块 → 页面上就该出现代码块结构 */
@@ -116,6 +120,11 @@ async function readContent(): Promise<ArticleSource[]> {
     return {
       slug: name.replace(/\.md$/, ''),
       isDraft: /^draft:\s*true\s*$/m.test(frontmatter),
+      title: (frontmatter.match(/^title:(.*)$/m)?.[1] ?? '')
+        .trim()
+        .replace(/^['"]|['"]$/g, ''),
+      // 整个 frontmatter 块剥掉之后剩什么。空文件与"只剩 frontmatter"在这里同样落到 false
+      hasBody: raw.replace(/^---\n[\s\S]*?\n---\n?/, '').trim().length > 0,
       // 只认行内数组写法(`badges: [wip, translated]`)—— 与 pnpm new 产出的
       // frontmatter 一致。这里不引 YAML 解析器:整个文件都在用正则读 frontmatter,
       // 为一个字段单独换一套读法,反而多一处会和其余检查不一致的地方。
@@ -201,6 +210,27 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
     checkedArticles++
     const html = await readFile(page, 'utf8')
     allArticles.push(html)
+
+    // 正文真的有东西,页面标题真的来自 frontmatter。
+    //
+    // 这两条防的是同一件事:markdown 被意外清空(或 frontmatter 整块损坏)。那种情况下
+    // 页面照常产出 —— 标题退化成 slug 的词首大写版(hero-liquid-text → Hero Liquid Text)、
+    // 日期落到 1970-01-01、正文一片空白,而下面每一项检查都不触发:没有组件可查、
+    // 没有代码块可查、没有徽章可查。整份断言照常通过,还会把这个空壳算进
+    // "N 篇文章逐页核对"的计数里,读起来像是核对过了。
+    //
+    // 已经踩过一次:一条改 frontmatter 的命令把 18 KB 草稿清成 0 字节,而
+    // lint / typecheck / 单测 / 构建 / 产物断言全部绿灯,是肉眼看产物才发现的。
+    if (!article.hasBody)
+      fail('article', `${article.slug} 只有 frontmatter,没有正文 —— 源文件可能被清空了`)
+
+    // 标题里的 & < > 在 HTML 里是转义过的,比对前先转一遍,否则带这些字符的标题会误报
+    const escapedTitle = article.title
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+    if (article.title && !html.includes(escapedTitle))
+      fail('article', `${article.slug} 的页面上找不到标题「${article.title}」—— frontmatter 可能没被解析`)
 
     // MDC 组件真的渲染了 —— 组件名若撞上 HTML 标签(如 ::figure),MDC 会把它
     // 当原生元素处理:props 原样挂成属性、内容一个字都不输出,而且不报错。
