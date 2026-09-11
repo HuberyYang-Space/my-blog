@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { animate } from 'motion'
 import { SITE } from '~/config'
 
 // 全站唯一一次 defineOgImage:模块按路由生成图片,在 BaseLayout 里调用会让每条
@@ -15,62 +14,88 @@ const { data: posts } = await useAsyncData('posts', () => getPublishedPosts())
 // 后者内部会再查一遍全站文章并重新排序,只为了取一列标签名。
 const tags = computed(() => groupPostsByTag(posts.value ?? []).map(group => group.tag))
 
-// 氛围光背景的鼠标视差。
-// .glow-core 的自动漂移(外层 transform)、呼吸缩放(scale)与这里的视差
-// transform 分属不同节点/属性,互不覆盖,详见本文件 <style> 块顶部的说明。
-const coreA = ref<HTMLElement>()
-const coreB = ref<HTMLElement>()
+// 氛围光背景的逐帧驱动。
+// 轨迹本身是纯函数(app/utils/ambient-glow.ts),这里只负责把结果写进 transform。
+//
+// 游走位移与鼠标视差合成同一个 transform 写在外层节点上,内层 .glow-core 的
+// 呼吸走独立的 scale 属性 —— 两者落在不同节点/不同 CSS 属性上,不会互相覆盖。
+const orbA = ref<HTMLElement>()
+const orbB = ref<HTMLElement>()
+
+/** 每个光斑的视差强度(px)与方向,数值差异营造出前后景的深度感 */
+const PARALLAX_DEPTH = [34, -20]
 
 onMounted(() => {
-  const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  const cores = [coreA.value, coreB.value].filter((el): el is HTMLElement => Boolean(el))
-
-  if (prefersReducedMotion || cores.length === 0)
+  const orbs = [orbA.value, orbB.value].filter((el): el is HTMLElement => Boolean(el))
+  if (orbs.length === 0)
     return
 
-  // 每个光斑的视差强度(px)与方向,数值差异营造出前后景的深度感
-  const depths = [34, -20]
-  let latestEvent: MouseEvent | undefined
-  let pending = false
+  function render(seconds: number, parallax: { x: number, y: number }[]) {
+    const { innerWidth: w, innerHeight: h } = window
 
-  function applyParallax() {
-    pending = false
-    if (!latestEvent)
-      return
-
-    const relX = latestEvent.clientX / window.innerWidth - 0.5
-    const relY = latestEvent.clientY / window.innerHeight - 0.5
-
-    cores.forEach((core, index) => {
-      const depth = depths[index] ?? 24
-      animate(core, { x: relX * depth, y: relY * depth }, {
-        type: 'spring',
-        stiffness: 55,
-        damping: 18,
-        mass: 0.7,
-      })
+    orbs.forEach((orb, index) => {
+      const drift = glowOffset(index, seconds, w, h)
+      const shift = parallax[index]!
+      orb.style.transform = `translate(${drift.x + shift.x}px, ${drift.y + shift.y}px)`
     })
   }
 
+  const rest = orbs.map(() => ({ x: 0, y: 0 }))
+  // 先摆好 t = 0 这一帧再决定要不要动起来。少了这句,减弱动效的访客会看到
+  // 两个光斑严丝合缝地叠在视口正中 —— 那是这套参数下最难看的一帧。
+  render(0, rest)
+
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+    return
+
+  // 视差的目标值由 mousemove 写入,当前值每帧向它逼近。直接赋值的话鼠标一停
+  // 背景跟着骤停,读起来是"跟随光标",不是"氛围"。
+  let targetX = 0
+  let targetY = 0
+  const parallax = rest
+
   function onMouseMove(event: MouseEvent) {
-    latestEvent = event
-    if (!pending) {
-      pending = true
-      requestAnimationFrame(applyParallax)
-    }
+    targetX = event.clientX / window.innerWidth - 0.5
+    targetY = event.clientY / window.innerHeight - 0.5
   }
 
-  window.addEventListener('mousemove', onMouseMove)
-  // 客户端路由离开首页时摘掉监听,避免其他页面继续跑视差计算
-  onUnmounted(() => window.removeEventListener('mousemove', onMouseMove))
+  let frame = 0
+  let last = 0
+  let elapsed = 0
+
+  function tick(now: number) {
+    // 单帧最多记 50ms:标签页切走时 rAF 本就暂停,但切回来的第一帧 now 会跨过
+    // 整段离开时间,不夹住的话光斑会瞬移到几十秒后的位置。
+    const dt = last ? Math.min(now - last, 50) : 16
+    last = now
+    elapsed += dt
+
+    parallax.forEach((shift, index) => {
+      const depth = PARALLAX_DEPTH[index] ?? 24
+      shift.x = approach(shift.x, targetX * depth, dt, 3)
+      shift.y = approach(shift.y, targetY * depth, dt, 3)
+    })
+
+    render(elapsed / 1000, parallax)
+    frame = requestAnimationFrame(tick)
+  }
+
+  window.addEventListener('mousemove', onMouseMove, { passive: true })
+  frame = requestAnimationFrame(tick)
+
+  // 客户端路由离开首页时停机,避免其他页面继续跑逐帧计算
+  onUnmounted(() => {
+    cancelAnimationFrame(frame)
+    window.removeEventListener('mousemove', onMouseMove)
+  })
 })
 </script>
 
 <template>
   <BaseLayout :title="SITE.title" :description="SITE.description">
     <div class="ambient-glow" aria-hidden="true">
-      <span class="glow-a"><i ref="coreA" class="glow-core glow-core-a" /></span>
-      <span class="glow-b"><i ref="coreB" class="glow-core glow-core-b" /></span>
+      <span ref="orbA" class="glow-orb glow-orb-a"><i class="glow-core glow-core-a" /></span>
+      <span ref="orbB" class="glow-orb glow-orb-b"><i class="glow-core glow-core-b" /></span>
     </div>
 
     <section class="hero">
@@ -119,15 +144,14 @@ onMounted(() => {
    fixed 定位就会一直相对浏览器视口本身,已核对过没有这类属性。
 
    每个光斑拆成两层节点:
-   - 外层(.glow-a/.glow-b)只负责自动漂移的位置(transform: translate 关键帧)
-   - 内层(.glow-core)负责实际视觉(渐变+模糊)+ 呼吸缩放(scale 关键帧)+
-     首页脚本驱动的鼠标视差(直接写 transform)
-   三者分别落在 transform / scale / filter 等不同 CSS 属性或不同节点上,
-   不会互相覆盖。呼吸用独立的 scale 属性(CSS Transforms Level 2)而不是
-   transform: scale(),这样才能和视差脚本写入的 transform 位移共存。
+   - 外层(.glow-orb)承载脚本每帧写入的位置(游走轨迹 + 鼠标视差,合成一个 transform)
+   - 内层(.glow-core)负责实际视觉(渐变+模糊)与呼吸缩放
+   呼吸用独立的 scale 属性(CSS Transforms Level 2)而不是 transform: scale(),
+   这样即便日后挪到同一个节点上也不会和脚本写入的位移打架。
 
-   两个圆各自走独立的多点闭环路径("视差漂浮"),百分比停靠点、时长、相位都
-   刻意错开,避免看起来像 from/to 两点式的直线来回("乒乓")那样机械。
+   光斑锚在视口正中、靠 transform 位移铺开,而不是钉在四角:轨迹按视口尺寸
+   等比缩放(见 ambient-glow.ts 的 AMPLITUDE_RATIO),钉在角上的话位移量与
+   视口无关,窄屏上会整个甩出屏幕,表现为背景时有时无。
    ========================================================================== */
 
 .ambient-glow {
@@ -183,101 +207,71 @@ onMounted(() => {
     animation: none;
     opacity: 1;
   }
+
+  /* 游走那半由脚本自己判断(见 onMounted),这里只停呼吸 */
+  .glow-core {
+    animation: none;
+  }
 }
 
-.glow-a,
-.glow-b {
+.glow-orb {
   position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--glow-size);
+  height: var(--glow-size);
+  margin-left: calc(var(--glow-size) / -2);
+  margin-top: calc(var(--glow-size) / -2);
   border-radius: 50%;
+}
+
+/* 尺寸随视口收缩(而非固定 rem):手机上一个 34rem 的圆比视口还宽,
+   叠加游走后整块屏幕都会被同一片颜色糊住。 */
+.glow-orb-a {
+  --glow-size: clamp(19rem, 46vw, 36rem);
+}
+
+.glow-orb-b {
+  --glow-size: clamp(17rem, 42vw, 33rem);
 }
 
 .glow-core {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  animation: glow-breathe 11s ease-in-out infinite;
+  animation: glow-breathe 3.8s ease-in-out infinite;
 }
 
-/* 右上角,冷色调 —— 刻意避开左上角的 <h1> 标题,窄屏下内容列几乎顶到视口边缘,
-   光斑堆在标题背后会拉低文字对比度。 */
-.glow-a {
-  top: -14rem;
-  right: -10rem;
-  width: 34rem;
-  height: 34rem;
-  animation: ambient-drift-a 24s ease-in-out infinite;
-}
-
-/* 左下角,暖色调,与 glow-a 对角分布 */
-.glow-b {
-  bottom: -16rem;
-  left: -12rem;
-  width: 32rem;
-  height: 32rem;
-  animation: ambient-drift-b 30s ease-in-out infinite;
-  animation-delay: -12s;
-}
-
+/* 冷色调 */
 .glow-core-a {
   background: radial-gradient(circle, rgb(var(--c-glow-1) / var(--c-glow-alpha-1)), transparent 70%);
-  filter: blur(90px);
+  /* 模糊半径要明显小于游走的总幅度,否则位移会被羽化抹平:两者同量级时,
+     光斑挪动的那点距离全落在自己的虚边里,看起来就是一动不动。游走幅度已是
+     视口尺度(约 1000px 跨度),七十几像素绰绰有余。
+
+     反向的约束是对比度:光斑现在会从正文底下经过,模糊越小峰值浓度越高,
+     直接换成正文可读性的损失 —— 详见本次改动记录的对比度实测。 */
+  filter: blur(72px);
 }
 
+/* 暖色调 */
 .glow-core-b {
   background: radial-gradient(circle, rgb(var(--c-glow-2) / var(--c-glow-alpha-2)), transparent 70%);
-  /* 11s 呼吸周期的一半,让两个光斑的呼吸相位彻底错开 */
-  animation-delay: -5.5s;
-  filter: blur(100px);
+  /* 呼吸周期的一半,让两个光斑的呼吸相位彻底错开 */
+  animation-delay: -1.9s;
+  filter: blur(82px);
 }
 
 @keyframes glow-breathe {
   0%,
   100% {
-    scale: 1;
-    opacity: 0.5;
+    scale: 0.92;
+    opacity: 0.55;
   }
 
   50% {
-    scale: 1.22;
+    scale: 1.2;
     opacity: 1;
-  }
-}
-
-@keyframes ambient-drift-a {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-
-  22% {
-    transform: translate(-6rem, 4rem);
-  }
-
-  48% {
-    transform: translate(-9rem, -3rem);
-  }
-
-  74% {
-    transform: translate(-2.5rem, -7.5rem);
-  }
-}
-
-@keyframes ambient-drift-b {
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-
-  28% {
-    transform: translate(7rem, -5rem);
-  }
-
-  56% {
-    transform: translate(2.5rem, 6.5rem);
-  }
-
-  82% {
-    transform: translate(-4rem, 2.5rem);
   }
 }
 </style>
