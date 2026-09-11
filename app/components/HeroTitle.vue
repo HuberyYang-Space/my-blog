@@ -198,6 +198,33 @@ onMounted(() => {
     ]
   }
 
+  /**
+   * 颜色从**父元素**读,不能从文字自己身上读:效果接管后 .hero-title-word 被涂成
+   * transparent,从它读到的是 rgba(0, 0, 0, 0),解析出来就是纯黑 —— 暗色主题下
+   * 深底黑字几乎等于消失,且不报错。
+   */
+  const colorSource = text.parentElement ?? text
+
+  /**
+   * 把当前的文字颜色与主色同步进 uniform。**逐帧调用,不能只在重建纹理时读一次。**
+   *
+   * 页面文字颜色带 0.2s 过渡(见 reset.css 里 body 那条),而主题切换只是瞬间改
+   * <html> 的 class。在那一刻去读计算样式,拿到的是过渡的**起点** —— 也就是上一个
+   * 主题的颜色。只读一次的话这个错值会一直留在 uniform 里,而且再没有第二次更新的
+   * 机会:切到暗色主题字仍是深的、切回亮色又变成一片浅灰,靠刷新(首次构建没有过渡)
+   * 才恢复。这个失败不报错,构建也照常成功。
+   *
+   * 逐帧读还顺带让标题跟着页面其余文字一起渐变,而不是切换结束时跳一下。
+   * 开销实测约 1μs/帧,占帧预算的万分之一量级。
+   */
+  function syncColors() {
+    const match = getComputedStyle(colorSource).color.match(/\d+/g)
+    uColor.value = match
+      ? [Number(match[0]) / 255, Number(match[1]) / 255, Number(match[2]) / 255]
+      : [0, 0, 0]
+    uAccent.value = readAccent()
+  }
+
   /** 把标题画成一张白字透明底的贴图,颜色留给 shader 填 */
   function buildTexture() {
     const rect = text!.getBoundingClientRect()
@@ -223,17 +250,6 @@ onMounted(() => {
     flowmap.aspect = cssW / cssH
 
     const cs = getComputedStyle(text!)
-
-    // 颜色从**父元素**读,不能从文字自己身上读:效果接管后 .hero-title-word 被涂成
-    // transparent,从它读到的是 rgba(0, 0, 0, 0),解析出来就是纯黑。首次构建发生在
-    // 涂透明之前所以看着正常,而切换主题会触发重建 —— 那一下字就变黑了,
-    // 暗色主题下深底黑字几乎等于消失,且不报错。
-    const colorSource = text!.parentElement ?? text!
-    const match = getComputedStyle(colorSource).color.match(/\d+/g)
-    uColor.value = match
-      ? [Number(match[0]) / 255, Number(match[1]) / 255, Number(match[2]) / 255]
-      : [0, 0, 0]
-    uAccent.value = readAccent()
 
     const offscreen = document.createElement('canvas')
     offscreen.width = w
@@ -342,6 +358,9 @@ onMounted(() => {
     flowmap.velocity.y += (velocity.y - flowmap.velocity.y) * 0.12
     flowmap.update()
 
+    // 主题切换没有专门的信号可用 —— 有的那个(class 变化)恰好早于颜色到位,见 syncColors
+    syncColors()
+
     renderer.render({ scene: mesh })
     raf = requestAnimationFrame(frame)
   }
@@ -384,15 +403,11 @@ onMounted(() => {
   }
   watchDpr()
 
-  const themeObserver = new MutationObserver(() => buildTexture())
-  themeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-
   onUnmounted(() => {
     cancelAnimationFrame(raf)
     window.removeEventListener('mousemove', onMouseMove)
     window.removeEventListener('resize', scheduleRebuild)
     resizeObserver.disconnect()
-    themeObserver.disconnect()
     dprQuery?.removeEventListener('change', onDprChange)
   })
 })

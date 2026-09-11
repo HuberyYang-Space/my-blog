@@ -26,3 +26,31 @@ describe('首页标题画布的尺寸不被 reset 压缩', () => {
     expect(rule).toMatch(/max-width:\s*none/)
   })
 })
+
+/**
+ * 这一组守的是「颜色什么时候读」,同样查不到渲染结果 —— 失败时 HTML 一个字不变、
+ * 构建全绿,只是主题切换后标题停在上一个主题的颜色上,刷新才恢复。
+ */
+describe('主题切换后标题颜色不会停在旧主题', () => {
+  const sfc = read('app/components/HeroTitle.vue')
+
+  it('前提:页面文字颜色带过渡 —— 这正是"切换那一刻读不到新颜色"的来源', () => {
+    // 前提没了这组测试就失去意义:哪天 body 不再对 color 做过渡,
+    // 切换瞬间就能读到终值,下面两条该重新评估而不是继续绿着
+    expect(read('app/assets/css/reset.css')).toMatch(/body\s*\{[^}]*transition:[^}]*\bcolor\b/)
+  })
+
+  it('颜色逐帧同步,不是只在纹理重建时读一次', () => {
+    const frame = sfc.match(/function frame\([\s\S]*?requestAnimationFrame\(frame\)/)?.[0]
+
+    expect(frame, '找不到渲染循环 frame()').toBeDefined()
+    expect(frame).toMatch(/syncColors\(\)/)
+  })
+
+  it('纹理构建不兼管颜色 —— 绑在一起就等于把颜色钉死在"只有重建时才更新"', () => {
+    const build = sfc.match(/function buildTexture\(\)[\s\S]*?\n {2}\}/)?.[0]
+
+    expect(build, '找不到 buildTexture()').toBeDefined()
+    expect(build).not.toMatch(/uColor\.value|uAccent\.value/)
+  })
+})
