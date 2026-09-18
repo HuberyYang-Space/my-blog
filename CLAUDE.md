@@ -25,7 +25,7 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 | 改徽章的预设表、解析或渲染 | [`.docs/badges.md`](.docs/badges.md) | 把拼错的 key 静默滤掉,或把 schema 的 `z.enum` 当成有效防线 —— 两者都会让构建照常绿而页面少东西 |
 | 改搜索索引、匹配或分段 | [`.docs/search.md`](.docs/search.md) | 换成分词搜索库会静默漏搜中文;新增 `fetch` 出来的路由不列进预渲染会在线上 404 |
 | 改 pnpm 配置、升级 pnpm,或提交钩子报错 | [`.docs/pnpm-and-hooks.md`](.docs/pnpm-and-hooks.md) | 把 `verifyDepsBeforeRun: false` 当冗余删掉,提交在无 TTY 环境下直接失败,报错还看不出跟提交有关 |
-| 在浏览器里验证改动,或改完 markdown 页面没变 | [`.docs/verification-traps.md`](.docs/verification-traps.md) | 拿旧模块、旧数据库的表现当结论 —— 踩过一次,连着几轮"验证通过"全部作废 |
+| 在浏览器里验证改动,或改完 markdown 页面没变 | [`.docs/verification-traps.md`](.docs/verification-traps.md) | 拿旧模块、旧数据库的表现当结论,或把后台标签页的环境限制当成代码缺陷去"修" —— 两种都踩过,各作废几轮"验证通过" |
 | 想换掉或新增一个依赖 | [`.docs/stack-decisions.md`](.docs/stack-decisions.md) | 重新踩一遍已经评估并否决过的方案 |
 | 新增文件不确定放哪 | [`.docs/directory-layout.md`](.docs/directory-layout.md) | `app/mdc.config.ts` 之类放错位置不报错,配置被静默忽略 |
 
