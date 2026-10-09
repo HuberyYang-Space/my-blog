@@ -136,6 +136,11 @@ pre {
   outline-offset: 2px;
 }
 
+/* 选中文本背景色 */
+::selection {
+  background-color: color-mix(in srgb, var(--c-primary) 25%, transparent);
+}
+
 /* 尊重用户的减少动效偏好 */
 @media (prefers-reduced-motion: reduce) {
   *,
