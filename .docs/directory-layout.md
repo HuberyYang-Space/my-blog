@@ -11,7 +11,8 @@ test/                    # 单测。被测对象必须是纯函数 —— 测不
 scripts/
 ├── new-post.ts          # pnpm new
 ├── verify-build.ts      # 产物断言(构建钩子调用 + pnpm verify:build 单独跑)
-└── lib/slugify.ts       # 供 new-post 与单测共用(new-post 顶层有副作用,不能直接 import)
+└── lib/                 # slugify.ts / post-template.ts,供 new-post 与单测共用
+                         # (new-post 顶层有副作用,不能直接 import)
 public/images/           # 正文插图(见 CLAUDE.md「图片约定」)
 shared/utils/            # app 与 server 双向自动导入(草稿过滤真源放这里)
 server/

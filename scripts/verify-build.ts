@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { Buffer } from 'node:buffer'
 import { access, readdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
@@ -51,6 +52,17 @@ async function exists(path: string): Promise<boolean> {
   catch {
     return false
   }
+}
+
+/** 按文件头判断图标格式,只认站点可能用到的三种 */
+function sniffImageType(bytes: Buffer): string | undefined {
+  if (bytes.subarray(0, 4).equals(Buffer.from([0x00, 0x00, 0x01, 0x00])))
+    return 'image/x-icon'
+  if (bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])))
+    return 'image/png'
+  if (/^\s*(?:<\?xml[^>]*>\s*)?<svg[\s>]/.test(bytes.subarray(0, 512).toString('utf8')))
+    return 'image/svg+xml'
+  return undefined
 }
 
 interface ArticleSource {
@@ -365,6 +377,45 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
   // 一个外链都没扫到时这条断言等于没跑：关于页和页脚都有外链，扫不到说明匹配规则失效了
   if (externalLinks === 0)
     fail('external-link', '产物里一个外链都没扫到 —— 匹配规则可能失效了')
+
+  // ---- 11. 列表页不带正文 ----
+  // 首页与标签页只渲染标题、日期、摘要,但取数若拉了整篇文章,正文 AST 会一并序列化进
+  // payload,首页还会把它 preload 下来 —— 页面看起来一模一样,只是首屏多下载全站正文,
+  // 且随文章数线性增长。正文 AST 的类型标记是 "minimark",列表页的 HTML 与 payload 里
+  // 都不该出现它。
+  const listPages = pages.filter((page) => {
+    const rel = page.slice(publicDir.length)
+    return rel === '/index.html' || /^\/tags\/[^/]+\/index\.html$/.test(rel)
+  })
+  for (const page of listPages) {
+    const payload = join(dirname(page), '_payload.json')
+    const sources = [page, ...(await exists(payload) ? [payload] : [])]
+    for (const source of sources) {
+      if ((await readFile(source, 'utf8')).includes('"minimark"'))
+        fail('payload', `${source.slice(publicDir.length)} 里带着文章正文 —— 列表取数应只 select 列表需要的字段`)
+    }
+  }
+  if (listPages.length === 0)
+    fail('payload', '产物里没有首页与标签页 —— 列表页 payload 检查没有对象可查')
+
+  // ---- 12. favicon 声明的类型与文件一致 ----
+  // type 写错时浏览器可能直接跳过这个图标,标签页上没有图标,而构建与页面都不报错。
+  const homepageHtml = await exists(homepage) ? await readFile(homepage, 'utf8') : ''
+  const iconTags = [...homepageHtml.matchAll(/<link\s[^>]*rel="icon"[^>]*>/g)].map(m => m[0])
+  if (iconTags.length === 0)
+    fail('icon', '首页没有 <link rel="icon">')
+  for (const tag of iconTags) {
+    const href = tag.match(/\shref="([^"]*)"/)?.[1] ?? ''
+    const type = tag.match(/\stype="([^"]*)"/)?.[1]
+    const file = join(publicDir, href)
+    if (!href.startsWith('/') || !await exists(file)) {
+      fail('icon', `图标 ${href} 不存在`)
+      continue
+    }
+    const actual = sniffImageType(await readFile(file))
+    if (type && type !== actual)
+      fail('icon', `图标 ${href} 声明为 ${type},文件实际是 ${actual ?? '无法识别的格式'}`)
+  }
 
   if (problems.length) {
     throw new Error(

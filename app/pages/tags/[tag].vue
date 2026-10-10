@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const route = useRoute()
-const tag = computed(() => decodeURIComponent(String(route.params.tag)))
+const tag = computed(() => String(route.params.tag))
 
 const { data: posts } = await useAsyncData(`tag-${route.path}`, async () => {
   // 一次分组拿到全部标签及各自的文章列表,避免逐标签重复扫描全集合。

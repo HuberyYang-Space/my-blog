@@ -153,7 +153,7 @@ badges: [wip] # 可选,默认 [],最多 3 个
 ├── scripts/
 │   ├── new-post.ts            # pnpm new 的实现
 │   ├── verify-build.ts        # 产物断言(构建期自动跑)
-│   └── lib/slugify.ts         # slug 推导,供脚手架与单测共用
+│   └── lib/                   # slug 推导与 frontmatter 模板,供脚手架与单测共用
 ├── test/                      # 纯函数单测
 ├── vitest.config.ts
 ├── shared/utils/posts.ts      # app 与 server 双向自动导入 —— 草稿过滤的唯一真源

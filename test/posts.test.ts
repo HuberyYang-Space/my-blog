@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { findNeighbors, groupPostsByTag } from '../app/utils/posts'
+import { findNeighbors, groupPostsByTag, tagPath } from '../app/utils/posts'
 import { isVisiblePost } from '../shared/utils/posts'
 
 describe('isVisiblePost', () => {
@@ -85,5 +85,19 @@ describe('findNeighbors', () => {
       olderPost: undefined,
       newerPost: undefined,
     })
+  })
+})
+
+describe('tagPath', () => {
+  it('普通标签原样拼进路径,编码交给路由', () => {
+    expect(tagPath('知识')).toBe('/tags/知识')
+    expect(tagPath('Vue 3')).toBe('/tags/Vue 3')
+  })
+
+  // 实测:`100%` 让预渲染爬虫的 decodeURIComponent 直接抛错,首页整页预渲染失败、
+  // 所有文章页随之缺失;`C#` 编码成 C%23 后又被预渲染器二次编码成 C%2523,标签页 404。
+  // 这几个字符在 URL 里有保留含义,不是编码一下就能绕开的,只能在源头拒绝。
+  it.each(['C#', 'a?b', '100%', 'a/b'])('含 URL 保留字符的标签直接抛错:%s', (tag) => {
+    expect(() => tagPath(tag)).toThrow(tag)
   })
 })

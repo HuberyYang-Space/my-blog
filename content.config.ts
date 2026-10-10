@@ -1,6 +1,6 @@
 import type { BadgeKey } from './app/config'
 import { defineCollection, defineContentConfig, z } from '@nuxt/content'
-import { AUTHORABLE_BADGE_KEYS, MAX_BADGES } from './app/config'
+import { AUTHORABLE_BADGE_KEYS, MAX_BADGES, TAG_FORBIDDEN_CHARS } from './app/config'
 
 const blog = defineCollection({
   type: 'page',
@@ -15,8 +15,9 @@ const blog = defineCollection({
     description: z.string(),
     date: z.coerce.date(),
     updatedDate: z.coerce.date().optional(),
-    // trim 避免空白导致的重复标签,regex 避免 '/' 破坏 /tags/[tag]/ 路由
-    tags: z.array(z.string().trim().min(1).regex(/^[^/]+$/, '标签不能包含 /')).default([]),
+    // trim 避免空白导致的重复标签。保留字符的约束同 badges 一样运行时零效力,
+    // 真正的关卡是 app/utils/posts.ts 的 tagPath()
+    tags: z.array(z.string().trim().min(1).refine(tag => !TAG_FORBIDDEN_CHARS.test(tag), '标签不能含 / # ? %')).default([]),
     draft: z.boolean().default(false),
     // 只收预设表里可手写的 key(不含 draft),文案与配色见 app/config.ts 的 BADGES。
     //

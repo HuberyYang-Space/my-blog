@@ -3,6 +3,7 @@ import { access, mkdir, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
+import { postTemplate } from './lib/post-template.ts'
 import { slugify } from './lib/slugify.ts'
 
 /**
@@ -55,22 +56,8 @@ catch {
   // 不存在才是期望的情况,继续
 }
 
-/**
- * draft 默认为 true:新文章不该因为一次 push 就直接上线。
- * 写完把它删掉或改成 false 即可发布。
- */
-const template = `---
-title: ${title}
-description:
-date: ${today()}
-tags: []
-draft: true
----
-
-`
-
 await mkdir(BLOG_DIR, { recursive: true })
-await writeFile(filePath, template, 'utf8')
+await writeFile(filePath, postTemplate(title, today()), 'utf8')
 
 console.log(`✓ 已创建 content/blog/${slug}.md`)
 console.log('  记得填 description 与 tags,发布前把 draft 去掉。')

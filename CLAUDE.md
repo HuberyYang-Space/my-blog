@@ -169,8 +169,8 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
 
 | 层 | 位置 | 守什么 | 怎么跑 |
 | :--- | :--- | :--- | :--- |
-| 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错) | `pnpm test` |
-| 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter、离开博客的链接都带 `target="_blank"` | 构建期自动跑;`pnpm verify:build` 单独跑 |
+| 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错)、标签含 URL 保留字符抛错、新文章 frontmatter 的标题加引号 | `pnpm test` |
+| 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter、离开博客的链接都带 `target="_blank"`、首页与标签页的 payload 不带正文、favicon 声明的类型与文件一致 | 构建期自动跑;`pnpm verify:build` 单独跑 |
 
 - **两层守卫常常管的不是同一件事,别以为有一层就够**。典型例子是徽章:产物断言查 HTML 里徽章
   有没有渲染出来,而 `.post-badge-<tone>` 的 **CSS 规则**在不在它查不到 —— 删掉那条规则,

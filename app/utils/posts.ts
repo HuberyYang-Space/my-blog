@@ -1,5 +1,5 @@
 import type { BlogCollectionItem } from '@nuxt/content'
-import { SITE } from '~/config'
+import { SITE, TAG_FORBIDDEN_CHARS } from '~/config'
 
 /**
  * 文章取数层 —— 页面不直接碰 `queryCollection`。
@@ -19,13 +19,22 @@ export interface PostSummary {
 }
 
 /**
+ * 列表项(首页、标签页)用到的字段。
+ *
+ * 只 select 这几列而不是整篇:取回的数据会序列化进页面 payload,带上正文的话
+ * 首页要为一列标题下载全站正文,且随文章数线性增长。产物断言 `payload` 一节守着这条。
+ */
+const LIST_FIELDS = ['path', 'title', 'description', 'date', 'tags', 'badges', 'draft'] as const
+export type PostListItem = Pick<BlogCollectionItem, typeof LIST_FIELDS[number]>
+
+/**
  * 取用于展示的文章列表,按日期倒序。
  *
  * 草稿过滤本身由 `shared/utils/posts.ts` 的 isPublishedPost() 定义 ——
  * 它是全站唯一真源,RSS 那条 Nitro 路由用的是同一个判定。
  */
-export async function getPublishedPosts(): Promise<BlogCollectionItem[]> {
-  const posts = await queryCollection('blog').order('date', 'DESC').all()
+export async function getPublishedPosts(): Promise<PostListItem[]> {
+  const posts = await queryCollection('blog').select(...LIST_FIELDS).order('date', 'DESC').all()
   return posts.filter(isPublishedPost)
 }
 
@@ -56,12 +65,25 @@ export function groupPostsByTag<T extends { tags?: string[] }>(
 }
 
 /**
+ * 标签归档页的路径。编码交给路由,页面读 `route.params.tag` 拿到的就是原文,
+ * 不要再 decode 一遍 —— 原文里一旦有 `%`,二次解码会直接抛错。
+ *
+ * 含 URL 保留字符的标签直接抛错(为什么不能靠编码绕开,见 TAG_FORBIDDEN_CHARS)。
+ * 每条标签链接都经过这里,所以拼错的标签一定在预渲染期间让构建停下来。
+ */
+export function tagPath(tag: string): string {
+  if (TAG_FORBIDDEN_CHARS.test(tag))
+    throw new Error(`标签「${tag}」含有 URL 保留字符(/ # ? %),换个写法 —— 它会被拼进 /tags/ 路径`)
+  return `/tags/${tag}`
+}
+
+/**
  * 按标签分组文章。
  *
  * 只调用一次 getPublishedPosts() 并在内存里分组 —— 避免每个标签各自重新
  * 查询 + 排序一遍(标签数越多,重复扫描的浪费越大)。
  */
-export async function getPostsGroupedByTag(): Promise<{ tag: string, posts: BlogCollectionItem[] }[]> {
+export async function getPostsGroupedByTag(): Promise<{ tag: string, posts: PostListItem[] }[]> {
   return groupPostsByTag(await getPublishedPosts())
 }
 

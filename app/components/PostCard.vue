@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { BlogCollectionItem } from '@nuxt/content'
+import type { PostListItem } from '~/utils/posts'
 
 defineProps<{
-  post: BlogCollectionItem
+  post: PostListItem
 }>()
 </script>
 

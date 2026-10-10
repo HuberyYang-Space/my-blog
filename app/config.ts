@@ -113,3 +113,13 @@ export const AUTHORABLE_BADGE_KEYS = BADGE_KEYS.filter(key => key !== 'draft')
  * `.max()` 不拦任何东西,理由见 CLAUDE.md 的「徽章约定」。
  */
 export const MAX_BADGES = 3
+
+/**
+ * 标签里不允许出现的字符 —— 都是 URL 里有保留含义的字符,标签又直接拼进 /tags/<标签> 路径。
+ *
+ * 不是编码一下就能绕开的:预渲染器自己会先 decodeURI 再 encodeURI 一遍,`%` 让它的
+ * 链接提取直接抛错(首页预渲染失败,文章页全部缺失),`C#` 编码后又被二次编码成
+ * `C%2523`,标签页 404。强制在 `app/utils/posts.ts` 的 tagPath(),schema 里那条同源
+ * 正则同样拦不住任何东西(理由见 content.config.ts 的 badges)。
+ */
+export const TAG_FORBIDDEN_CHARS = /[/#?%]/
