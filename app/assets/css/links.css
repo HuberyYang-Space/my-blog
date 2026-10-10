@@ -59,6 +59,13 @@
    面向页面正文、markdown 链接等泛用的"可点击文本"场景:下划线常驻(不依赖
    hover/激活态),hover/focus 时只多一个从下往上涂满的色块。
 
+   选择器带上 .prose a:not([class]):not([data-footnote-ref]):Markdown 的
+   [文字](url) 语法没地方挂 class,文章里的链接靠这条选择器自动拿到 highlighter,
+   写文章不必逐个补 {.highlighter} —— 逐个补的话漏一个不报错,只会悄悄退回
+   无样式。:not([class]) 放过关于页那种主动挂了类的链接与脚注返回箭头
+   (带 .data-footnote-backref);:not([data-footnote-ref]) 放过正文里的脚注
+   编号,上标数字挂常驻下划线和色块太抢眼,它留在下方 tinter。
+
    色块用 background-origin: padding-box,止于 padding 盒边缘、不越过
    border-bottom 所在的边框带,色块底边与下划线顶边因此天然对齐、不留缝。
 
@@ -99,7 +106,8 @@
    而且浅色品牌色的焦点环在亮色底上基本等于没有。
    ========================================================================== */
 
-.highlighter {
+.highlighter,
+.prose a:not([class]):not([data-footnote-ref]) {
   --_tint: var(--tint, var(--c-primary));
 
   color: var(--_tint);
@@ -119,7 +127,9 @@
 
 /* 键盘聚焦与鼠标悬停给同等反馈,不让键盘用户只拿到一个通用焦点环 */
 .highlighter:hover,
-.highlighter:focus-visible {
+.highlighter:focus-visible,
+.prose a:not([class]):not([data-footnote-ref]):hover,
+.prose a:not([class]):not([data-footnote-ref]):focus-visible {
   background-size: 100% 100%;
 }
 
@@ -139,22 +149,21 @@
    两档效果:highlighter 更醒目,用于想强调的链接;tinter 更克制,平时融入上下
    文,只在交互时才提示"这是可点击文本"。
 
-   选择器带上 .prose a:not([class]):Markdown 的 [文字](url) 语法没地方挂
-   class,正文链接靠这条选择器自动拿到 tinter 的观感,写文章不必退化成裸 HTML。
-   :not([class]) 是必需的 —— .prose a 的权重(0,1,1)高过 .highlighter(0,1,0),
-   不排除就会把关于页那种主动挂了 .highlighter 的正文链接连背景带过渡一起改写
-   掉;顺带也放过了脚注返回箭头(带 .data-footnote-backref)。
+   选择器带上 .prose a[data-footnote-ref]:not([class]):正文里的脚注编号。
+   文章链接已归 highlighter(见上方),脚注编号是唯一留在这里的 Markdown 产物
+   —— 上标数字挂 highlighter 的常驻下划线和色块太抢眼。:not([class]) 与
+   highlighter 那条同理,不能去掉:.prose a 一类选择器权重高过单个类,不排除
+   就会改写主动挂了类的链接。
 
    换色同样走 --tint(说明见上方 .highlighter 与 --tint 一节)。tinter 静止态本来
    就不着色,所以 --tint 只影响 hover/focus 时的文字色与那条划出的下划线。
-   .prose a:not([class]) 这一支是 Markdown 正文链接,没地方挂 class 也就没地方
-   传参,恒定落到默认的 --c-primary。
+   脚注编号没地方挂 class 也就没地方传参,恒定落到默认的 --c-primary。
 
    prefers-reduced-motion 由本文件 Reset 一节的全局媒体查询统一降级,无需重复处理。
    ========================================================================== */
 
 .tinter,
-.prose a:not([class]) {
+.prose a[data-footnote-ref]:not([class]) {
   --_tint: var(--tint, var(--c-primary));
   background-image: linear-gradient(var(--_tint), var(--_tint));
   background-repeat: no-repeat;
@@ -169,8 +178,8 @@
 
 .tinter:hover,
 .tinter:focus-visible,
-.prose a:not([class]):hover,
-.prose a:not([class]):focus-visible {
+.prose a[data-footnote-ref]:not([class]):hover,
+.prose a[data-footnote-ref]:not([class]):focus-visible {
   color: var(--_tint);
   background-size: 100% 1px;
 }

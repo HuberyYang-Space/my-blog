@@ -224,6 +224,11 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
   (包进 `export default defineConfig({ ... })` 之类),或换用不参与 lint 的语言标签(如 ```text)。
 - **中文引号要直接打 `“”`,不要指望自动转换**。本项目不启用 `remark-smartypants` —— 它会把 `到"标题"`
   的开引号也转成收引号(`到”标题”`),方向是错的、比不转更糟。
+- **文章里的链接一律是 `.highlighter` 样式(与关于页一致),直接写 Markdown `[文字](url)` 即可**,由
+  [`links.css`](app/assets/css/links.css) 的 `.prose a:not([class]):not([data-footnote-ref])` 自动套用。
+  不要逐个补 `{.highlighter}`,更不要挂 `{.tinter}` 或改写成裸 HTML `<a>`:挂了任何类都会退出这条自动规则,
+  漏一个不报错,只会悄悄变样。唯一该挂类的情况是换品牌色:`[Vue](url){.highlighter .[--tint:var(--c-brand-vue)]}`。
+  脚注编号(`data-footnote-ref`)是刻意的例外,留在 `.tinter`,上标数字挂常驻下划线和色块太抢眼。
 
 ## 视觉效果实现注意事项
 
