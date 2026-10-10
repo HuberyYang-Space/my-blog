@@ -345,6 +345,27 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
       fail('hero', `首页 <h1> 里的文字是「${heroWord}」,期望「${SITE.title}」—— 标题可能只剩 canvas 了`)
   }
 
+  // ---- 10. 离开博客的链接一律新开标签页 ----
+  // 外链漏了 target="_blank" 不报错，只是点了之后博客标签页被替换掉。文章里的外链由 ProseA 覆写统一加，
+  // 模板里的外链（关于页、页脚 RSS）各自手写，任何一处漏写都只有这里查得出来。
+  // /rss.xml 同源但不是页面，同页打开会把博客换成一屏 XML，按离开博客处理。
+  let externalLinks = 0
+  for (const page of pages) {
+    const html = await readFile(page, 'utf8')
+    for (const [tag] of html.matchAll(/<a\s[^>]*>/g)) {
+      const href = tag.match(/\shref="([^"]*)"/)?.[1] ?? ''
+      const leavesBlog = (/^https?:\/\//.test(href) && !href.startsWith(SITE.url)) || href === '/rss.xml'
+      if (!leavesBlog)
+        continue
+      externalLinks++
+      if (!/\starget="_blank"/.test(tag))
+        fail('external-link', `${page.slice(publicDir.length)} → ${href} 没有 target="_blank",点了会把博客标签页替换掉`)
+    }
+  }
+  // 一个外链都没扫到时这条断言等于没跑：关于页和页脚都有外链，扫不到说明匹配规则失效了
+  if (externalLinks === 0)
+    fail('external-link', '产物里一个外链都没扫到 —— 匹配规则可能失效了')
+
   if (problems.length) {
     throw new Error(
       `产物断言未通过,共 ${problems.length} 项:\n  ${problems.join('\n  ')}`,

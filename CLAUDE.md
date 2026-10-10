@@ -84,7 +84,7 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
   | 目录 | 注册方式 | 放什么 |
   | :--- | :--- | :--- |
   | [`app/components/mdc/`](app/components/mdc/) | MDC 模块注册,带 `global: true` | 自定义组件(`::note`、`::demo`、`::illustration`) |
-  | [`app/components/content/`](app/components/content/) | Content 模块注册,**不带 global** | 覆写内置 Prose 组件(`ProsePre`/`ProseTable`/`ProseImg`) |
+  | [`app/components/content/`](app/components/content/) | Content 模块注册,**不带 global** | 覆写内置 Prose 组件(`ProsePre`/`ProseTable`/`ProseImg`/`ProseA`) |
 
   `MDCRenderer` 运行时走 Vue 的 `resolveComponent`,只认全局注册。自定义组件放进 `content/`
   不会报错,只会在页面上留下原样的 `::组件名`。
@@ -132,6 +132,11 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
   任何宽度折算成 0 —— 不预置的话每个用边框的地方都得踩一次,还得各写一段注释解释。)
 - **链接必须挂 `.tinter` 或 `.highlighter`**。全局 `a` 规则是 `color: inherit` + 无下划线,
   且没有通用 `a:hover` —— 不挂样式的链接与周围纯文本在视觉上完全无法区分,悬停也毫无反馈。
+- **离开博客的链接一律 `target="_blank"`,保证博客标签页始终在**。范围是外站地址与 `/rss.xml`(同源但不是页面,
+  同页打开会把博客换成一屏 XML);站内路由与页内锚点照常同页跳转,否则每点一次多一个标签页。
+  文章里的 Markdown 外链由 [`ProseA.vue`](app/components/content/ProseA.vue) 统一加,写文章不用管;
+  模板里的外链要手写 `target="_blank" rel="noreferrer"`。漏写不报错,只是点了会替换掉博客标签页,
+  由产物断言 `external-link` 逐页拦截。
 - **不要留没有定义的类名**。`class="copy-contact"` 这种"看起来像钩子、实际零样式"的名字会误导下一个人
   去找它的定义。要么给它写样式,要么删掉。
 
@@ -165,7 +170,7 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
 | 层 | 位置 | 守什么 | 怎么跑 |
 | :--- | :--- | :--- | :--- |
 | 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错) | `pnpm test` |
-| 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter | 构建期自动跑;`pnpm verify:build` 单独跑 |
+| 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter、离开博客的链接都带 `target="_blank"` | 构建期自动跑;`pnpm verify:build` 单独跑 |
 
 - **两层守卫常常管的不是同一件事,别以为有一层就够**。典型例子是徽章:产物断言查 HTML 里徽章
   有没有渲染出来,而 `.post-badge-<tone>` 的 **CSS 规则**在不在它查不到 —— 删掉那条规则,
