@@ -51,8 +51,8 @@ export const SITE = {
    *
    * 由 nuxt-og-image 在构建期生成,文件名规则是 `c_<模板组件名>.png` ——
    * 模板见 `app/components/OgImage/Hubery.browser.vue`,重命名模板必须同步改这里。
-   * 之所以能写死:文件名只由组件名决定,不含内容哈希;且 `nuxt.config.ts` 的构建期
-   * 守卫会核对每个页面的 og:image 是否真的存在于产物中,对不上就让构建失败,
+   * 之所以能写死:文件名只由组件名决定,不含内容哈希;且 `scripts/verify-build.ts` 的
+   * 产物断言会核对每个页面的 og:image 是否真的存在于产物中,对不上就让构建失败,
    * 不会静默指向一个 404。
    */
   ogImage: '/_og/s/c_Hubery.browser.png',
@@ -110,7 +110,7 @@ export const AUTHORABLE_BADGE_KEYS = BADGE_KEYS.filter(key => key !== 'draft')
  * 单篇文章的徽章数量上限。列表项右侧还杵着日期,超过这个数标题行会被挤散。
  *
  * 强制在 `app/utils/badges.ts` 做,不在 schema —— `content.config.ts` 里那个
- * `.max()` 不拦任何东西,理由见 CLAUDE.md 的「徽章约定」。
+ * `.max()` 不拦任何东西,理由见 `.docs/badges.md`。
  */
 export const MAX_BADGES = 3
 

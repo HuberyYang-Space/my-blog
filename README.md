@@ -10,7 +10,7 @@
 | 领域 | 选型 |
 | :--- | :--- |
 | 框架 | [Nuxt 4](https://nuxt.com)(`nuxt generate`,纯静态输出) |
-| 内容 | [Nuxt Content 3](https://content.nuxt.com) —— zod schema 校验的 Markdown 集合 |
+| 内容 | [Nuxt Content 3](https://content.nuxt.com) —— zod schema 定义字段与类型的 Markdown 集合 |
 | 富文本 | [MDC](https://content.nuxt.com/docs/files/markdown) —— Markdown 里直接调用 Vue 组件 |
 | 代码高亮 | [Shiki](https://shiki.style) 双主题 + [@shikijs/transformers](https://shiki.style/packages/transformers)(diff / 聚焦标记) |
 | 样式 | [UnoCSS](https://unocss.dev)(`darkMode: 'class'`) |

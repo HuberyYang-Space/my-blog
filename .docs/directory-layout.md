@@ -38,7 +38,7 @@ app/
 └── utils/               # 仅 app 侧自动导入:
                          #   posts.ts(取数层)、search.ts(搜索匹配)、badges.ts(徽章解析)、
                          #   clipboard.ts、error-copy.ts、animation.ts、
-                         #   ambient-glow.ts + hero-particles.ts(首页背景)
+                         #   ambient-glow.ts(首页氛围光轨迹)
 ```
 
 ## `app/mdc.config.ts` 不能放仓库根
