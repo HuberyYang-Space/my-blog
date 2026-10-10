@@ -3,7 +3,7 @@ import { Buffer } from 'node:buffer'
 import { access, readdir, readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { BADGES, SITE } from '../app/config.ts'
 
 /**
@@ -441,7 +441,9 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
 }
 
 // 直接执行时对 .output/public 跑一遍;被 import 时什么都不做
-if (process.argv[1] && import.meta.url === `file://${process.argv[1]}`) {
+// 用 pathToFileURL 比对,不要手拼 `file://${argv[1]}`:路径里有空格或中文时 import.meta.url
+// 是百分号编码过的,手拼的永远对不上,脚本就什么都不查、静默以 0 退出
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const dir = process.argv[2] ?? join(ROOT, '.output/public')
   if (!await exists(dir)) {
     console.error(`✗ 找不到产物目录 ${dir},先跑 pnpm build`)

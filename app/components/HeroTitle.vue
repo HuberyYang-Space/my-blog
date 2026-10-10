@@ -427,6 +427,8 @@ onMounted(() => {
     window.removeEventListener('resize', scheduleRebuild)
     resizeObserver.disconnect()
     dprQuery?.removeEventListener('change', onDprChange)
+    // ogl 不释放上下文,不交还的话每挂载一次就多占一个,超出浏览器上限会丢掉最老的那个
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
   })
 })
 </script>

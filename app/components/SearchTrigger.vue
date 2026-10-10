@@ -7,7 +7,9 @@ const mounted = ref(false)
 const isMac = ref(false)
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.key.toLowerCase() !== 'k' || !(event.metaKey || event.ctrlKey))
+  // key 可能是 undefined:Chrome 自动填充派发的 keydown 是普通 Event,不带 key,
+  // 直接 toLowerCase() 会在控制台抛 TypeError
+  if (event.key?.toLowerCase() !== 'k' || !(event.metaKey || event.ctrlKey))
     return
 
   // 焦点在输入框里时不劫持 —— 让浏览器/页面自己的行为优先

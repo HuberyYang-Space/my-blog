@@ -6,9 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+# 不取消进行中的部署:取消可能落在远端脚本删旧、移新之间,留下一个不完整的站点。
+# 连续两次 push 时后一次排队等前一次跑完,代价只是多等一轮。
 concurrency:
   group: deploy-my-blog
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -63,7 +65,16 @@ jobs:
           fingerprint: ${{ secrets.SERVER_HOST_FINGERPRINT }}
           port: 22
           script: |
-            cd /www/wwwroot/my-blog/ || exit 1
-            find . -mindepth 1 ! -name 'dist.tar.gz' -exec rm -rf {} +
-            tar -xzf dist.tar.gz
+            set -e
+            cd /www/wwwroot/my-blog/
+            # 先解压到站点内的暂存目录并确认完整,再替换线上文件 —— 包损坏或解压失败时
+            # 线上内容不动,而不是先删光再发现解不开。
+            rm -rf .release
+            mkdir .release
+            tar -xzf dist.tar.gz -C .release
+            test -f .release/index.html
+            # 删旧、移新紧挨着做,访客撞上空站点的窗口只剩这两步之间的毫秒级
+            find . -mindepth 1 -maxdepth 1 ! -name .release ! -name dist.tar.gz -exec rm -rf {} +
+            find .release -mindepth 1 -maxdepth 1 -exec mv {} . \;
+            rmdir .release
             rm dist.tar.gz

@@ -18,7 +18,13 @@ function onScroll() {
   visible.value = window.scrollY > SHOW_THRESHOLD
 }
 
+// scrollend 在 Safari 26 之前不存在:收不到它,屏蔽就永远不解除,按钮再也不出现。
+// 另挂一个上限计时兜底,时长要盖过一次长距离平滑滚动,否则滚到一半解除屏蔽会弹回按钮。
+const UNLOCK_FALLBACK_MS = 1500
+let unlockTimer: ReturnType<typeof setTimeout> | undefined
+
 function onScrollEnd() {
+  clearTimeout(unlockTimer)
   scrollingToTop.value = false
 }
 
@@ -31,6 +37,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  clearTimeout(unlockTimer)
   window.removeEventListener('scroll', onScroll)
   window.removeEventListener('scrollend', onScrollEnd)
 })
@@ -40,6 +47,8 @@ function scrollToTop() {
   // 一边往上飘一边消失,而不是干脆利落地收起。
   visible.value = false
   scrollingToTop.value = true
+  clearTimeout(unlockTimer)
+  unlockTimer = setTimeout(onScrollEnd, UNLOCK_FALLBACK_MS)
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
   window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' })

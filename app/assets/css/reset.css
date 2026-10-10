@@ -104,11 +104,16 @@ pre {
    写成 * 选择器一次覆盖全站,而不是分别写进页面滚动条、搜索结果列表、宽表格、
    代码块横向滚动等各处 —— 那样每新增一个滚动区域都要记得补一份,漏改不会报错。
    颜色源自 --c-text-mute,双主题下自动跟着换,不是写死的灰色。
-   Firefox 的 scrollbar-width/scrollbar-color 只能控制粗细与两个颜色,做不到直角和
-   发光,是浏览器 API 的上限,不是漏改。 */
-* {
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--c-text-mute) 40%, transparent) transparent;
+
+   标准属性 scrollbar-width/scrollbar-color 必须关在 @supports 里:Chrome(121 起)只要
+   元素设了其中任何一个,就不再应用 ::-webkit-scrollbar,下面的直角与光晕整段作废,
+   且不报错(test/scrollbar.test.ts 守着)。Firefox 不认 webkit 伪元素,只走标准属性,
+   只能控制粗细与两个颜色,做不到直角和发光,是浏览器 API 的上限,不是漏改。 */
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--c-text-mute) 40%, transparent) transparent;
+  }
 }
 
 *::-webkit-scrollbar {

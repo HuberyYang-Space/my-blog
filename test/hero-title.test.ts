@@ -54,3 +54,18 @@ describe('主题切换后标题颜色不会停在旧主题', () => {
     expect(build).not.toMatch(/uColor\.value|uAccent\.value/)
   })
 })
+
+/**
+ * 卸载时必须交还 WebGL 上下文。ogl 没有任何释放逻辑,不显式 loseContext 的话,首页
+ * 每挂载一次就多占一个上下文 —— 浏览器实测:首页与关于页来回三次,离开首页后三个上下文
+ * 全部仍然存活。Chrome 活跃上下文有上限,超出会丢掉最老的那个,而这一切都不报错。
+ */
+describe('首页标题卸载时释放 WebGL 上下文', () => {
+  it('onUnmounted 里调用了 loseContext()', () => {
+    const sfc = read('app/components/HeroTitle.vue')
+    const unmount = sfc.match(/onUnmounted\(\(\) => \{[\s\S]*?\n {2}\}\)/)?.[0]
+
+    expect(unmount, '找不到 onUnmounted 清理块').toBeDefined()
+    expect(unmount).toMatch(/getExtension\('WEBGL_lose_context'\)\?\.loseContext\(\)/)
+  })
+})
