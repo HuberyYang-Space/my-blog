@@ -25,22 +25,25 @@ const items = computed(() => {
 
 const activeId = ref<string>()
 
-// 判定线固定在吸顶头部下方 80px。"当前项" = 顶部已经越过这条线的最后一个标题 ——
+// 判定线 = 标题的滚动停靠位置(scrollOffset,与 router.options.ts 的锚点落点同源)
+// 再往下 ACTIVE_TOLERANCE。"当前项" = 顶部已经越过这条线的最后一个标题 ——
 // 用 IntersectionObserver 只当触发器(标题穿过判定线时回调),每次都用实时
 // getBoundingClientRect 重新扫一遍,而不是直接信任回调传入的 entries:
 // entries 只包含"这一次状态发生变化"的标题,单独用它判断会在两个标题之间
 // 出现"谁都不是当前项"的空档。
 //
-// 80px 与 tokens.css 的 --header-h(60px)是同一个物理量(头部高度)的两份独立
-// 表达 —— 这里留了一点余量而非直接等于头部高度。头部改高度时记得同步这个数值。
-const HEADER_OFFSET = 80
+// 不能写死成 px:停靠位置是 rem,浏览器默认字号调到 20px 时落点是 95px,
+// 写死的 80px 会让刚点过的那一项不被点亮、高亮停在上一个标题上。
+// 余量是因为落点有亚像素误差(实测 75.9 / 94.8),判定线与落点严丝合缝会时灵时不灵。
+const ACTIVE_TOLERANCE = 4
+let activeLine = 0
 
 let observer: IntersectionObserver | undefined
 
 function updateActive(headingEls: HTMLElement[]) {
   let current: HTMLElement | undefined
   for (const el of headingEls) {
-    if (el.getBoundingClientRect().top - HEADER_OFFSET <= 0)
+    if (el.getBoundingClientRect().top - activeLine <= 0)
       current = el
     else
       break
@@ -56,8 +59,9 @@ onMounted(() => {
   if (headingEls.length === 0)
     return
 
+  activeLine = scrollOffset() + ACTIVE_TOLERANCE
   observer = new IntersectionObserver(() => updateActive(headingEls), {
-    rootMargin: `-${HEADER_OFFSET}px 0px 0px 0px`,
+    rootMargin: `-${activeLine}px 0px 0px 0px`,
     threshold: 0,
   })
   headingEls.forEach(el => observer!.observe(el))

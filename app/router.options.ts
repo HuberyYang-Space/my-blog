@@ -1,18 +1,5 @@
 import type { RouterConfig } from '@nuxt/schema'
-
-/**
- * 固定头部遮住的高度,从 CSS 读,不在 JS 里再写一个魔法数字。
- *
- * 读的是 html 的 scroll-padding-top(见 assets/css/reset.css)而不是自定义属性
- * --scroll-offset:后者的值是 calc(var(--header-h) + 1rem),自定义属性不会被求值,
- * getPropertyValue 拿回来的是那串字面量,parseFloat 会得到 NaN。scroll-padding-top
- * 是真实 CSS 属性,getComputedStyle 保证返回解析好的 px。
- * 这样 --header-h 仍是唯一真源,JS 只是把 CSS 已经算好的结果读出来。
- */
-function scrollOffset(): number {
-  const raw = getComputedStyle(document.documentElement).scrollPaddingTop
-  return Number.parseFloat(raw) || 0
-}
+import { scrollOffset } from '~/utils/scroll-offset'
 
 /**
  * 等目标元素真正出现在 DOM 里再返回它,最多等 timeout 毫秒。

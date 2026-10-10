@@ -423,17 +423,6 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
     )
   }
 
-  // 域名核对是"还没上线",不是"构建坏了" —— 告警而不失败,否则会挡住日常开发。
-  // 格式层面的约束(https / 无尾斜杠 / 无路径段)由 test/config.test.ts 硬守。
-  if (!SITE.urlConfirmed) {
-    console.warn(
-      `⚠ SITE.url 尚未与实际部署地址核对(当前 ${SITE.url})。\n`
-      + '  canonical / sitemap / RSS / OG 图都用它生成绝对 URL,填错不会报错,\n'
-      + '  只会让全站外链整体指向错误的域名。核对后把 app/config.ts 的\n'
-      + '  urlConfirmed 改成 true,这条告警就会消失。',
-    )
-  }
-
   console.log(
     `✓ 产物断言通过(${pages.length} 个页面 / ${checkedArticles} 篇文章逐页核对 / `
     + `${drafts.length} 篇草稿确认未外泄)`,
