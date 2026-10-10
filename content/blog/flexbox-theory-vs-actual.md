@@ -22,7 +22,7 @@ draft: false
 - `min-width: auto` 为什么让子元素撑爆了容器
 - `flex-basis: 0` 和 `auto` 到底差在哪
 
-没有哪个工具告诉你，浏览器是怎么一步步算出那个宽度的。于是我花了一个月，提交了 141 次，做了 todo-flex。
+没有哪个工具告诉你，浏览器是怎么一步步算出那个宽度的。于是我花了一个月，提交了 141 次，做了 [todo-flex](https://huberyyang-space.github.io/todo-flex/)，一个专讲 flex 尺寸怎么算出来的交互演示站。
 
 ## 「为什么要把理论值和实际值摆在一起」
 
@@ -55,7 +55,7 @@ draft: false
 理论最终 = 120 − 61.3 ≈ 58.7
 ```
 
-站里选中任意一个盒子，“推导过程”页签就是这样一行行展开的，代入的数字照着算得出结果。
+在 [todo-flex](https://huberyyang-space.github.io/todo-flex/) 里选中任意一个盒子，“推导过程”页签就是这样一行行展开的，代入的数字照着算得出结果。
 
 ## 「故意不修的那道缝」
 
@@ -136,6 +136,10 @@ B 下方的斜纹手柄就是 200px 容器的右边界，B 有一半、C 整个�
 2. 回到自己的项目，找一个被内容撑爆的 flex 子元素，在 DevTools 里给它加一句 `min-width: 0`，看它是不是立刻缩回去。
 
 如果你的布局没被撑爆，第二步可以跳过，不必为了“规范”给所有 flex 子元素都补一句 `min-width: 0`。
+
+::tip{title="todo-flex 在线可用，打开就能玩"}
+地址是 [huberyyang-space.github.io/todo-flex](https://huberyyang-space.github.io/todo-flex/)，不用安装也不用登录。调好的布局会实时编进地址栏，复制链接就能把当前画面原样发给同事，下次被问“这里为什么没等分”，甩一个链接过去比解释半天管用。源码在 [GitHub](https://github.com/HuberyYang-Space/todo-flex)，觉得有用的话，点个 Star 就是对我最大的支持。
+::
 
 ---
 
