@@ -244,18 +244,18 @@ function onDialogClick(event: MouseEvent) {
   border: 0;
   background: transparent;
   color: var(--c-text);
+
+  /* 弹层铺满视口,滚轮落在哪都先落到它身上;contain 截住滚动链,背景因此不跟着滚。
+     不能改用 html { overflow: hidden } 锁滚动:那会让 html 的常驻滚动条消失,
+     整页连同 fixed 的头部与大纲横跳半个滚动条宽。scrollbar-gutter: stable 也补不回来
+     —— 实测 Chrome 155 对根元素的 gutter 完全不生效,短页面同样不预留槽位。 */
+  overscroll-behavior: contain;
 }
 
 /* ::backdrop 在现代浏览器里从原生元素继承自定义属性,但这条落地较晚 ——
    写上字面量兜底,继承不到时也不会变成完全透明的遮罩。 */
 .search-dialog::backdrop {
   background-color: rgb(0 0 0 / 50%);
-}
-
-/* 弹层打开时锁住背景滚动。用 :has() 而不是在 JS 里加类:开关只有一处真源
-   (dialog 的 open 属性),不会出现"状态改了但类忘了摘"的残留。 */
-html:has(.search-dialog[open]) {
-  overflow: hidden;
 }
 
 .search-panel {

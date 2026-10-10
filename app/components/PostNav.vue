@@ -24,8 +24,9 @@ defineProps<{
     <NuxtLink
       v-if="newer"
       :to="newer.path"
-      class="group border border-transparent rounded-md p-3 transition-colors hover:border-border"
+      class="post-nav-link group p-3"
     >
+      <svg class="post-nav-frame" aria-hidden="true"><rect pathLength="1" /></svg>
       <span class="flex items-center gap-1.5 text-xs text-text-mute">
         上一篇
         <span class="i-ph-arrow-left transition-transform group-hover:-translate-x-0.5" />
@@ -37,8 +38,9 @@ defineProps<{
     <NuxtLink
       v-if="older"
       :to="older.path"
-      class="group border border-transparent rounded-md p-3 text-right transition-colors sm:col-start-2 hover:border-border"
+      class="post-nav-link post-nav-link-mirrored group p-3 text-right sm:col-start-2"
     >
+      <svg class="post-nav-frame" aria-hidden="true"><rect pathLength="1" /></svg>
       <span class="flex items-center justify-end gap-1.5 text-xs text-text-mute">
         下一篇
         <span class="i-ph-arrow-right transition-transform group-hover:translate-x-0.5" />
@@ -49,3 +51,49 @@ defineProps<{
     </NuxtLink>
   </nav>
 </template>
+
+<style>
+/* 悬停时边框从一个点出发、沿四边描一圈画出来。
+   border 做不到"从一点画出",改用一个铺满链接的 SVG 圆角矩形:pathLength="1" 把周长
+   归一成 1,dasharray 1 = 一段实线接一段等长空白,dashoffset 从 1 走到 0 就是实线
+   从路径起点一路长满一圈;移出时走回 1,沿原路缩回起点。
+   rect 路径的起点在左上角、方向顺时针;"下一篇"整块水平镜像,变成从右上角逆时针,
+   两张卡片因此左右对称。 */
+.post-nav-link {
+  position: relative;
+}
+
+.post-nav-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.post-nav-link-mirrored .post-nav-frame {
+  scale: -1 1;
+}
+
+/* 描边居中落在几何边上,内缩半个线宽才不会被 SVG 视口裁掉一半;
+   圆角同样扣掉半个线宽,外沿才与 rounded-md 的 6px 对齐 */
+.post-nav-frame rect {
+  x: 0.5px;
+  y: 0.5px;
+  width: calc(100% - 1px);
+  height: calc(100% - 1px);
+  rx: 5.5px;
+  fill: none;
+  stroke: var(--c-primary);
+  stroke-width: 1px;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset 300ms cubic-bezier(0.4, 0, 1, 1);
+}
+
+.post-nav-link:hover .post-nav-frame rect,
+.post-nav-link:focus-visible .post-nav-frame rect {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 500ms ease-out;
+}
+</style>

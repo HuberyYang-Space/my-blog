@@ -76,7 +76,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
       合作请联系
     </div>
 
-    <nav aria-label="联系方式" class="flex flex-wrap gap-x-5 gap-y-2 text-sm text-text-mute">
+    <nav aria-label="联系方式" class="flex flex-col items-start gap-1 text-sm text-text-mute">
       <template v-for="{ icon, text, href, tint } in contacts" :key="text">
         <!--
           .tinge 不可省:全局 a 规则是 color: inherit + 无下划线且没有通用 a:hover,
@@ -89,7 +89,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
           :href="href"
           :target="isExternal(href) ? '_blank' : undefined"
           :rel="isExternal(href) ? 'noreferrer' : undefined"
-          class="tinge inline-flex items-center"
+          class="tinge inline-flex items-center gap-1"
           :class="tint"
         >
           <span :class="icon" />
@@ -98,7 +98,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
         <button
           v-else
           type="button"
-          class="tinge inline-flex items-center p-0"
+          class="tinge inline-flex items-center gap-1 p-0"
           :class="tint"
           @click="onCopy(text)"
         >

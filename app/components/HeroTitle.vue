@@ -26,7 +26,7 @@
  * ## 效果没启用时不需要任何降级分支
  *
  * <h1> 始终渲染真实文字,启用后只是把它涂成透明:它仍然撑开布局(所以没有 CLS)、
- * 仍然能被选中和朗读、仍然出现在静态产物里。偏好减弱动效、无指针设备、
+ * 仍然能被朗读、仍然出现在静态产物里。偏好减弱动效、无指针设备、
  * WebGL 不可用这三种情况一律直接返回,文字原样显示。
  */
 import { Flowmap, Mesh, Program, Renderer, Texture, Triangle, Vec2 } from 'ogl'
@@ -446,6 +446,9 @@ onMounted(() => {
 <style>
 .hero-title {
   position: relative;
+  /* 看得见的字在画布上,能被选中的却是底下那层透明文字:框选时只会浮出一块
+     和画面对不上的选区色块。禁止选中不影响朗读与搜索引擎,它们读的是 DOM 文本。 */
+  user-select: none;
 }
 
 /* 样式挂 class 而不是 h1 标签选择器 —— 标签由 as 决定,挂标签的话传 div 时字号会整个丢掉 */
@@ -455,9 +458,8 @@ onMounted(() => {
   letter-spacing: -0.02em;
 }
 
-/* 效果接管后把文字涂成透明而不是移除:它还要继续撑开布局、继续能被选中和朗读。
-   只作用于 .hero-title-word,插槽里的光标不受影响 —— 它不在纹理里,涂透明就真没了。
-   用 color 而非 opacity,是为了让框选时仍能看到选区高亮。 */
+/* 效果接管后把文字涂成透明而不是移除:它还要继续撑开布局、继续被朗读。
+   只作用于 .hero-title-word,插槽里的光标不受影响 —— 它不在纹理里,涂透明就真没了。 */
 .hero-title.is-active .hero-title-word {
   color: transparent;
 }

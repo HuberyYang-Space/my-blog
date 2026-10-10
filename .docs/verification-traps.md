@@ -21,6 +21,18 @@
 - 目前的应对方式就是手动重启:改完 markdown,`Ctrl+C` 杀掉 `pnpm dev` 再重新跑一次。
   接受这个成本,不为它引入额外的自动重启脚本。
 
+## dev 开着时跑 build,dev 的内容库会被弄坏
+
+- **`pnpm dev` 运行期间执行一次 `pnpm build`,dev 里所有文章页变成"页面不存在"**,
+  dev 日志报 `SqliteError: no such table: _content_blog`。build 会重写 dev 正在读的同一个
+  内容库 `.data/content/contents.sqlite`(build 跑完它的修改时间跟着变),dev 进程手里的
+  连接就找不到表了,而且不会自己恢复。
+- 危险在于它**长得像刚改的代码出了 bug**:现象是 404 而不是报错页,而且不一定马上出现 ——
+  上一刻还能打开的文章,build 跑完后再访问就没了。容易误判成路由、草稿过滤或软导航坏了。
+- 应对:验证流程里要跑 build 的话,先停掉 dev,build 完再重启 dev;
+  或者反过来,dev 里验证完再停掉它去跑 build。看到上面那条 `no such table` 就直接重启 dev,
+  不要去查代码。
+
 ## 浏览器可能还在跑旧模块
 
 改完 `.vue` 去浏览器里看效果时,**浏览器可能还在跑缓存里的旧模块**。踩过一次,代价是

@@ -24,7 +24,8 @@ const showOutline = computed(() => props.links.filter(l => l.depth === 2).length
   >
     <article>
       <header class="post-intro mb-10 border-b border-border pb-6 pt-6">
-        <h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <!-- text-wrap 覆盖 reset 给标题的 balance:标题与正文同宽,排满一行再折 -->
+        <h1 class="text-wrap text-2xl font-semibold tracking-tight sm:text-3xl">
           {{ post.title }}<PostBadges :post="post" />
         </h1>
         <!--

@@ -12,7 +12,7 @@
 | [`nuxt-ui-evaluation.md`](nuxt-ui-evaluation.md) | 想引入 UI 组件库时 |
 | [`directory-layout.md`](directory-layout.md) | 新增文件不确定放哪时 |
 | [`pnpm-and-hooks.md`](pnpm-and-hooks.md) | 提交钩子报错、要改 pnpm 配置或升级 pnpm 时 |
-| [`verification-traps.md`](verification-traps.md) | 改完去浏览器验证之前;改完 markdown 页面却没变时 |
+| [`verification-traps.md`](verification-traps.md) | 改完去浏览器验证之前;改完 markdown 页面却没变时;dev 里文章页突然全部 404 时 |
 | [`hero-title.md`](hero-title.md) | 改首页标题特效之前 |
 | [`badges.md`](badges.md) | 改徽章之前 |
 | [`search.md`](search.md) | 改搜索之前 |

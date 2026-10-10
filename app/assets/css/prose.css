@@ -57,6 +57,18 @@
   margin-top: 0.4em;
 }
 
+/* 段落与列表项两端对齐;引用块、提示框里的段落也是 p,一并覆盖。
+   排除图注:插图组件的图注文字会被包进 <p>,p 自己声明的 justify 会盖过
+   figcaption 继承下来的 center。标题、代码块、表格不是 p/li,不受影响。
+   只在 sm(40rem)以上生效:窄屏下放不下的长行内代码、网址会整段挪到下一行,
+   上一行剩下的几个字被撑满整行,实测 375px 宽时字间距被拉到 28px、52px;
+   正文栏宽下同一批文章没有超过 4px 的行。 */
+@media (min-width: 40rem) {
+  .prose :is(p, li):not(figcaption *) {
+    text-align: justify;
+  }
+}
+
 .prose blockquote {
   padding-left: 1em;
   color: var(--c-text-mute);
