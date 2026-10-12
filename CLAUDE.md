@@ -137,6 +137,12 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
   文章里的 Markdown 外链由 [`ProseA.vue`](app/components/content/ProseA.vue) 统一加,写文章不用管;
   模板里的外链要手写 `target="_blank" rel="noreferrer"`。漏写不报错,只是点了会替换掉博客标签页,
   由产物断言 `external-link` 逐页拦截。
+- **页内锚点(`#id`)一律用 `NuxtLink`,不要写裸 `<a href="#id">`**。裸链接由浏览器自己跳,vue-router
+  事后只收到一次 popstate、当成后退/前进,拿离开该锚点那一刻存下的滚动位置去还原 —— 同一个锚点
+  第二次点击会落回上次离开时的位置,表现为"点了没反应",不报错。文章大纲踩过一次。
+  正文里的 Markdown 锚点(脚注)已由 [`ProseA.vue`](app/components/content/ProseA.vue) 走 `NuxtLink`。
+  产物里两种写法都渲染成 `href="#id"`,产物断言分不出,由单测
+  [`test/in-page-anchor.test.ts`](test/in-page-anchor.test.ts) 读模板源码拦截。
 - **不要留没有定义的类名**。`class="copy-contact"` 这种"看起来像钩子、实际零样式"的名字会误导下一个人
   去找它的定义。要么给它写样式,要么删掉。
 
@@ -169,7 +175,7 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
 
 | 层 | 位置 | 守什么 | 怎么跑 |
 | :--- | :--- | :--- | :--- |
-| 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错)、标签含 URL 保留字符抛错、新文章 frontmatter 的标题加引号 | `pnpm test` |
+| 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错)、标签含 URL 保留字符抛错、新文章 frontmatter 的标题加引号、模板里没有裸的页内锚点 | `pnpm test` |
 | 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter、离开博客的链接都带 `target="_blank"`、首页与标签页的 payload 不带正文、favicon 声明的类型与文件一致 | 构建期自动跑;`pnpm verify:build` 单独跑 |
 
 - **两层守卫常常管的不是同一件事,别以为有一层就够**。典型例子是徽章:产物断言查 HTML 里徽章

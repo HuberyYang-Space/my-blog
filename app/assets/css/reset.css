@@ -23,13 +23,9 @@
 /* document 自己就是滚动容器。overflow-y: scroll(而非 auto)让滚动条槽位常驻,
    短页面与长页面之间切换时内容不会因为滚动条出现/消失而横向跳动。
 
-   **刻意不写 scroll-behavior: smooth。** 实测(生产构建、prefers-reduced-motion
-   为 false)长距离程序化滚动一旦走平滑动画就不可靠:同一句
-   window.scrollTo({ top: 6156 }) 反复跑,落点在 0 / 166 / 6156 之间随机漂移,
-   而 behavior: 'instant' 每次都精确到位。失败时**不报错**,只是页面停在原地或
-   停在错误位置 —— 正是本站最需要防的那种静默失败。
-   平滑滚动的观感不值得用"点了大纲有时没反应"来换,因此程序化滚动一律用
-   instant(见 router.options.ts),这也和参考实现 antfu.me 的行为一致。 */
+   **刻意不写 scroll-behavior: smooth。** 它会作用到所有程序化滚动上,包括前进/后退
+   还原位置、换页回顶 —— 那些场景要的是直接落位。要不要平滑由 router.options.ts
+   按每次导航单独决定(只有同页内跳锚点才平滑),这里不设全局默认。 */
 html {
   -webkit-text-size-adjust: 100%;
   overflow-y: scroll;

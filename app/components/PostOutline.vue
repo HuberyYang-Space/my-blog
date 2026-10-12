@@ -26,11 +26,13 @@ const items = computed(() => {
 const activeId = ref<string>()
 
 // 判定线 = 标题的滚动停靠位置(scrollOffset,与 router.options.ts 的锚点落点同源)
-// 再往下 ACTIVE_TOLERANCE。"当前项" = 顶部已经越过这条线的最后一个标题 ——
-// 用 IntersectionObserver 只当触发器(标题穿过判定线时回调),每次都用实时
-// getBoundingClientRect 重新扫一遍,而不是直接信任回调传入的 entries:
-// entries 只包含"这一次状态发生变化"的标题,单独用它判断会在两个标题之间
-// 出现"谁都不是当前项"的空档。
+// 再往下 ACTIVE_TOLERANCE。"当前项" = 顶部已经越过这条线的最后一个标题,
+// 每次滚动都按实时位置扫一遍。
+//
+// 不用 IntersectionObserver 触发:它只在相交状态变化时回调,而标题与"判定线以下"
+// 这块区域的相交状态由标题的**底边**决定 —— 顶边越过判定线那一刻不回调。
+// 页面停在"顶边已过、底边未过"的位置时高亮会留在上一项,而平滑滚动到锚点
+// 恰好就停在这里(顶边落在判定线上方 4px)。
 //
 // 不能写死成 px:停靠位置是 rem,浏览器默认字号调到 20px 时落点是 95px,
 // 写死的 80px 会让刚点过的那一项不被点亮、高亮停在上一个标题上。
@@ -38,9 +40,9 @@ const activeId = ref<string>()
 const ACTIVE_TOLERANCE = 4
 let activeLine = 0
 
-let observer: IntersectionObserver | undefined
+let headingEls: HTMLElement[] = []
 
-function updateActive(headingEls: HTMLElement[]) {
+function updateActive() {
   let current: HTMLElement | undefined
   for (const el of headingEls) {
     if (el.getBoundingClientRect().top - activeLine <= 0)
@@ -91,7 +93,7 @@ onMounted(() => {
   if (wrapEl.value)
     resizeObserver.observe(wrapEl.value)
 
-  const headingEls = items.value
+  headingEls = items.value
     .map(item => document.getElementById(item.id))
     .filter((el): el is HTMLElement => el !== null)
 
@@ -99,24 +101,22 @@ onMounted(() => {
     return
 
   activeLine = scrollOffset() + ACTIVE_TOLERANCE
-  observer = new IntersectionObserver(() => updateActive(headingEls), {
-    rootMargin: `-${activeLine}px 0px 0px 0px`,
-    threshold: 0,
-  })
-  headingEls.forEach(el => observer!.observe(el))
-  updateActive(headingEls)
+  window.addEventListener('scroll', updateActive, { passive: true })
+  updateActive()
 })
 
-// 客户端路由切换时组件会卸载,必须断开观察者 —— 页面之间是软导航,
+// 客户端路由切换时组件会卸载,必须摘掉监听 —— 页面之间是软导航,
 // 不会有整页重载来自动回收它。
 onUnmounted(() => {
-  observer?.disconnect()
+  window.removeEventListener('scroll', updateActive)
   resizeObserver?.disconnect()
 })
 
-// 大纲链接是朴素的 <a href="#id">,不在这里拦截点击。滚动落点与动画统一由
-// app/router.options.ts 的 scrollBehavior 决定(偏移量、等待异步渲染的标题、
-// 减少动效降级都在那一处),这里多写一份只会和它抢同一次滚动。
+// 大纲链接必须是 NuxtLink,不能是裸 <a href="#id">。裸链接由浏览器自己跳,
+// vue-router 事后只收到一次 popstate、当成"后退/前进"处理,拿离开该锚点那一刻
+// 存下的滚动位置去还原 —— 同一项第二次点击会落回上次离开时的位置,看起来就是
+// "点了没反应"。NuxtLink 走 router.push,滚动落点与动画统一由
+// app/router.options.ts 的 scrollBehavior 决定,这里不再自己滚。
 </script>
 
 <template>
@@ -127,8 +127,8 @@ onUnmounted(() => {
     <div ref="wrapEl" class="relative">
       <ul class="flex flex-col list-none gap-2 border-l border-border pl-0">
         <li v-for="item in items" :key="item.id">
-          <a
-            :href="`#${item.id}`"
+          <NuxtLink
+            :to="`#${item.id}`"
             class="outline-link block py-0.5 hover:text-text"
             :class="[
               item.depth === 3 ? 'pl-6' : 'pl-3',
@@ -136,7 +136,7 @@ onUnmounted(() => {
             ]"
           >
             {{ item.text }}
-          </a>
+          </NuxtLink>
         </li>
       </ul>
       <span

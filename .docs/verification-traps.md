@@ -76,6 +76,15 @@
   **这反倒是个有用信号**:类名换了说明点击到达、组件状态确实变了,只是动画不跑。
 - **`scrollTo({ behavior: 'smooth' })` 不动,`behavior: 'auto'` 立即生效**。
   所以"点了回顶而 `scrollY` 没变"不能判成 bug,得先用 `auto` 探一下滚动本身有没有被锁。
+  同页锚点(大纲)在系统未开减少动效时走的就是 smooth,在这里点了只会改 hash、页面不动;
+  要在这个环境里验落点,先把 `matchMedia` 对 `prefers-reduced-motion` 的查询改成返回 true,让它走 instant。
+- **每次路由导航都会被拖慢最多约 1 秒**。Nuxt 自带的 `navigation-repaint` 插件在 `beforeResolve`
+  里等"下一帧或 100ms 定时器"二者先到者,后台标签页 rAF 不跑、定时器又被节流到秒级对齐。
+  实测 `router.push` 耗时 0 / 360 / 1001 / 1002 ms。点完只等 1 秒就去读结果,会看到
+  "点击到达、`preventDefault` 了、却没导航",像极了点击失效 —— 等够 2.5 秒再判,或在
+  `router.afterEach` 里记日志看导航到底有没有发生。
+- **`scroll` 事件不派发**。`scrollTo` 让 `scrollY` 立即变了,监听器却一次都没收到 ——
+  靠滚动事件更新的东西(大纲高亮)在这里必然不变,不能据此判它坏了。
 - **`<dialog>` 的 `close` / `cancel` 事件不派发**。`close()` 照常把 `open` 置 false、退出
   top layer,但事件是排队派发的,那个 task 不跑 —— **挂在 `@close` 上的状态收口一行都不会执行**。
   [`app/components/SearchDialog.vue`](../app/components/SearchDialog.vue) 的清空查询正是挂在那里,
