@@ -417,6 +417,53 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
       fail('icon', `图标 ${href} 声明为 ${type},文件实际是 ${actual ?? '无法识别的格式'}`)
   }
 
+  // ---- 13. RSS 逐篇全文 ----
+  // 订阅源坏了站点照样正常:文件没生成、某篇漏掉、全文只剩空串,构建都不报错,
+  // 只有订阅者那边悄悄收不到。第 3 节只查草稿有没有混进去,这里查该有的有没有。
+  const rssPath = join(publicDir, 'rss.xml')
+  const rss = await exists(rssPath) ? await readFile(rssPath, 'utf8') : ''
+  if (!rss) {
+    fail('rss', 'rss.xml 不存在或为空')
+  }
+  else {
+    const feedUrl = `${SITE.url}/rss.xml`
+    if (!rss.includes(`<atom:link href="${feedUrl}" rel="self"`))
+      fail('rss', `频道缺少指向 ${feedUrl} 的 atom:link rel="self"`)
+    if (!/<lastBuildDate>[^<]+<\/lastBuildDate>/.test(rss))
+      fail('rss', '频道缺少 lastBuildDate')
+
+    // 组件名取自目录而不是手写清单:新加的 MDC 组件自动纳入,忘了在 feed.ts 里处理就会在这里红
+    const componentNames = (await readdir(join(ROOT, 'app/components/mdc')))
+      .filter(name => name.endsWith('.vue'))
+      .map(name => name.slice(0, -4).replace(/([a-z0-9])([A-Z])/g, '$1-$2').toLowerCase())
+    // 全文经 escapeXml 转义后才进 XML,所以残留的组件标签与属性引号在这里都是转义形态
+    const leftoverComponent = new RegExp(`&lt;(${componentNames.join('|')})(?=[\\s/]|&gt;)`)
+    const relativeUrl = /(?:href|src)=&quot;[/#]/
+
+    const items = [...rss.matchAll(/<item>([\s\S]*?)<\/item>/g)].map(m => m[1]!)
+    const published = articles.filter(a => !a.isDraft)
+    if (items.length !== published.length)
+      fail('rss', `RSS 有 ${items.length} 个条目,已发布文章有 ${published.length} 篇`)
+
+    for (const article of published) {
+      const item = items.find(i => i.includes(`<link>${SITE.url}/posts/${article.slug}</link>`))
+      if (!item) {
+        fail('rss', `${article.slug} 没有出现在 RSS 里`)
+        continue
+      }
+      const content = item.match(/<content:encoded>([\s\S]*?)<\/content:encoded>/)?.[1]?.trim() ?? ''
+      if (!content) {
+        fail('rss', `${article.slug} 的 content:encoded 缺失或为空`)
+        continue
+      }
+      const component = content.match(leftoverComponent)?.[1]
+      if (component)
+        fail('rss', `${article.slug} 的全文里残留未转换的组件 <${component}> —— 在 server/utils/feed.ts 里给它加转换规则`)
+      if (relativeUrl.test(content))
+        fail('rss', `${article.slug} 的全文里有站内相对地址,阅读器里点不开`)
+    }
+  }
+
   if (problems.length) {
     throw new Error(
       `产物断言未通过,共 ${problems.length} 项:\n  ${problems.join('\n  ')}`,

@@ -202,7 +202,7 @@ sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须
 站点同时输出:
 
 - `/sitemap.xml` —— 由 `@nuxtjs/sitemap` 生成
-- `/rss.xml` —— 订阅源,与站点共用同一套草稿过滤逻辑
+- `/rss.xml` —— 全文订阅源,与站点共用同一套草稿过滤逻辑
 - `/404.html` —— 静态托管平台按约定用作兜底页
 - `/_og/s/*.png` —— OG 分享图,构建期用 Chrome 渲染 `app/components/OgImage/` 下的模板
 

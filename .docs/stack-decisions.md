@@ -30,6 +30,15 @@ Nuxt 没有官方 RSS 模块,所以 [`server/routes/rss.xml.ts`](../server/route
 手写带来的连带约束:转义逻辑抽进 [`server/utils/xml.ts`](../server/utils/xml.ts) 才可单测;
 草稿过滤必须复用 [`shared/utils/posts.ts`](../shared/utils/posts.ts),不能在 Nitro 侧另写一遍。
 
+全文输出(`<content:encoded>`)由 [`server/utils/feed.ts`](../server/utils/feed.ts) 从正文 AST 序列化:
+
+- 不复用页面 HTML —— 那份带交互 canvas、`data-v` 属性和离开站点 CSS 就散架的结构。
+- 不用 minimark 自带的 `stringify(…, { format: 'text/html' })` —— 它对文本与属性值都不转义,
+  正文里写到 `<script>` 字面量会直接变成真标签。改为转成标准 hast 交给 `hast-util-to-html`。
+- MDC 组件在阅读器里没有对应实现,逐个转换:提示框 → `blockquote`,插图 → `figure`,
+  交互演示 → 一句指向原文的说明。**新增 MDC 组件要在那里加转换规则**,漏了由产物断言拦下
+  (组件名直接取自 `app/components/mdc/` 目录,不需要手动登记)。
+
 ## 已经评估并否决的
 
 | 方案 | 结论 | 详见 |

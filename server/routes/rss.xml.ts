@@ -12,6 +12,12 @@ import { SITE } from '../../app/config'
 export default defineEventHandler(async (event) => {
   const all = await queryCollection(event, 'blog').order('date', 'DESC').all()
   const posts = all.filter(isPublishedPost)
+  const feedUrl = new URL('/rss.xml', SITE.url).href
+
+  // 取文章自身的最后改动时间而不是构建时刻:后者让每次部署都像"有更新",内容没变也一样
+  const lastBuildDate = posts.length > 0
+    ? new Date(Math.max(...posts.map(post => new Date(post.updatedDate ?? post.date).getTime())))
+    : undefined
 
   const items = posts.map((post) => {
     const link = new URL(post.path, SITE.url).href
@@ -23,6 +29,8 @@ export default defineEventHandler(async (event) => {
       '<item>',
       `<title>${escapeXml(post.title)}</title>`,
       `<description>${escapeXml(post.description)}</description>`,
+      // 整段 HTML 走 escapeXml 而不是 CDATA:CDATA 还得另外处理正文里出现的 `]]>`
+      `<content:encoded>${escapeXml(renderFeedHtml(post.body, link))}</content:encoded>`,
       `<pubDate>${new Date(post.date).toUTCString()}</pubDate>`,
       categories,
       `<link>${escapeXml(link)}</link>`,
@@ -33,12 +41,14 @@ export default defineEventHandler(async (event) => {
 
   const xml = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<rss version="2.0">',
+    '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">',
     '<channel>',
     `<title>${escapeXml(SITE.title)}</title>`,
     `<description>${escapeXml(SITE.description)}</description>`,
     `<link>${escapeXml(SITE.url)}</link>`,
+    `<atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />`,
     `<language>${SITE.locale}</language>`,
+    lastBuildDate ? `<lastBuildDate>${lastBuildDate.toUTCString()}</lastBuildDate>` : '',
     items,
     '</channel>',
     '</rss>',

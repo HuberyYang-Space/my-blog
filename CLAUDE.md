@@ -35,7 +35,7 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 - 核心:`nuxt`(4.x,`nuxt generate` 出纯静态)+ `@nuxt/content`(3.x)
 - 内容层:根级 [`content.config.ts`](content.config.ts) 定义 collection,zod schema;markdown 放 [`content/blog/`](content/blog/)
 - 样式:`unocss` + `@unocss/nuxt`,`darkMode: 'class'`,手写 reset(不开 `injectReset`)
-- 站点地图:`@nuxtjs/sitemap`;RSS 是手写 Nitro 路由 [`server/routes/rss.xml.ts`](server/routes/rss.xml.ts)
+- 站点地图:`@nuxtjs/sitemap`;RSS 是手写 Nitro 路由 [`server/routes/rss.xml.ts`](server/routes/rss.xml.ts),输出全文
 - OG 分享图:`nuxt-og-image`,Browser(Chrome)渲染器,模板在 [`app/components/OgImage/`](app/components/OgImage/)
 - 首页标题特效:`ogl`(轻量 WebGL 库),组件是 [`app/components/HeroTitle.vue`](app/components/HeroTitle.vue)
 - MDC:markdown 里可直接调用 Vue 组件(`::note`、`:demo-counter`、`[文字]{.class}`)
@@ -96,6 +96,11 @@ Markdown 驱动的静态个人博客,风格克制极简,Nuxt 4 + @nuxt/content,�
 
 - **组件属性值里不要用转义引号**(`title="…\"x\""`)。`\"` 不会被识别成转义,整个块直接不解析、
   原样当普通文字输出,同样不报错。需要引号时换个说法绕开。
+
+- **新增 MDC 组件要同时在 [`server/utils/feed.ts`](server/utils/feed.ts) 加 RSS 转换规则**。
+  RSS 全文是从正文 AST 直接序列化的,不经过 Vue 组件 —— 没有规则的组件会原样变成阅读器不认识的
+  `<组件名>` 标签,里面的内容要么裸露、要么(交互演示)是一片空白。漏了由产物断言 `rss` 拦下,
+  组件名直接取自 `app/components/mdc/` 目录,不需要另外登记。
 
 - 图标类名必须是**源码里的字面量**(`'i-ph-info'`),不能拼接(`` `i-ph-${type}` ``)。UnoCSS 靠扫描
   源码文本收集候选类名,拼接结果不在源码里,产物中就没有对应规则,图标是空的。
@@ -175,8 +180,8 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
 
 | 层 | 位置 | 守什么 | 怎么跑 |
 | :--- | :--- | :--- | :--- |
-| 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错)、标签含 URL 保留字符抛错、新文章 frontmatter 的标题加引号、模板里没有裸的页内锚点 | `pnpm test` |
-| 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter、离开博客的链接都带 `target="_blank"`、首页与标签页的 payload 不带正文、favicon 声明的类型与文件一致 | 构建期自动跑;`pnpm verify:build` 单独跑 |
+| 纯函数单测 | [`test/`](test/) | 排序、分组、找相邻、转义、slug 推导、`SITE.url` 格式、搜索匹配与摘要分段(含中文不漏搜回归)、徽章解析(顺序稳定、draft 注入、未知 key 抛错)、标签含 URL 保留字符抛错、新文章 frontmatter 的标题加引号、模板里没有裸的页内锚点、RSS 全文的组件转换与地址绝对化 | `pnpm test` |
+| 产物断言 | [`scripts/verify-build.ts`](scripts/verify-build.ts) | og 图存在、图片存在、草稿未外泄、MDC 组件真的渲染了、无未解析的 `::语法` 残留、`ProsePre` 覆写生效、`PostNav` 接线、徽章真的渲染了、搜索索引存在且每条锚点在页面上真实可达、首页 `<h1>` 里的标题文字仍在、文章正文非空且标题来自 frontmatter、离开博客的链接都带 `target="_blank"`、首页与标签页的 payload 不带正文、favicon 声明的类型与文件一致、RSS 逐篇含全文且无未转换组件与站内相对地址 | 构建期自动跑;`pnpm verify:build` 单独跑 |
 
 - **两层守卫常常管的不是同一件事,别以为有一层就够**。典型例子是徽章:产物断言查 HTML 里徽章
   有没有渲染出来,而 `.post-badge-<tone>` 的 **CSS 规则**在不在它查不到 —— 删掉那条规则,

@@ -45,6 +45,21 @@ export const SITE = {
 } as const
 
 /**
+ * 提示框(`::note` 等)没写 title 时的默认标题。
+ *
+ * 页面上的 `Callout.vue` 与 RSS 全文(`server/utils/feed.ts`)两处都要显示它 ——
+ * 放这里而不是组件里,是因为 Nitro 侧拿不到 Vue 组件内的常量。
+ */
+export const CALLOUT_LABELS = {
+  note: '说明',
+  tip: '技巧',
+  warning: '注意',
+  caution: '警告',
+} as const
+
+export type CalloutType = keyof typeof CALLOUT_LABELS
+
+/**
  * 文章徽章预设表 —— 标题右侧那些小色块的唯一真源。
  *
  * frontmatter 里只写 key(`badges: [wip, translated]`),文案与配色一律从这里取。
