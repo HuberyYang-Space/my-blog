@@ -42,7 +42,31 @@ let activeLine = 0
 
 let headingEls: HTMLElement[] = []
 
+// 点击大纲后高亮立刻落到被点项,滚动途中冻结、不跟着经过的标题变。不冻结的话,
+// 往下跳时目标标题要到滚动的最后 4px 才越过判定线,高亮会一路扫过中间各项,
+// 并在平滑滚动的减速段停在前一项;往上跳则在最后一整节就已经是目标,两个方向观感不一致。
+let frozen = false
+
+function onLinkClick(id: string) {
+  activeId.value = id
+  // 不支持 scrollend 的浏览器解冻不了,退回逐帧跟随
+  frozen = 'onscrollend' in window
+}
+
+function onScrollEnd() {
+  if (!frozen)
+    return
+  frozen = false
+  // 滚到页面底部时末尾几节到不了判定线(如 FAQ),按位置复核会把高亮退回前一项,
+  // 这时保留被点的那一项;其余情况(包括滚动途中被用户打断)以实际位置为准
+  const atBottom = Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight
+  if (!atBottom)
+    updateActive()
+}
+
 function updateActive() {
+  if (frozen)
+    return
   let current: HTMLElement | undefined
   for (const el of headingEls) {
     if (el.getBoundingClientRect().top - activeLine <= 0)
@@ -102,6 +126,7 @@ onMounted(() => {
 
   activeLine = scrollOffset() + ACTIVE_TOLERANCE
   window.addEventListener('scroll', updateActive, { passive: true })
+  window.addEventListener('scrollend', onScrollEnd, { passive: true })
   updateActive()
 })
 
@@ -109,6 +134,7 @@ onMounted(() => {
 // 不会有整页重载来自动回收它。
 onUnmounted(() => {
   window.removeEventListener('scroll', updateActive)
+  window.removeEventListener('scrollend', onScrollEnd)
   resizeObserver?.disconnect()
 })
 
@@ -134,6 +160,7 @@ onUnmounted(() => {
               item.depth === 3 ? 'pl-6' : 'pl-3',
               activeId === item.id ? 'outline-link-active text-text' : 'text-text-mute',
             ]"
+            @click="onLinkClick(item.id)"
           >
             {{ item.text }}
           </NuxtLink>
