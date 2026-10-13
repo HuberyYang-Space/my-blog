@@ -3,11 +3,13 @@ import { SITE } from '~/config'
 
 const works = [
   { href: 'https://huberyyang.site/', label: '主页' },
+  { href: 'https://huberyyang.site:90/', label: 'AI周报' },
+  { href: 'https://huberyyang-space.github.io/todo-flex/', label: 'flex游乐场' },
+  { href: 'https://huberyyang.site:88/', label: 'equals-demo' },
   { href: 'https://huberyyang.site:81/', label: '健身管理' },
   { href: 'https://huberyyang.site:83/', label: '音乐' },
   { href: 'https://huberyyang.site:84/', label: '前端森林' },
-  { href: 'https://huberyyang.site:90/', label: 'AI日报' },
-  { href: 'https://huberyyang.site:88/', label: 'equals-demo' },
+  { href: 'https://huberyyang.site:89/day01', label: '50practice-Vue3版本' },
 ]
 
 // href 缺省表示这一项没有可跳转的目标(微信号只能复制),渲染成点击复制的按钮
@@ -17,8 +19,8 @@ const works = [
 // 源码文本收集候选类名,拼接结果不在源码里,产物中就没有对应规则。
 const contacts: { icon: string, text: string, href?: string, tint: string }[] = [
   { icon: 'i-ph-envelope-simple', text: '18830279823@163.com', tint: '[--tint:var(--c-brand-email)]' },
-  { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang', tint: '[--tint:var(--c-brand-github)]' },
   { icon: 'i-ph-wechat-logo', text: 'HuberyYang_', tint: '[--tint:var(--c-brand-wechat)]' },
+  { icon: 'i-ph-github-logo', text: 'Hub-yang', href: 'https://github.com/Hub-yang', tint: '[--tint:var(--c-brand-github)]' },
 ]
 
 // 站外链接才需要新开标签页,mailto: 这类协议链接不需要。
@@ -72,11 +74,11 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
       >#{{ label }}</a>
     </nav>
 
-    <div class="prose mb-1 mt-6 text-sm text-text-mute">
+    <div class="prose mb-1 mt-8 text-sm text-text-mute">
       合作请联系
     </div>
 
-    <nav aria-label="联系方式" class="flex flex-col items-start gap-1 text-sm text-text-mute">
+    <nav aria-label="联系方式" class="mt-2 flex flex-col items-start gap-2 text-sm text-text-mute">
       <template v-for="{ icon, text, href, tint } in contacts" :key="text">
         <!--
           .tinge 不可省:全局 a 规则是 color: inherit + 无下划线且没有通用 a:hover,
@@ -108,7 +110,7 @@ onUnmounted(() => timers.forEach(id => clearTimeout(id)))
       </template>
     </nav>
 
-    <nav class="mt-12">
+    <nav class="mt-6">
       <BackLink href="/">
         返回首页
       </BackLink>
