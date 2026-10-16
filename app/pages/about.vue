@@ -2,14 +2,14 @@
 import { SITE } from '~/config'
 
 const works = [
-  { href: 'https://huberyyang.site/', label: '主页' },
-  { href: 'https://huberyyang.site:90/', label: 'AI周报' },
+  { href: 'https://html.huberyyang.site/', label: '主页' },
+  { href: 'https://ai.huberyyang.site/', label: 'AI周报' },
   { href: 'https://huberyyang-space.github.io/todo-flex/', label: 'flex游乐场' },
-  { href: 'https://huberyyang.site:88/', label: 'equals-demo' },
-  { href: 'https://huberyyang.site:81/', label: '健身管理' },
-  { href: 'https://huberyyang.site:83/', label: '音乐' },
-  { href: 'https://huberyyang.site:84/', label: '前端森林' },
-  { href: 'https://huberyyang.site:89/day01', label: '50practice-Vue3版本' },
+  { href: 'https://jsequals.huberyyang.site/', label: 'equals-demo' },
+  { href: 'https://fit.huberyyang.site/', label: '健身管理' },
+  { href: 'https://music.huberyyang.site/', label: '音乐' },
+  { href: 'https://forest.huberyyang.site/', label: '前端森林' },
+  { href: 'https://projects.huberyyang.site/day01', label: '50practice-Vue3版本' },
 ]
 
 // href 缺省表示这一项没有可跳转的目标(微信号只能复制),渲染成点击复制的按钮
