@@ -260,7 +260,7 @@ Issues 通过 GitHub Issues 管理(仓库 `HuberyYang-Space/my-blog`),使用 `gh
 ### Domain docs
 
 单上下文(single-context)布局:领域文档若存在,`CONTEXT.md` 与 `docs/adr/` 位于仓库根目录。
-两者目前均未创建,由 `$domain-modeling` 在术语或决策真正需要沉淀时惰性生成 —— 缺失属预期,
+两者目前均未创建,由 `$mattpocock-skills:domain-modeling` 在术语或决策真正需要沉淀时惰性生成 —— 缺失属预期,
 不必主动补建。详见 [`docs/agents/domain.md`](docs/agents/domain.md)。
 
 **`docs/agents/` 的路径被 mattpocock-skills 硬编码引用,不要挪进 `.docs/`** —— 挪走后 skill

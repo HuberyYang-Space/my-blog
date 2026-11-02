@@ -21,9 +21,8 @@
 | `.docs/` | 叙述性 | 按 [`README.md`](README.md) 索引按需读 |
 | [`docs/agents/`](../docs/agents/) | skill 的运行时配置 | skill 自己读 |
 
-**`docs/agents/` 不能并进 `.docs/`**。它的路径被 mattpocock-skills 硬编码
-(`skills/engineering/code-review/SKILL.md` 等处直接按此路径读取),挪走会让
-`/code-review`、`/triage` 找不到文件,且不报错 —— 只是安静地退化。
+**`docs/agents/` 不能并进 `.docs/`**。技能按约定路径读取这里的配置,挪走会让
+依赖这些配置的技能找不到文件,且不报错 —— 只是安静地退化。
 
 ## 外放时守的两条规则
 
