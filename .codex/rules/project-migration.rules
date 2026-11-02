@@ -1,0 +1,3 @@
+# 项目 Git 推送命令的审批规则。命令授权不代替本次任务授权。
+
+prefix_rule(pattern=["git", "push"], decision="allow", justification="允许已获任务授权的 Git 推送")

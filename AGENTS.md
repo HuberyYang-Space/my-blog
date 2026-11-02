@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-本文件为项目级约定,供 Claude Code 在本仓库工作时参考。全局约定见 `~/.claude/CLAUDE.md`。
+本文件为项目级约定,供 Codex 在本仓库工作时参考。全局约定见 `~/.codex/AGENTS.md`。
 
 这里只放**约束性内容**:现役禁令、跨文件的隐式契约、踩过的坑及其理由。叙述性内容
 (选型对比、目录树、评估记录、实现笔记)外放在 [`.docs/`](.docs/README.md),按索引取用。
@@ -10,7 +10,7 @@
 没有触发条件可挂的两件事,不要等索引提醒:
 
 - **每次开工** → 先读本文件,再按 [`.docs/README.md`](.docs/README.md) 的索引连接项目上下文。
-- **每次提交** → 走 `/commit` skill,不要手写 `git add` + `git commit` 绕过去 ——
+- **每次提交** → 走 `$commit` skill,不要手写 `git add` + `git commit` 绕过去 ——
   skill 里有本项目的具体规则,手动操作容易漏掉。
 
 ## 项目概览
@@ -217,7 +217,7 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
 - 判据:**把旧技术栈的名字遮住再读一遍**。剩下的句子如果仍在解释当前代码的因果(如"加尾斜杠会让两条
   路由抢写同一个 `index.html`"、"smartypants 会把 CJK 开引号转反"),就保留并改写;如果剩下的只是
   "以前不是这样",就删掉。
-- 同理适用于本文件:清理代码注释时,`CLAUDE.md` 里与之冲突的规则要同步改,否则下次会话会按旧规则把
+- 同理适用于本文件:清理代码注释时,`AGENTS.md` 里与之冲突的规则要同步改,否则下次会话会按旧规则把
   注释加回来。
 
 ## 文档同步规则
@@ -229,7 +229,7 @@ test / build(`build` 内含 `verify-build.ts` 产物断言),全部通过才会�
   新增一份 `.docs/` 文档,要同时加进 [`.docs/README.md`](.docs/README.md) 的表和索引表。
 - **哪些内容该往外放**:判据是时态 —— 写不成「现在要/不要做什么」的句子就外放。
   外放时**整节搬走,不要把禁令留下、理由挪走**:没有理由的禁令会被下一个会话当成疏漏"顺手改正"。
-  布局本身的来龙去脉见 [`.docs/claude-md-refactor.md`](.docs/claude-md-refactor.md)。
+  布局本身的来龙去脉见 [`.docs/agent-doc-layout.md`](.docs/agent-doc-layout.md)。
 
 ## 写文章约束
 
@@ -260,8 +260,14 @@ Issues 通过 GitHub Issues 管理(仓库 `HuberyYang-Space/my-blog`),使用 `gh
 ### Domain docs
 
 单上下文(single-context)布局:领域文档若存在,`CONTEXT.md` 与 `docs/adr/` 位于仓库根目录。
-两者目前均未创建,由 `/domain-modeling` 在术语或决策真正需要沉淀时惰性生成 —— 缺失属预期,
+两者目前均未创建,由 `$domain-modeling` 在术语或决策真正需要沉淀时惰性生成 —— 缺失属预期,
 不必主动补建。详见 [`docs/agents/domain.md`](docs/agents/domain.md)。
 
 **`docs/agents/` 的路径被 mattpocock-skills 硬编码引用,不要挪进 `.docs/`** —— 挪走后 skill
 找不到文件,且不报错,只会安静地退化。
+
+## Codex 接续约定
+
+- 每次开工先读 [项目上下文与记忆索引](.docs/codex-context/README.md)，再按索引核对现役进度；未读的后果是把旧状态当新任务或重复已完成工作。
+- 修改子目录前，先读取目标路径上相应的 AGENTS.md；不能假设从根目录读取任意源码时会自动加载子目录规则。
+- 旧工具／技能／MCP 尚未迁入时明确缺项，不声称已经调用；历史授权不自动成为新任务的合并、推送、发布或浏览器授权。

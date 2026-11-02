@@ -80,7 +80,7 @@ badges: [wip] # 可选,默认 [],最多 3 个
 下划线开头的文件(如 `_wip.md`)不会被收录。
 
 > 正文里的中文引号请直接输入 `“”`。本项目未启用 smartypants 类插件,直引号不会被自动转换
-> —— 原因见 [`CLAUDE.md`](./CLAUDE.md) 的「写文章约束」。
+> —— 原因见 [`AGENTS.md`](./AGENTS.md) 的「写文章约束」。
 
 ### 正文能力
 
@@ -98,12 +98,12 @@ badges: [wip] # 可选,默认 [],最多 3 个
 | 代码块聚焦 | 行尾 `// [!code focus]` |
 
 > 自定义组件放 `app/components/mdc/`,覆写内置 Prose 组件放 `app/components/content/`
-> —— 两者注册方式不同,放错会静默失效,详见 [`CLAUDE.md`](./CLAUDE.md) 的「MDC 组件约定」。
+> —— 两者注册方式不同,放错会静默失效,详见 [`AGENTS.md`](./AGENTS.md) 的「MDC 组件约定」。
 
 ### 插图
 
 放在 `public/images/`,markdown 里用 `/images/x.webp` 引用。**图片要在提交前压好、定好尺寸**
-(正文栏宽 672px,按 2x 屏取 1344px 宽,格式 WebP);项目不接图片优化模块,原因见 `CLAUDE.md`。
+(正文栏宽 672px,按 2x 屏取 1344px 宽,格式 WebP);项目不接图片优化模块,原因见 `AGENTS.md`。
 构建期有守卫:产物里任何 `<img src>` 指向不存在的文件都会让构建失败。
 
 ## 搜索
@@ -179,8 +179,8 @@ badges: [wip] # 可选,默认 [],最多 3 个
 │   ├── pages/                 # 文件路由(index、about、posts/[slug]、tags/[tag])
 │   └── utils/                 # posts.ts(取数层)、search.ts(搜索匹配)、clipboard.ts
 ├── nuxt.config.ts             # Nuxt 配置(含防闪烁内联脚本、Shiki 双主题)
-├── uno.config.ts              # UnoCSS 配置(含跳过 SFC <style> 的自定义提取器)
-├── eslint.config.js           # ESLint 配置
+├── uno.config.ts              # UnoCSS 配置(使用默认提取器)
+├── eslint.config.ts           # ESLint 配置
 └── commitlint.config.ts       # 提交信息规范
 ```
 
@@ -213,7 +213,7 @@ sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须
 
 ## 相关文档
 
-- [`CLAUDE.md`](./CLAUDE.md) —— 项目级开发约定(现役禁令、跨文件契约、踩过的坑)
+- [`AGENTS.md`](./AGENTS.md) —— 项目级开发约定(现役禁令、跨文件契约、踩过的坑)
 - [`.docs/`](./.docs/README.md) —— 叙述性文档索引:选型理由、目录布局、实现笔记
 
 ## License

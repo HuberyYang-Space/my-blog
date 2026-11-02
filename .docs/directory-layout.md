@@ -1,6 +1,6 @@
 # 目录结构
 
-> 新增文件不确定放哪时读。约束性的五条核心原则在 [`CLAUDE.md`](../CLAUDE.md)「目录结构约定」,
+> 新增文件不确定放哪时读。约束性的五条核心原则在 [`AGENTS.md`](../AGENTS.md)「目录结构约定」,
 > 这里只是布局与位置规则。
 
 ```
@@ -13,7 +13,7 @@ scripts/
 ├── verify-build.ts      # 产物断言(构建钩子调用 + pnpm verify:build 单独跑)
 └── lib/                 # slugify.ts / post-template.ts,供 new-post 与单测共用
                          # (new-post 顶层有副作用,不能直接 import)
-public/images/           # 正文插图(见 CLAUDE.md「图片约定」)
+public/images/           # 正文插图(见 AGENTS.md「图片约定」)
 shared/utils/            # app 与 server 双向自动导入(草稿过滤真源放这里)
 server/
 ├── routes/              # Nitro 路由(rss.xml.ts、search-index.json.ts)
@@ -24,7 +24,7 @@ app/
 ├── config.ts            # 站点级常量,同时被 nuxt.config.ts 导入 → 只能放纯常量
 ├── mdc.config.ts        # Shiki transformer;**必须在 app/ 下**,见下方说明
 ├── router.options.ts    # 滚动行为
-├── assets/css/          # 只放"不属于任何单个组件"的样式,见 CLAUDE.md「样式归属」
+├── assets/css/          # 只放"不属于任何单个组件"的样式,见 AGENTS.md「样式归属」
 │   ├── global.css       # 入口,只做 @import 汇总,不写规则
 │   ├── tokens.css       # 双主题语义变量
 │   ├── reset.css        # 手写 reset

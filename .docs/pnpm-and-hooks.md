@@ -3,7 +3,7 @@
 > 提交钩子报错、或要改 pnpm 配置、升级 pnpm 之前读。
 
 配置写在 [`pnpm-workspace.yaml`](../pnpm-workspace.yaml);钩子在 [`.husky/`](../.husky/),
-分工见 `CLAUDE.md`「守门机制」。
+分工见 `AGENTS.md`「守门机制」。
 
 - **pnpm 自己的设置只认 `pnpm-workspace.yaml`,写进 `.npmrc` 不生效**(camelCase 与 kebab-case 都读不到)。
   验证办法:`pnpm config get <key>` 返回 `undefined` 就说明没读到。`.npmrc` 只留给 npm 通用的东西(如 registry、认证)。

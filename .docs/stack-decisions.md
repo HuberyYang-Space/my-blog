@@ -1,7 +1,7 @@
 # 选型理由与已否决的方案
 
 > 想换掉或新增一个依赖之前读。约束本身(版本要锁死、要在哪放行)在
-> [`CLAUDE.md`](../CLAUDE.md)「技术栈速览」,这里是"为什么是它"。
+> [`AGENTS.md`](../AGENTS.md)「技术栈速览」,这里是"为什么是它"。
 
 ## OG 分享图:为什么是 Browser 渲染器
 
@@ -44,7 +44,7 @@ Nuxt 没有官方 RSS 模块,所以 [`server/routes/rss.xml.ts`](../server/route
 | 方案 | 结论 | 详见 |
 | :--- | :--- | :--- |
 | `@nuxt/ui` 组件库 | 不采用,已回滚 | [`nuxt-ui-evaluation.md`](nuxt-ui-evaluation.md) |
-| 图片优化模块 | 刻意不接 —— 预渲染爬虫不扫 `<img src>`,产物会指向从未生成的文件且不报错 | `CLAUDE.md`「图片约定」 |
+| 图片优化模块 | 刻意不接 —— 预渲染爬虫不扫 `<img src>`,产物会指向从未生成的文件且不报错 | `AGENTS.md`「图片约定」 |
 | 搜索库(FTS5 / Pagefind / MiniSearch / Fuse) | 不采用 —— 中文分词会静默漏搜 | [`search.md`](search.md) |
-| `remark-smartypants` | 不启用 —— 会把中文开引号转反 | `CLAUDE.md`「写文章约束」 |
+| `remark-smartypants` | 不启用 —— 会把中文开引号转反 | `AGENTS.md`「写文章约束」 |
 | UnoCSS 自定义 `extractorDefault` | 不写 —— 正则分不清真样式块和注释,踩中时整页工具类静默消失 | [`uno.config.ts`](../uno.config.ts) 顶部注释 |

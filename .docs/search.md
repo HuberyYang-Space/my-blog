@@ -24,7 +24,7 @@
   标题范围取 h2/h3,与 [`app/components/PostOutline.vue`](../app/components/PostOutline.vue)
   的过滤条件同一口径。
 - **`/search-index.json` 必须显式列进 `nitro.prerender.routes`**。索引是 `fetch` 出来的,HTML 里
-  没有任何指向它的 `href`,爬虫发现不了(同 `CLAUDE.md`「图片约定」里 `extractLinks` 那条)。
+  没有任何指向它的 `href`,爬虫发现不了(同 `AGENTS.md`「图片约定」里 `extractLinks` 那条)。
   漏掉时 dev 模式照常能搜、构建照常成功,只有线上点开搜索才 404。已由产物断言守住。
 - 索引是继站点页面、RSS、sitemap 之后的**第四条草稿泄露面**,过滤只认
   [`shared/utils/posts.ts`](../shared/utils/posts.ts) 的 `isPublishedPost()`。

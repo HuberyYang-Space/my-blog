@@ -1,10 +1,10 @@
 # .docs/
 
 叙述性文档的索引。约束性内容(现役禁令、跨文件的隐式契约、踩过的坑及其理由)在
-[`CLAUDE.md`](../CLAUDE.md),每轮会话常驻;这里的东西按需读。
+[`AGENTS.md`](../AGENTS.md),每轮会话常驻;这里的东西按需读。
 
 判据是时态:写不成「现在要/不要做什么」的句子,就放这里。布局是怎么定下来的见
-[`claude-md-refactor.md`](claude-md-refactor.md)。
+[`agent-doc-layout.md`](agent-doc-layout.md)。
 
 | 文档 | 什么时候读 |
 | :--- | :--- |
@@ -16,7 +16,8 @@
 | [`hero-title.md`](hero-title.md) | 改首页标题特效之前 |
 | [`badges.md`](badges.md) | 改徽章之前 |
 | [`search.md`](search.md) | 改搜索之前 |
-| [`claude-md-refactor.md`](claude-md-refactor.md) | 想动这套文档布局本身时 |
+| [`agent-doc-layout.md`](agent-doc-layout.md) | 想动这套文档布局本身时 |
+| [`codex-context/README.md`](codex-context/README.md) | 接续项目、查看 Codex 接入状态与协作记录时 |
 
 agent skill 的运行时配置在 [`docs/agents/`](../docs/agents/),不在这里 —— 那个路径被
 mattpocock-skills 硬编码引用,挪走会让 skill 静默找不到文件。

@@ -17,6 +17,6 @@ pnpm-debug.log*
 
 .idea/
 
-# Claude Code 本地产物与个人配置(settings.local.json、预览用的 launch.json、
-# 调度锁文件、agent worktree 暂存目录),不随仓库分发。
-.claude/
+# Codex 本机运行产物；项目规则 AGENTS.md 与协作文档另按本仓库策略管理。
+.codex/cache/
+.codex/tmp/
