@@ -5,6 +5,21 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      operation:
+        description: 部署或搜索通知操作
+        type: choice
+        default: deploy
+        options: [deploy, initialize-search, submit-search, backfill-baidu]
+      engine:
+        description: 搜索平台（历史补推仅支持百度）
+        type: choice
+        default: all
+        options: [all, baidu, indexnow]
+
+permissions:
+  contents: read
+  actions: read
 
 # 不取消进行中的部署:取消可能落在远端脚本删旧、移新之间,留下一个不完整的站点。
 # 连续两次 push 时后一次排队等前一次跑完,代价只是多等一轮。
@@ -14,7 +29,14 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.operation == 'deploy')
     runs-on: ubuntu-latest
+    env:
+      GOOGLE_SITE_VERIFICATION: ${{ vars.GOOGLE_SITE_VERIFICATION }}
+      BAIDU_SITE_VERIFICATION: ${{ vars.BAIDU_SITE_VERIFICATION }}
+      BING_SITE_VERIFICATION: ${{ vars.BING_SITE_VERIFICATION }}
+      INDEXNOW_SUBMISSION_ENABLED: ${{ vars.INDEXNOW_SUBMISSION_ENABLED }}
+      INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
     steps:
       - uses: actions/checkout@v7
 
@@ -78,3 +100,87 @@ jobs:
             find .release -mindepth 1 -maxdepth 1 -exec mv {} . \;
             rmdir .release
             rm dist.tar.gz
+
+      - name: Save deployed search snapshot
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: search-snapshot-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .output/search/snapshot.json
+          if-no-files-found: error
+          retention-days: 90
+
+  search:
+    needs: deploy
+    if: >-
+      always() && github.ref == 'refs/heads/main' &&
+      (needs.deploy.result == 'success' ||
+       (github.event_name == 'workflow_dispatch' &&
+        contains(fromJSON('["initialize-search","submit-search","backfill-baidu"]'), inputs.operation)))
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BAIDU_SUBMISSION_ENABLED: ${{ vars.BAIDU_SUBMISSION_ENABLED }}
+      INDEXNOW_SUBMISSION_ENABLED: ${{ vars.INDEXNOW_SUBMISSION_ENABLED }}
+      SEARCH_OPERATION: ${{ inputs.operation || 'deploy' }}
+      SEARCH_ENGINE: ${{ inputs.engine || 'all' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/setup@v2
+        with:
+          version: 11.15.1
+          runtime: node@24
+          cache: true
+          install: false
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Restore deployed snapshot and platform states
+        run: |
+          args=(--snapshot --engine "$SEARCH_ENGINE")
+          if [ "$SEARCH_OPERATION" = initialize-search ]; then args+=(--initialize); fi
+          pnpm search:restore "${args[@]}"
+
+      - name: Notify search engines
+        env:
+          BAIDU_API_ENDPOINT: ${{ secrets.BAIDU_API_ENDPOINT }}
+          BAIDU_ALLOW_HTTP: ${{ vars.BAIDU_ALLOW_HTTP }}
+          INDEXNOW_KEY: ${{ secrets.INDEXNOW_KEY }}
+        run: |
+          args=(--snapshot .search/snapshot.json --state .search/state.json --engine "$SEARCH_ENGINE")
+          case "$SEARCH_OPERATION" in
+            initialize-search) args+=(--mode initialize) ;;
+            backfill-baidu) args+=(--mode backfill-baidu) ;;
+            deploy) args+=(--mode submit --allow-disabled) ;;
+            submit-search) args+=(--mode submit) ;;
+          esac
+          pnpm search:submit "${args[@]}"
+
+      - name: Save Baidu state even after a partial failure
+        if: always() && hashFiles('.search/results/baidu/state.json') != ''
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: search-state-baidu-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            .search/results/baidu/state.json
+            .search/results/baidu/removed.txt
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Save IndexNow state even after a partial failure
+        if: always() && hashFiles('.search/results/indexnow/state.json') != ''
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: search-state-indexnow-${{ github.run_id }}-${{ github.run_attempt }}
+          path: .search/results/indexnow/state.json
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Summarize search notifications
+        if: always()
+        run: |
+          if [ -f .search/results/summary.txt ]; then
+            cat .search/results/summary.txt >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo '搜索通知未执行，请查看产物恢复或配置步骤。' >> "$GITHUB_STEP_SUMMARY"
+          fi

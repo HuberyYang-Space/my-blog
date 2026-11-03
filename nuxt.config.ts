@@ -1,4 +1,9 @@
+import process from 'node:process'
 import { SITE } from './app/config'
+import { prepareSearchBuild, readSearchBuildOptions } from './scripts/lib/search-build'
+import { buildVerificationMeta } from './shared/utils/seo'
+
+const searchBuildOptions = readSearchBuildOptions(process.env)
 
 // 防闪烁脚本:必须在浏览器首次绘制前同步把 .dark 落到 <html> 上,
 // 否则深色用户会先看到一帧浅色。写成字符串由 app.head.script 内联注入,
@@ -59,6 +64,7 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      meta: buildVerificationMeta(searchBuildOptions.verification),
       htmlAttrs: { lang: SITE.locale },
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
@@ -105,7 +111,7 @@ export default defineNuxtConfig({
       // (extractLinks 里 `if (!node.attributes?.href) return`),而这个索引是
       // 搜索弹层用 fetch 取的,HTML 里没有任何指向它的 href。漏掉不会报错 ——
       // dev 模式照常能搜、构建照常成功,只有线上点开搜索才 404。
-      routes: ['/', '/rss.xml', '/404', '/search-index.json'],
+      routes: ['/', '/rss.xml', '/robots.txt', '/404', '/search-index.json'],
     },
   },
 
@@ -129,6 +135,7 @@ export default defineNuxtConfig({
       }
 
       await copyFile(src, join(dir, '404.html'))
+      await prepareSearchBuild(dir, SITE.url, searchBuildOptions)
 
       // 产物断言 —— 校验逻辑全在 scripts/verify-build.ts,这里只负责调用。
       // 放在外部文件而非内联进配置:那样能用 `pnpm verify:build` 单独跑,

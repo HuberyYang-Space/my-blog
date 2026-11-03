@@ -8,6 +8,7 @@ const props = withDefaults(defineProps<{
   ogType?: 'website' | 'article'
   /** 仅 ogType 为 'article' 时有意义,输出 article:published_time */
   publishedDate?: Date | string
+  modifiedDate?: Date | string
 }>(), {
   ogType: 'website',
 })
@@ -33,6 +34,11 @@ useSeoMeta({
   articlePublishedTime: () => (
     props.ogType === 'article' && props.publishedDate
       ? new Date(props.publishedDate).toISOString()
+      : undefined
+  ),
+  articleModifiedTime: () => (
+    props.ogType === 'article' && props.publishedDate
+      ? articleModifiedTime(props.publishedDate, props.modifiedDate)
       : undefined
   ),
   twitterCard: 'summary_large_image',

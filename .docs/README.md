@@ -16,6 +16,8 @@
 | [`hero-title.md`](hero-title.md) | 改首页标题特效之前 |
 | [`badges.md`](badges.md) | 改徽章之前 |
 | [`search.md`](search.md) | 改搜索之前 |
+| [`seo.md`](seo.md) | 改搜索引擎验证、robots、sitemap 元信息或发布提交通知之前 |
+| [`搜索引擎接入执行计划`](plans/2026-11-03-search-discovery.md) | 审核与执行搜索引擎接入方案 B 时 |
 | [`agent-doc-layout.md`](agent-doc-layout.md) | 想动这套文档布局本身时 |
 | [`codex-context/README.md`](codex-context/README.md) | 接续项目、查看 Codex 接入状态与协作记录时 |
 

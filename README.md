@@ -3,7 +3,7 @@
 一个 Markdown 驱动的静态个人博客,风格克制极简。基于 Nuxt 4 + Nuxt Content 构建,纯静态输出,支持双主题切换。
 
 > 🚧 开发中。当前进度:内容层、文章页、双主题、标签页、RSS、sitemap、社交分享元信息、
-> 全文搜索,以及 MDC 组件与代码块增强均已跑通;评论 / 阅读时长 尚未实现。
+> 全文搜索、搜索引擎发现与提交通知,以及 MDC 组件与代码块增强均已跑通;评论 / 阅读时长 尚未实现。
 
 ## 技术栈
 
@@ -125,6 +125,10 @@ badges: [wip] # 可选,默认 [],最多 3 个
 不报错也不告警。中文没有词形变化,子串匹配反而近乎完美,代价只是线性扫描 ——
 而几十篇的语料全量扫一遍是 0.004ms 量级。详见 [`.docs/search.md`](./.docs/search.md)。
 
+## 搜索引擎接入
+
+默认生成 robots、sitemap 与文章更新日期；Google／百度／Bing 验证标签按配置输出。百度普通收录与 IndexNow 通知默认关闭，启用后仅在部署成功后比较公开页面变更。账号验证、变量／Secrets、首次初始化与重试见 [接入说明](.docs/seo.md)。
+
 ## 可用命令
 
 所有命令均在项目根目录执行:
@@ -141,6 +145,8 @@ badges: [wip] # 可选,默认 [],最多 3 个
 | `pnpm test` | 跑纯函数单测(Vitest) |
 | `pnpm test:watch` | 单测 watch 模式 |
 | `pnpm verify:build` | 对 `.output/public` 单独跑一遍产物断言(构建时会自动跑) |
+| `pnpm search:submit` | 初始化、增量通知或百度补推，详见[接入说明](.docs/seo.md) |
+| `pnpm search:restore` | Actions 恢复最近已部署快照和各平台状态 |
 
 ## 项目结构
 
@@ -153,12 +159,15 @@ badges: [wip] # 可选,默认 [],最多 3 个
 ├── scripts/
 │   ├── new-post.ts            # pnpm new 的实现
 │   ├── verify-build.ts        # 产物断言(构建期自动跑)
-│   └── lib/                   # slug 推导与 frontmatter 模板,供脚手架与单测共用
+│   ├── search-submit.ts       # 发布后的搜索通知 CLI
+│   ├── search-artifacts.ts    # Actions artifact 恢复
+│   └── lib/                   # 脚手架、SEO 快照与提交纯逻辑
 ├── test/                      # 纯函数单测
 ├── vitest.config.ts
-├── shared/utils/posts.ts      # app 与 server 双向自动导入 —— 草稿过滤的唯一真源
+├── shared/utils/              # app 与 server 双向自动导入,草稿判定与纯 SEO 工具
 ├── server/
 │   ├── routes/rss.xml.ts      # RSS 订阅源(Nitro 路由)
+│   ├── routes/robots.txt.ts   # 爬虫规则(构建期静态生成)
 │   ├── routes/search-index.json.ts  # 搜索索引(构建期生成的静态 JSON)
 │   └── utils/xml.ts           # XML 转义(抽出来才可单测)
 ├── app/
@@ -193,7 +202,7 @@ pnpm build
 npx serve .output/public
 ```
 
-线上域名已核对为 `https://huberyyang.site:91`(`app/config.ts` 的 `SITE.url`,canonical、
+正式站点地址为 `https://blog.huberyyang.site`(`app/config.ts` 的 `SITE.url`,canonical、
 sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须 https、无尾斜杠、无路径段——
 由 `test/config.test.ts` 硬守)。push 到 `main` 后由 GitHub Actions(`.github/workflows/deploy.yml`)
 自动构建部署:依次跑 lint / typecheck / test / build,全部通过才会同步到生产服务器,进度与失败
@@ -201,6 +210,7 @@ sitemap、RSS 与 OG 图均依赖该值生成绝对 URL;格式约束——必须
 
 站点同时输出:
 
+- `/robots.txt` —— 允许抓取,声明完整 sitemap 地址
 - `/sitemap.xml` —— 由 `@nuxtjs/sitemap` 生成
 - `/rss.xml` —— 全文订阅源,与站点共用同一套草稿过滤逻辑
 - `/404.html` —— 静态托管平台按约定用作兜底页

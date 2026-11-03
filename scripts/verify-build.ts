@@ -5,6 +5,7 @@ import { dirname, join, resolve } from 'node:path'
 import process from 'node:process'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { BADGES, SITE } from '../app/config.ts'
+import { collectSearchBuildProblems, readSearchBuildOptions } from './lib/search-build.ts'
 
 /**
  * 产物断言 —— 构建成功之后再问一遍"产物里真的有那些东西吗"。
@@ -463,6 +464,9 @@ export async function verifyBuildOutput(publicDir: string): Promise<void> {
         fail('rss', `${article.slug} 的全文里有站内相对地址,阅读器里点不开`)
     }
   }
+
+  problems.push(...(await collectSearchBuildProblems(publicDir, SITE.url, readSearchBuildOptions(process.env)))
+    .map(problem => `[seo] ${problem}`))
 
   if (problems.length) {
     throw new Error(

@@ -21,6 +21,7 @@ const showOutline = computed(() => props.links.filter(l => l.depth === 2).length
     :description="post.description"
     og-type="article"
     :published-date="post.date"
+    :modified-date="post.updatedDate"
   >
     <article>
       <header class="post-intro mb-10 border-b border-border pb-6 pt-6">

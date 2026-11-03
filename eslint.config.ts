@@ -7,5 +7,5 @@ export default antfu({
   formatters: {
     css: true,
   },
-  ignores: ['.nuxt', '.output', 'dist'],
+  ignores: ['.nuxt', '.output', '.search', 'dist'],
 })

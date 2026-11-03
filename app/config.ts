@@ -30,7 +30,7 @@ export const SITE = {
    * 这些写错都不会报错,只会让全站外链整体指向错误的地方。
    * "格式对"不等于"域名对",换域名时要人工核对与实际部署地址一致。
    */
-  url: 'https://huberyyang.site:91',
+  url: 'https://blog.huberyyang.site',
 
   /**
    * OG 分享图路径,相对站点根。
