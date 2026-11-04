@@ -4,9 +4,37 @@
 
 用户于 2026-11-03 选择方案 B：站点验证、robots、现有 sitemap 增强，以及部署成功后的百度普通收录与 IndexNow 增量提交。
 
-本页是设计与接入说明；实现步骤见[执行计划](plans/2026-11-03-search-discovery.md)。代码已实现并在本地验证；用户已反馈 Google 网域所有权验证通过，其余平台验证与真实 URL 提交尚未确认，尚未配置真实验证 meta、Key 或百度接口。
+本页是设计与接入说明，实现步骤见[执行计划](plans/2026-11-03-search-discovery.md)。截至 2026-11-04，Google、Bing、百度和 IndexNow 的接入均已完成，实际收录待在各平台复查。配置和验证证据见[生产接入结果](#生产接入结果)。
 
 不在本轮范围内：开发环境维护、博客线上可达性治理、访问统计、评论、阅读时长、BlogPosting 结构化数据、Google 受限 Indexing API、百度快速抓取权益申请、非公开后台 API 与自动收录 JS。账号登录、DNS 验证及平台最终审核由用户完成。
+
+## 生产接入结果
+
+正式站点为 `https://blog.huberyyang.site`。[线上 sitemap](https://blog.huberyyang.site/sitemap.xml) 包含 7 个页面网址，图片扩展中的 2 个图片地址单独计数。
+
+| 平台 | 已完成项 | 验证证据 |
+| :--- | :--- | :--- |
+| Google Search Console | 验证 `huberyyang.site` 网域资源，另添加博客网址前缀资源供 Bing 导入。提交正式站点的 sitemap | 用户确认 sitemap 显示成功，发现 7 个网页。首页和 [Flexbox 文章](https://blog.huberyyang.site/posts/flexbox-theory-vs-actual) 的实时测试可编入索引，均显示已请求编入索引。人工处置措施和安全问题报告均显示未检测到问题 |
+| Bing Webmaster Tools | 从 Google 导入 `https://blog.huberyyang.site/` 站点 | 用户确认 Bing 的 sitemap 显示成功，发现 7 个网址 |
+| 百度搜索资源平台 | 通过首页 HTML 标签验证，启用普通收录 API。百度后台提供 HTTP 接口，用户接受 Token 明文传输并显式启用 `BAIDU_ALLOW_HTTP` | [验证标签部署](https://github.com/HuberyYang-Space/my-blog/actions/runs/41755276448)后，线上首页返回 HTTP 200，`head` 内唯一的百度验证标签与仓库变量一致，用户在百度后台确认验证通过。[基线初始化](https://github.com/HuberyYang-Space/my-blog/actions/runs/41756624655)核对 7 个网址及指纹与部署快照一致。[历史补推](https://github.com/HuberyYang-Space/my-blog/actions/runs/41756992166)确认百度接收 7 条，失败和待重试均为 0，当次剩余配额 3 条 |
+| IndexNow | 保存 Key 并启用，初始化 7 个网址的基线，重新部署发布当前 Key 文件 | [基线初始化](https://github.com/HuberyYang-Space/my-blog/actions/runs/41758069982)核对 7 个网址及指纹一致。[当前 Key 部署](https://github.com/HuberyYang-Space/my-blog/actions/runs/41763586489)成功。线上 Key 文件返回 HTTP 200，正文与当前 Key 一致。对首页发送实际通知，首次返回 HTTP 202，约 90 秒后重试一次返回 HTTP 200，确认平台完成 Key 验证并接收首页通知 |
+
+Google 和 Bing 的后台结果来自用户反馈。百度的接收数量来自 Actions 中的 API 响应摘要和状态产物。IndexNow 的 HTTP 200 来自对线上首页的实际请求，验证了当前 Key 和通知接口。
+
+## 后续检查收录
+
+| 平台 | 检查入口 | 如何判断 |
+| :--- | :--- | :--- |
+| Google | [Search Console](https://search.google.com/search-console) 的「网址检查」，输入新域名下的完整文章网址。整站趋势看「网页索引编制」 | 看索引版本是否显示「网址已收录到 Google」。如果未收录，展开报告查看原因，必要时点「测试实际网址」确认当前页面能否抓取。[网址检查说明](https://support.google.com/webmasters/answer/9012289?hl=zh-Hans) |
+| Bing | [Bing Webmaster Tools](https://www.bing.com/webmasters/) 选择博客子域名，在 URL Inspection 检查完整网址。站点范围的情况可查看 Site Explorer | 看索引结果中的网址状态。出现问题时，用 Live URL 查看 Bingbot 实时抓取到的版本。[网址检查说明](https://www.bing.com/webmasters/help/url-inspection-55a30305) |
+| 百度 | [百度搜索资源平台](https://ziyuan.baidu.com/) 选择博客站点，查看「数据统计 → 索引量」 | 观察站点索引量及趋势。排查单页访问问题时用「抓取诊断」，接口接收数量从发布 Actions 的百度摘要查看。[百度平台说明](https://ziyuan.baidu.com/college/articleinfo/?id=3329) |
+| IndexNow | 查看 Deploy 的 `search` 任务摘要和待处理状态 | HTTP 200 表示通知提交成功，HTTP 202 表示平台已收到网址并等待验证 Key。检查实际收录时，使用接收方的站长工具，例如 Bing 的 URL Inspection。[协议响应说明](https://www.indexnow.org/documentation#response-format) |
+
+## IndexNow 在本项目中的工作方式
+
+IndexNow 是网站通知搜索引擎的网址变更协议。网站把新增、更新或删除的 URL 发给参与协议的入口，接收方可以据此安排抓取，并将通知共享给其他参与方。站点在同一主机公开 Key 文件，接收方读取它来验证通知来自能控制该站点的人。[IndexNow 协议](https://www.indexnow.org/documentation)
+
+博客部署成功后，工作流比较本次公开页面快照与已保存的 IndexNow 基线。新文章、正文变更和已移除的页面会产生通知。通知成功后更新对应基线，HTTP 202 或可重试的失败则留下待处理记录。sitemap 继续提供整站的发现清单，IndexNow 在内容变化时提供更及时的提示。各搜索引擎各自决定何时抓取和收录。[IndexNow 提交与重试原则](https://www.indexnow.org/faq)
 
 ## 方案选择
 
