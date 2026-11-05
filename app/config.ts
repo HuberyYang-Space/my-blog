@@ -84,6 +84,7 @@ export const BADGES = {
   ssl: { label: 'SSL', tone: 'danger' },
   featured: { label: '精选', tone: 'success' },
   server: { label: '服务器', tone: 'success' },
+  readingNote: { label: '读书笔记', tone: 'info' },
 } as const
 
 export type BadgeKey = keyof typeof BADGES

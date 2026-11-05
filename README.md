@@ -71,6 +71,7 @@ badges: [wip] # 可选,默认 [],最多 3 个
 | `translated` | 译文 | |
 | `outdated` | 已过时 | |
 | `featured` | 精选 | |
+| `readingNote` | 读书笔记 | 用于读书笔记类文章 |
 
 徽章的渲染顺序取上表的定义序,与 frontmatter 里的书写顺序无关。
 `tags` 与 `badges` 分工不同:前者是分类导航(有 `/tags/<标签>` 归档页),
