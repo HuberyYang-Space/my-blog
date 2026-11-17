@@ -4,7 +4,6 @@ description: 从玫瑰、狐狸与飞行员的相遇，记下时间、照料与�
 date: 2026-11-16
 tags:
   - 阅读
-  - 读书笔记
 draft: false
 badges: [readingNote]
 ---
