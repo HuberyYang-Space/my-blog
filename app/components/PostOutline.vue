@@ -157,7 +157,7 @@ onUnmounted(() => {
             :to="`#${item.id}`"
             class="outline-link block py-0.5 hover:text-text"
             :class="[
-              item.depth === 3 ? 'pl-6' : 'pl-3',
+              { 'outline-link-nested': item.depth === 3 },
               activeId === item.id ? 'outline-link-active text-text' : 'text-text-mute',
             ]"
             @click="onLinkClick(item.id)"
@@ -226,10 +226,15 @@ onUnmounted(() => {
    过渡的是描边颜色(透明 → 文字色)而不是宽度:实测 Chrome 155 里
    -webkit-text-stroke-width 不可动画,改了直接跳变。 */
 .outline-link {
+  padding-inline-start: var(--toc-gap);
   -webkit-text-stroke: 0.35px transparent;
   transition:
     color 200ms cubic-bezier(0.4, 0, 0.2, 1),
     -webkit-text-stroke-color 260ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.outline-link-nested {
+  padding-inline-start: calc(2 * var(--toc-gap));
 }
 
 .outline-link-active {

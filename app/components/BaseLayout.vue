@@ -67,9 +67,7 @@ const hasFooter = computed(() => Boolean(slots.footer))
     <Header />
     <!-- 头部是 fixed 的,不占文档流高度,这里用 padding-top 补偿被它遮住的空间 -->
     <div class="page-main flex-1">
-      <!-- 阅读列宽度的唯一真源:max-w-2xl,与 Header.vue 的导航条、Footer.vue 的页脚完全同宽,
-           首页/about/标签页/文章页(无论是否有大纲)不再有第二个宽度值。 -->
-      <div class="mx-auto max-w-2xl w-full px-6">
+      <div class="site-column">
         <main>
           <slot />
           <div v-if="hasFooter">
@@ -100,23 +98,15 @@ const hasFooter = computed(() => Boolean(slots.footer))
   padding-top: var(--header-h);
 }
 
-/* 大纲(TOC)浮层。定位在阅读列右边界之外的"多余空间"里,阅读列本身(max-w-2xl,
-   半宽 21rem)完全不知道它的存在,不会因为大纲出现/消失而改变宽度或位置。
-   left 的计算:50%(视口中点)+ 21rem(阅读列半宽,到达阅读列右边界)+ 2.5rem
-   (与阅读列的间距)。
-   top 与标题的滚动停靠位置同源,见 --scroll-offset(tokens.css)。
-   原先挂在 grid 单元格里的 position: sticky 有"内容太多就被推走"的自然退路,
-   改成 fixed 后失去这条退路,因此显式加 max-height + overflow-y 让超长大纲
-   在自己内部滚动,而不是在视口底部被截断且无法触达。
-   默认 display: none,显示断点见下方 @media —— 值不落在 UnoCSS/Wind3 预设的
-   xl(1280px)/2xl(1536px)关键字上,沿用 .post-shell 的先例手写精确值,
-   而不是硬套一个不够用或过度保守的关键字。 */
+/* 从内容列右边界扣除内边距后，以一级条目缩进量定位大纲边框。
+   右侧留出回顶按钮的占位（2rem + 36px）和 1.25rem 净空。 */
 .toc-aside {
   display: none;
   position: fixed;
   top: var(--scroll-offset);
-  left: calc(50% + 21rem + 2.5rem);
-  width: 14rem;
+  left: calc(50% + var(--site-column-width) / 2 - var(--site-column-padding) + var(--toc-gap));
+  right: calc(3.25rem + 36px);
+  max-width: 16rem;
   max-height: calc(100vh - var(--scroll-offset) - 2.5rem);
   overflow-y: auto;
 }
@@ -131,18 +121,7 @@ const hasFooter = computed(() => Boolean(slots.footer))
   display: none;
 }
 
-/* 断点算式必须把 ScrollToTopButton 自己的footprint 算进去,不能只留一个笼统的
-   "安全边距"——两者是两套不同的定位参照系(大纲相对阅读列中心,按钮相对视口
-   右边缘),边距不够时大纲右边界会反过来越过按钮左边界。用真实浏览器量出来的
-   数字反推(ScrollToTopButton.vue:right 2rem + width 36px = 2.25rem):
-
-     大纲右边界(距视口左侧) = 50vw + 21rem 阅读列半宽 + 2.5rem 间距 + 14rem 大纲宽
-     按钮左边界(距视口左侧) = 100vw - 2rem - 2.25rem
-     两者之间留 1.25rem 净空 → 解出 vw ≥ 86rem(1376px)
-
-   同样卡在 xl(1280px)/2xl(1536px)两个关键字中间,沿用 .post-shell 的先例
-   手写精确值。1376px 已用真实浏览器核对过:两者之间净空 17px(视口宽里还扣掉了
-   6px 滚动条),不会重叠;1375px 时两者都隐藏。 */
+/* 86rem 时大纲有约 12rem 的可用宽度（按 16px 根字号、未扣滚动条计算）。 */
 @media (min-width: 86rem) {
   .toc-aside {
     display: block;

@@ -22,7 +22,7 @@ function navLinkClass(active: boolean) {
 
 <template>
   <header class="site-header">
-    <nav class="mx-auto max-w-2xl w-full flex items-center justify-between gap-4 px-6 py-3">
+    <nav class="site-column flex items-center justify-between gap-4 py-3">
       <div class="flex items-baseline gap-5">
         <NuxtLink
           to="/"
@@ -66,8 +66,7 @@ function navLinkClass(active: boolean) {
   height: var(--header-h);
   /* 用 flex + align-items: center 纵向居中 nav,不依赖"nav 自身高度刚好等于
      --header-h"这种巧合 —— 内容(如按钮尺寸)以后变了也不会跑出固定高度的头部盒子。
-     flex 项默认按内容收缩宽度,nav 需要显式 w-full 才能让自己的 mx-auto 生效
-     (见模板),否则 max-w-2xl mx-auto 在 flex 容器里没有多余空间可居中。 */
+     nav 通过 .site-column 显式撑到可用宽度,避免 flex 项按内容宽度收缩。 */
   display: flex;
   align-items: center;
   background-color: color-mix(in srgb, var(--c-bg) 72%, transparent);

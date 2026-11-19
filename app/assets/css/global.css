@@ -10,8 +10,10 @@
  * 2. reset  —— 打底,必须早于任何具名规则
  * 3. links  —— 三种可点击文本样式,被多个组件与 markdown 正文共用
  * 4. prose  —— 文章正文排版,作用于 markdown 产出的 DOM(不属于任何 SFC)
+ * 5. layout —— 页头、内容区与页脚共用的居中列
  */
 @import './tokens.css';
 @import './reset.css';
 @import './links.css';
 @import './prose.css';
+@import './layout.css';

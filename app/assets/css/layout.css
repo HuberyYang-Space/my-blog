@@ -1,0 +1,6 @@
+.site-column {
+  width: 100%;
+  max-width: var(--site-column-width);
+  margin-inline: auto;
+  padding-inline: var(--site-column-padding);
+}

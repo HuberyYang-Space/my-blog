@@ -9,7 +9,7 @@ onMounted(() => {
 
 <template>
   <footer class="site-footer">
-    <div class="mx-auto max-w-2xl w-full flex items-center justify-between gap-4 px-6">
+    <div class="site-column flex items-center justify-between gap-4">
       <p>© {{ year }} {{ SITE.title }}</p>
       <a href="/rss.xml" target="_blank" class="tinge">RSS</a>
     </div>
