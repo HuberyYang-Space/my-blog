@@ -108,7 +108,7 @@
     ui-sans-serif, system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
-  --site-column-width: 48rem;
+  --site-column-width: 46.75rem;
   --site-column-padding: 1.5rem;
   --toc-gap: 0.75rem;
 

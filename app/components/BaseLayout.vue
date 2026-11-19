@@ -121,7 +121,7 @@ const hasFooter = computed(() => Boolean(slots.footer))
   display: none;
 }
 
-/* 86rem 时大纲有约 14rem 的可用宽度（按 16px 根字号、未扣滚动条计算）。 */
+/* 86rem 时大纲有约 15rem 的可用宽度（按 16px 根字号、未扣滚动条计算）。 */
 @media (min-width: 86rem) {
   .toc-aside {
     display: block;
