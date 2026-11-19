@@ -2,11 +2,12 @@
 import { SITE } from '~/config'
 
 const works = [
-  { href: 'https://html.huberyyang.site/', label: '主页' },
+  { href: 'https://react.huberyyang.site/', label: '主页' },
   { href: 'https://ai.huberyyang.site/', label: 'AI周报' },
+  { href: 'https://books.huberyyang.site/', label: '书架' },
   { href: 'https://huberyyang-space.github.io/todo-flex/', label: 'flex游乐场' },
   { href: 'https://jsequals.huberyyang.site/', label: 'equals-demo' },
-  { href: 'https://fit.huberyyang.site/', label: '健身管理' },
+  { href: 'https://fitness.huberyyang.site/', label: '健身管理' },
   { href: 'https://music.huberyyang.site/', label: '音乐' },
   { href: 'https://forest.huberyyang.site/', label: '前端森林' },
   { href: 'https://projects.huberyyang.site/day01', label: '50practice-Vue3版本' },
